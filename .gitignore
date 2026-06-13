@@ -1,0 +1,44 @@
+# Dependencies
+node_modules/
+
+# Database
+backend/data/*.db
+backend/data/*.db-shm
+backend/data/*.db-wal
+data/*.db
+
+# Uploads
+backend/uploads/
+
+# Environment
+.env
+.env.local
+
+# Build
+dist/
+frontend/dist/
+dev-dist/
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Claude Code
+.claude/
+
+# Graphify output
+graphify-out/
+
+# Seed utils (jangan ikut production)
+backend/src/utils/seedMockData.js
+backend/src/utils/seedUsers.js
+
+# Assets tidak perlu
+frontend/src/assets/react.svg
+frontend/src/assets/vite.svg
+frontend/src/App.css
+frontend/src/assets/hero.png

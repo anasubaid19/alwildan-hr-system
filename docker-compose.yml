@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  backend:
+    build: ./backend
+    container_name: alwildan-hr-backend
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+      - ./data:/app/data
+    environment:
+      - NODE_ENV=development
+      - PORT=3001
+      - DB_PATH=/app/data/alwildan.db
+      - AI_BASE_URL=${AI_BASE_URL}
+      - AI_API_KEY=${AI_API_KEY}
+      - AI_MODEL=${AI_MODEL}
+    networks:
+      - alwildan-network
+
+  frontend:
+    build: ./frontend
+    container_name: alwildan-hr-frontend
+    restart: unless-stopped
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    environment:
+      - VITE_API_URL=http://localhost:3001
+    depends_on:
+      - backend
+    networks:
+      - alwildan-network
+
+networks:
+  alwildan-network:
+    driver: bridge
