@@ -5,19 +5,16 @@ services:
     build: ./backend
     container_name: alwildan-hr-backend
     restart: unless-stopped
-    ports:
-      - "3001:3001"
+    # Port backend tidak diekspos keluar — hanya diakses internal via nginx
     volumes:
-      - ./backend:/app
-      - /app/node_modules
-      - ./data:/app/data
+      - ./data:/app/data          # database SQLite
+      - ./backend/uploads:/app/uploads  # file upload Excel
+    env_file:
+      - .env                      # baca JWT_SECRET, AI_BASE_URL, dll dari .env
     environment:
-      - NODE_ENV=development
-      - PORT=3001
+      - NODE_ENV=production
+      - PORT=3010
       - DB_PATH=/app/data/alwildan.db
-      - AI_BASE_URL=${AI_BASE_URL}
-      - AI_API_KEY=${AI_API_KEY}
-      - AI_MODEL=${AI_MODEL}
     networks:
       - alwildan-network
 
@@ -26,12 +23,7 @@ services:
     container_name: alwildan-hr-frontend
     restart: unless-stopped
     ports:
-      - "5173:5173"
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
-    environment:
-      - VITE_API_URL=http://localhost:3001
+      - "80:80"                   # akses via http://server-ip
     depends_on:
       - backend
     networks:
