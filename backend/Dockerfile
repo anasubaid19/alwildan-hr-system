@@ -1,4 +1,4 @@
-FROM node:18-alpine
+FROM node:22-alpine
 
 # better-sqlite3 perlu build tools untuk compile native module
 RUN apk add --no-cache python3 make g++

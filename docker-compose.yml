@@ -23,7 +23,7 @@ services:
     container_name: alwildan-hr-frontend
     restart: unless-stopped
     ports:
-      - "80:80"                   # akses via http://server-ip
+      - "127.0.0.1:3050:80"                   # akses via http://server-ip
     depends_on:
       - backend
     networks:
