@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react'
 import Login from './pages/Login'
 import FirstSetup from './pages/FirstSetup'
 import Signup from './pages/Signup'
+import ForgotPassword from './pages/ForgotPassword'
+import ResetPassword from './pages/ResetPassword'
 import Dashboard from './pages/Dashboard'
 import Karyawan from './pages/Karyawan'
 import Settings from './pages/Settings'
@@ -57,6 +59,9 @@ export default function App() {
   const [checking, setChecking] = useState(true)
   const [needsSetup, setNeedsSetup] = useState(false)
   const [isSignupPage, setIsSignupPage] = useState(false)
+  const [isForgotPage, setIsForgotPage] = useState(false)
+  const [isResetPage, setIsResetPage] = useState(false)
+  const [resetToken, setResetToken] = useState('')
   const [mobile, setMobile]   = useState(false)
   const [mobileMenu, setMobileMenu] = useState(false)
   const [showSearch, setShowSearch]       = useState(false)
@@ -79,6 +84,22 @@ export default function App() {
     // Deteksi signup page dari URL
     if (window.location.pathname === '/signup') {
       setIsSignupPage(true)
+      setChecking(false)
+      return
+    }
+
+    // Deteksi forgot password page
+    if (window.location.pathname === '/lupa-password') {
+      setIsForgotPage(true)
+      setChecking(false)
+      return
+    }
+
+    // Deteksi reset password page dengan token
+    const rpMatch = window.location.pathname.match(/^\/reset-password\/(.+)$/)
+    if (rpMatch) {
+      setResetToken(rpMatch[1])
+      setIsResetPage(true)
       setChecking(false)
       return
     }
@@ -109,6 +130,8 @@ export default function App() {
     axios.defaults.headers.common['Authorization'] = `Bearer ${localStorage.getItem('aw_token')}`
     setNeedsSetup(false)
     setIsSignupPage(false)
+    setIsForgotPage(false)
+    setIsResetPage(false)
     setUser(u)
   }
 
@@ -167,6 +190,8 @@ export default function App() {
   )
 
   if (isSignupPage) return <Signup onSignup={login} />
+  if (isForgotPage) return <ForgotPassword onBack={() => window.location.href = '/'} />
+  if (isResetPage) return <ResetPassword token={resetToken} onDone={() => window.location.href = '/'} />
   if (needsSetup) return <FirstSetup onSetup={login} />
   if (!user) return <Login onLogin={login} />
 

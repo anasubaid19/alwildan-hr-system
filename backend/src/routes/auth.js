@@ -3,12 +3,22 @@ const { createNotif } = require('./notifications');
 const router = express.Router();
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const rateLimit = require('express-rate-limit');
 const db = require('../models/database');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'alwildan-hr-secret-2026';
 
+// Proteksi brute force: maks 10 percobaan login per IP tiap 15 menit
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  message: { success: false, message: 'Terlalu banyak percobaan login. Coba lagi dalam 15 menit.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
 // POST /api/auth/login
-router.post('/login', (req, res) => {
+router.post('/login', loginLimiter, (req, res) => {
   const { email, password } = req.body;
 
   if (!email || !password)
@@ -123,6 +133,60 @@ router.post('/signup', (req, res) => {
     { expiresIn: '24h' }
   );
   res.json({ success: true, token, user: { id: result.lastInsertRowid, nama, email, inisial, role: key.role } });
+});
+
+// POST /api/auth/forgot-password — minta token reset password
+router.post('/forgot-password', (req, res) => {
+  const { email } = req.body;
+  if (!email)
+    return res.status(400).json({ success: false, message: 'Email wajib diisi' });
+
+  const user = db.prepare('SELECT * FROM users WHERE email = ?').get(email);
+
+  // Selalu balas sukses generik untuk mencegah email enumeration
+  const genericResponse = { success: true, message: 'Jika email terdaftar, link reset password telah dibuat.' };
+
+  if (!user)
+    return res.json(genericResponse);
+
+  const crypto = require('crypto');
+  const token = crypto.randomBytes(32).toString('hex');
+  const expiredAt = new Date(Date.now() + 60 * 60 * 1000).toISOString(); // 1 jam
+
+  db.prepare(
+    'INSERT INTO reset_tokens (user_id, token, expired_at) VALUES (?, ?, ?)'
+  ).run(user.id, token, expiredAt);
+
+  // Tidak ada mailer: log token ke console (MVP). Di production, kirim via email.
+  console.log(`Reset password untuk ${email}: token=${token} (expired ${expiredAt})`);
+
+  // Sistem internal HR tanpa mailer — kembalikan token agar user bisa lanjut reset.
+  res.json({ ...genericResponse, resetToken: token, expired_at: expiredAt });
+});
+
+// POST /api/auth/reset-password/:token — reset password pakai token
+router.post('/reset-password/:token', (req, res) => {
+  const { token } = req.params;
+  const { password } = req.body;
+
+  if (!password)
+    return res.status(400).json({ success: false, message: 'Password baru wajib diisi' });
+  if (password.length < 6)
+    return res.status(400).json({ success: false, message: 'Password minimal 6 karakter' });
+
+  const row = db.prepare('SELECT * FROM reset_tokens WHERE token = ?').get(token);
+  if (!row)
+    return res.status(400).json({ success: false, message: 'Token tidak valid' });
+  if (row.used_at)
+    return res.status(400).json({ success: false, message: 'Token sudah digunakan' });
+  if (new Date(row.expired_at) < new Date())
+    return res.status(400).json({ success: false, message: 'Token sudah kadaluarsa' });
+
+  const hashed = bcrypt.hashSync(password, 10);
+  db.prepare('UPDATE users SET password = ? WHERE id = ?').run(hashed, row.user_id);
+  db.prepare("UPDATE reset_tokens SET used_at = datetime('now') WHERE id = ?").run(row.id);
+
+  res.json({ success: true, message: 'Password berhasil direset. Silakan login dengan password baru.' });
 });
 
 // POST /api/auth/invite — Super Admin generate invite key
