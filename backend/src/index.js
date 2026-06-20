@@ -12,6 +12,9 @@ const auth = require('./middleware/auth');
 app.use(cors());
 app.use(express.json());
 
+// Di belakang nginx (Docker): percayai 1 proxy hop agar rate limiter melihat IP client asli
+app.set('trust proxy', 1);
+
 app.use('/api/auth',     require('./routes/auth'));
 app.use('/api/settings', auth, require('./routes/settings'));
 app.use('/api/cabang',   auth, require('./routes/cabang'));

@@ -42,3 +42,6 @@ frontend/src/assets/react.svg
 frontend/src/assets/vite.svg
 frontend/src/App.css
 frontend/src/assets/hero.png
+
+# Backup files
+*.bak

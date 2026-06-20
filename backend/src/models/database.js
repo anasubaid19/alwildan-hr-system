@@ -7,8 +7,8 @@ const dotenv = require('dotenv');
 dotenv.config({ path: path.join(__dirname, '../../../.env') });
 
 const DB_PATH = process.env.DB_PATH
-  ? path.resolve(process.cwd(), process.env.DB_PATH)
-  : path.join(__dirname, '../../../data/alwildan.db');
+  ? path.resolve(process.env.DB_PATH)              // absolute (Docker) dipakai apa adanya
+  : path.join(__dirname, '../../data/alwildan.db'); // default cwd-independent: backend/data/
 
 const dbDir = path.dirname(DB_PATH);
 if (!fs.existsSync(dbDir)) fs.mkdirSync(dbDir, { recursive: true });
@@ -55,6 +55,17 @@ db.exec(`
     status TEXT DEFAULT 'pending', catatan TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (cabang_id) REFERENCES cabang(id)
+  );
+
+  CREATE TABLE IF NOT EXISTS users (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    nama       TEXT NOT NULL,
+    email      TEXT UNIQUE NOT NULL,
+    password   TEXT NOT NULL,
+    inisial    TEXT,
+    role       TEXT DEFAULT 'admin',
+    avatar     TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
   );
 `);
 
@@ -105,6 +116,19 @@ db.exec(`
     expired_at DATETIME,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (created_by) REFERENCES users(id)
+  )
+`);
+
+// Migration: create reset_tokens table (lupa password)
+db.exec(`
+  CREATE TABLE IF NOT EXISTS reset_tokens (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    token TEXT UNIQUE NOT NULL,
+    expired_at DATETIME NOT NULL,
+    used_at DATETIME,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id)
   )
 `);
 

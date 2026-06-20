@@ -103,7 +103,7 @@ export default function Login({ onLogin }) {
             <div style={{ marginBottom:24 }}>
               <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:8 }}>
                 <label style={{ fontSize:13, fontWeight:700, color:'#0a0b0d' }}>Password</label>
-                <span style={{ fontSize:12, color:'#1A3B8F', cursor:'pointer', fontWeight:600 }}>Lupa password?</span>
+                <span style={{ fontSize:12, color:'#1A3B8F', cursor:'pointer', fontWeight:600 }} onClick={() => window.location.href='/lupa-password'}>Lupa password?</span>
               </div>
               <div style={{ position:'relative' }}>
                 <input type={showPass?'text':'password'} value={password} onChange={e=>setPassword(e.target.value)}
