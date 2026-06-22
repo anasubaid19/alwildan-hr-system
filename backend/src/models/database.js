@@ -6,6 +6,9 @@ const dotenv = require('dotenv');
 // Load .env dari root project
 dotenv.config({ path: path.join(__dirname, '../../../.env') });
 
+const pino = require('pino');
+const logger = pino({ level: process.env.LOG_LEVEL || 'info' });
+
 const DB_PATH = process.env.DB_PATH
   ? path.resolve(process.env.DB_PATH)              // absolute (Docker) dipakai apa adanya
   : path.join(__dirname, '../../../data/alwildan.db'); // default: data/alwildan.db (root project — kompatibel Docker)
@@ -14,7 +17,7 @@ const dbDir = path.dirname(DB_PATH);
 if (!fs.existsSync(dbDir)) fs.mkdirSync(dbDir, { recursive: true });
 
 const db = new Database(DB_PATH);
-console.log('DB:', DB_PATH);
+logger.info('DB: ' + DB_PATH);
 
 db.exec(`
   CREATE TABLE IF NOT EXISTS cabang (
@@ -81,12 +84,12 @@ if (!gajiColumns.includes('paying_cabang_id')) {
     )
     WHERE paying_cabang_id IS NULL
   `);
-  console.log('Migration: kolom paying_cabang_id ditambahkan');
+  logger.info('Migration: kolom paying_cabang_id ditambahkan');
 }
 
 if (!gajiColumns.includes('lembur')) {
   db.exec('ALTER TABLE gaji ADD COLUMN lembur REAL DEFAULT 0');
-  console.log('Migration: kolom lembur ditambahkan');
+  logger.info('Migration: kolom lembur ditambahkan');
 }
 
 // Migration: users columns
@@ -96,12 +99,12 @@ if (!userColumns.includes('role')) {
   db.exec("ALTER TABLE users ADD COLUMN role TEXT DEFAULT 'admin'");
   // First user is superadmin
   db.exec("UPDATE users SET role = 'superadmin' WHERE id = 1");
-  console.log('Migration: kolom role ditambahkan, user id=1 dijadikan superadmin');
+  logger.info('Migration: kolom role ditambahkan, user id=1 dijadikan superadmin');
 }
 
 if (!userColumns.includes('avatar')) {
   db.exec('ALTER TABLE users ADD COLUMN avatar TEXT');
-  console.log('Migration: kolom avatar ditambahkan');
+  logger.info('Migration: kolom avatar ditambahkan');
 }
 
 // Migration: create invite_keys table
@@ -136,7 +139,7 @@ db.exec(`
 const karyawanColumns = db.prepare("PRAGMA table_info(karyawan)").all().map(c => c.name);
 if (!karyawanColumns.includes('status')) {
   db.exec("ALTER TABLE karyawan ADD COLUMN status TEXT DEFAULT 'aktif'");
-  console.log('Migration: kolom status ditambahkan');
+  logger.info('Migration: kolom status ditambahkan');
 }
 
 // Performance indexes

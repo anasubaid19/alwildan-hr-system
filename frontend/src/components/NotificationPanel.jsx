@@ -118,11 +118,9 @@ export default function NotificationPanel({ onClose, onNavigate, onUnreadChange 
             const typeConf = ICONS[n.type] || ICONS.info
             const Icon = typeConf.icon
             return (
-              <div key={n.id}
+              <div key={n.id} className="hover-bg-blue"
                 onClick={() => { markRead(n.id); if(n.link_page) { onNavigate(n.link_page); onClose() } }}
-                style={{ padding:'14px 20px', display:'flex', gap:14, cursor:n.link_page?'pointer':'default', transition:'background 0.1s', background: n.is_read ? 'white' : '#F8F9FF', borderBottom:'1px solid ' + C.hairline }}
-                onMouseEnter={e => e.currentTarget.style.background='#F8F9FC'}
-                onMouseLeave={e => e.currentTarget.style.background=n.is_read?'white':'#F8F9FF'}>
+                style={{ padding:'14px 20px', display:'flex', gap:14, cursor:n.link_page?'pointer':'default', transition:'background 0.1s', background: n.is_read ? 'white' : '#F8F9FF', borderBottom:'1px solid ' + C.hairline }}>
                 <div style={{ width:40, height:40, borderRadius:12, background:typeConf.bg, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
                   <Icon size={18} color={typeConf.color}/>
                 </div>
@@ -131,10 +129,8 @@ export default function NotificationPanel({ onClose, onNavigate, onUnreadChange 
                     <p style={{ fontSize:13, fontWeight: n.is_read ? 600 : 700, color:C.ink, lineHeight:1.4 }}>{n.title}</p>
                     <div style={{ display:'flex', alignItems:'center', gap:4, flexShrink:0 }}>
                       {!n.is_read && <div style={{ width:8, height:8, borderRadius:'50%', background:C.navy, marginTop:4 }}/>}
-                      <button onClick={e=>deleteNotif(e,n.id)}
-                        style={{ width:24, height:24, borderRadius:6, border:'none', background:'#F0F2F8', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', color:C.muted, transition:'all 0.15s', flexShrink:0 }}
-                        onMouseEnter={e=>{ e.currentTarget.style.background='#FEF2F2'; e.currentTarget.style.color='#EF4444' }}
-                        onMouseLeave={e=>{ e.currentTarget.style.background='#F0F2F8'; e.currentTarget.style.color=C.muted }}>
+                      <button onClick={e=>deleteNotif(e,n.id)} className="hover-bg-red" aria-label="Hapus notifikasi"
+                        style={{ width:24, height:24, borderRadius:6, border:'none', background:'#F0F2F8', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', color:C.muted, transition:'all 0.15s', flexShrink:0 }}>
                         <X size={12}/>
                       </button>
                     </div>
@@ -148,7 +144,6 @@ export default function NotificationPanel({ onClose, onNavigate, onUnreadChange 
         )}
       </div>
 
-      <style>{`@keyframes spin { to { transform:rotate(360deg); } }`}</style>
     </div>
   )
 }

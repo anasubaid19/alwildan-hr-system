@@ -5,8 +5,11 @@ const path = require('path');
 
 dotenv.config({ path: path.join(__dirname, '../../.env') });
 
+const pino = require('pino')
+const logger = pino({ level: process.env.LOG_LEVEL || 'info' })
+
 if (!process.env.JWT_SECRET) {
-  console.error('FATAL: JWT_SECRET tidak diset di environment')
+  logger.error('FATAL: JWT_SECRET tidak diset di environment')
   process.exit(1)
 }
 
@@ -14,6 +17,7 @@ const app = express();
 const PORT = process.env.PORT || 3010;
 const auth = require('./middleware/auth');
 
+app.use(require('pino-http')({ logger }));
 app.use(cors());
 app.use(express.json());
 
@@ -36,8 +40,8 @@ app.get('/api/health', (req, res) => {
 });
 
 app.use((err, req, res, next) => {
-  console.error('Unhandled error:', err)
+  (req.log || logger).error(err, 'Unhandled error')
   res.status(500).json({ success: false, message: 'Terjadi kesalahan server' })
 })
 
-app.listen(PORT, () => console.log(`Backend running on http://localhost:${PORT}`));
+app.listen(PORT, () => logger.info(`Backend running on http://localhost:${PORT}`));

@@ -39,9 +39,7 @@ const TTip = ({ active, payload, label }) => {
 function KPICard({ title, value, sub, icon:Icon, trend, trendVal, bgColor, iconBg }) {
   const isUp = trend === 'up'
   return (
-    <div style={{ background:'white', borderRadius:20, padding:'22px 24px', border:'1px solid #E8EBF4', display:'flex', flexDirection:'column', gap:16, transition:'box-shadow 0.2s' }}
-      onMouseEnter={e=>e.currentTarget.style.boxShadow='0 8px 32px rgba(26,59,143,0.1)'}
-      onMouseLeave={e=>e.currentTarget.style.boxShadow='none'}>
+    <div className="hover-shadow" style={{ background:'white', borderRadius:20, padding:'22px 24px', border:'1px solid #E8EBF4', display:'flex', flexDirection:'column', gap:16, transition:'box-shadow 0.2s' }}>
       <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
         <div style={{ width:44, height:44, borderRadius:14, background:iconBg||'#EEF1FA', display:'flex', alignItems:'center', justifyContent:'center' }}>
           <Icon size={20} color={bgColor||C.navy}/>
@@ -149,14 +147,6 @@ export default function Dashboard() {
 
   return (
     <div style={{ maxWidth:1300, display:'flex', flexDirection:'column', gap:20 }}>
-      <style>{`
-        .kpi-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
-        .kpi-sub  { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
-        .chart-grid { display:grid; grid-template-columns:3fr 2fr; gap:16px; }
-        @media(max-width:1100px){ .chart-grid{grid-template-columns:1fr;} }
-        @media(max-width:768px){ .kpi-grid,.kpi-sub{grid-template-columns:repeat(2,1fr);gap:12px;} .chart-grid{grid-template-columns:1fr;} }
-      `}</style>
-
       {/* Welcome Header */}
       <div style={{ display:'flex', flexWrap:'wrap', alignItems:'center', justifyContent:'space-between', gap:16, marginBottom:4 }}>
         <div>
@@ -315,9 +305,7 @@ export default function Dashboard() {
                   const pot = Math.max(0,(c.total_gaji||0)-(c.total_diterima||0))
                   const pct = c.total_gaji>0?Math.min(100,Math.round((c.total_diterima/c.total_gaji)*100)):0
                   return (
-                    <tr key={i} style={{ borderTop:'1px solid #F0F2F8', transition:'background 0.1s' }}
-                      onMouseEnter={e=>e.currentTarget.style.background='#F8F9FC'}
-                      onMouseLeave={e=>e.currentTarget.style.background='transparent'}>
+                    <tr key={i} className="hover-bg-blue" style={{ borderTop:'1px solid #F0F2F8', transition:'background 0.1s' }}>
                       <td style={{ padding:'16px 20px' }}>
                         <p style={{ fontWeight:700, color:C.ink }}>{c.nama}</p>
                         <p style={{ fontSize:11, color:C.muted, marginTop:2 }}>{c.kode}</p>

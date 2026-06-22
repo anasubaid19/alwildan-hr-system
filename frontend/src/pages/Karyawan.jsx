@@ -9,7 +9,7 @@ function Modal({ title, onClose, children }) {
       <div style={{ background:'white', borderRadius:20, width:'100%', maxWidth:480, boxShadow:'0 20px 60px rgba(0,0,0,0.15)' }}>
         <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'18px 24px', borderBottom:`1px solid ${C.hairline}` }}>
           <p style={{ fontSize:16, fontWeight:700, color:C.ink }}>{title}</p>
-          <button onClick={onClose} style={{ width:32, height:32, borderRadius:8, border:'none', background:'#F0F2F8', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', color:C.muted }}>
+          <button onClick={onClose} aria-label="Tutup" style={{ width:32, height:32, borderRadius:8, border:'none', background:'#F0F2F8', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', color:C.muted }}>
             <X size={16}/>
           </button>
         </div>
@@ -178,9 +178,7 @@ export default function Karyawan() {
               </thead>
               <tbody>
                 {filtered.map((k,i) => (
-                  <tr key={k.id} style={{ borderTop:`1px solid ${C.hairline}` }}
-                    onMouseEnter={e=>e.currentTarget.style.background='#F8F9FC'}
-                    onMouseLeave={e=>e.currentTarget.style.background='transparent'}>
+                  <tr key={k.id} className="hover-bg-blue" style={{ borderTop:`1px solid ${C.hairline}` }}>
                     <td style={{ padding:'14px 16px', textAlign:'center', fontFamily:'monospace', fontSize:12, color:C.muted, fontWeight:600 }}>{k.nu||'-'}</td>
                     <td style={{ padding:'14px 16px' }}>
                       <p style={{ fontWeight:700, color:C.ink }}>{k.nama}</p>
@@ -199,15 +197,15 @@ export default function Karyawan() {
                     <td style={{ padding:'14px 16px', fontFamily:'monospace', fontSize:12, color:C.muted }}>{k.no_acc||'-'}</td>
                     <td style={{ padding:'14px 16px' }}>
                       <div style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:6 }}>
-                        <button onClick={()=>openDetail(k)} title="Riwayat Gaji"
+                        <button onClick={()=>openDetail(k)} title="Riwayat Gaji" aria-label="Riwayat Gaji"
                           style={{ width:32, height:32, borderRadius:8, border:'none', background:'#F0FDF4', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', color:'#16a34a' }}>
                           <Eye size={14}/>
                         </button>
-                        <button onClick={()=>openEdit(k)}
+                        <button onClick={()=>openEdit(k)} aria-label="Edit karyawan"
                           style={{ width:32, height:32, borderRadius:8, border:'none', background:'#EEF1FA', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', color:C.navy }}>
                           <Pencil size={14}/>
                         </button>
-                        <button onClick={()=>openHapus(k)}
+                        <button onClick={()=>openHapus(k)} aria-label="Hapus karyawan"
                           style={{ width:32, height:32, borderRadius:8, border:'none', background:'#FEF2F2', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', color:C.red }}>
                           <Trash2 size={14}/>
                         </button>
@@ -346,7 +344,7 @@ export default function Karyawan() {
                   <p style={{ fontSize:11, color:C.muted, marginTop:1 }}>{selected.jabatan||''} · {selected.kode_cabang||''}</p>
                 </div>
               </div>
-              <button onClick={closeModal} style={{ width:32, height:32, borderRadius:8, border:'none', background:'#F0F2F8', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', color:C.muted }}>
+              <button onClick={closeModal} aria-label="Tutup" style={{ width:32, height:32, borderRadius:8, border:'none', background:'#F0F2F8', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', color:C.muted }}>
                 <X size={16}/>
               </button>
             </div>
@@ -426,7 +424,6 @@ export default function Karyawan() {
         </div>
       )}
 
-      <style>{`@keyframes spin { to { transform:rotate(360deg); } }`}</style>
     </div>
   )
 }

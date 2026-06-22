@@ -221,7 +221,7 @@ export default function Settings() {
                 onChange={e=>setForm(f=>({...f,ai_api_key:e.target.value}))}
                 placeholder="Masukkan API key..." style={{ ...inputStyle, fontFamily:'monospace', paddingRight:44 }}
                 onFocus={e=>e.target.style.borderColor=C.navy} onBlur={e=>e.target.style.borderColor=C.hairline}/>
-              <button onClick={()=>setShowKey(s=>!s)}
+              <button onClick={()=>setShowKey(s=>!s)} aria-label={showKey ? 'Sembunyikan API key' : 'Lihat API key'}
                 style={{ position:'absolute', right:12, top:'50%', transform:'translateY(-50%)', border:'none', background:'transparent', cursor:'pointer', color:C.muted, display:'flex' }}>
                 {showKey ? <EyeOff size={16}/> : <Eye size={16}/>}
               </button>
@@ -378,10 +378,8 @@ export default function Settings() {
             <div>
               <input ref={masterRef} type="file" accept=".xlsx,.xls,.csv" style={{ display:'none' }}
                 onChange={e => handleMasterUpload(e.target.files[0])}/>
-              <div onClick={() => masterRef.current?.click()}
-                style={{ border:`2px dashed ${C.hairline}`, borderRadius:14, padding:'40px 24px', textAlign:'center', cursor:'pointer', transition:'all 0.15s' }}
-                onMouseEnter={e => { e.currentTarget.style.borderColor=C.navy; e.currentTarget.style.background='#F8F9FC' }}
-                onMouseLeave={e => { e.currentTarget.style.borderColor=C.hairline; e.currentTarget.style.background='transparent' }}>
+              <div onClick={() => masterRef.current?.click()} className="hover-border hover-bg-blue"
+                style={{ border:`2px dashed ${C.hairline}`, borderRadius:14, padding:'40px 24px', textAlign:'center', cursor:'pointer', transition:'all 0.15s' }}>
                 {masterUploading ? (
                   <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:12 }}>
                     <div style={{ width:36, height:36, border:`3px solid ${C.navy}`, borderTopColor:'transparent', borderRadius:'50%', animation:'spin 0.8s linear infinite' }}/>
@@ -575,7 +573,6 @@ export default function Settings() {
         </div>
       )}
 
-      <style>{`@keyframes spin { to { transform:rotate(360deg); } }`}</style>
     </div>
   )
 }

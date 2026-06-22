@@ -8,12 +8,33 @@ router.get('/', (req, res) => {
   const params = [];
   if (cabang_id) { where += ' AND k.cabang_id=?'; params.push(cabang_id); }
   if (status)    { where += ' AND k.status=?'; params.push(status); }
-  const data = db.prepare(`
+
+  const paginate = req.query.page !== undefined || req.query.limit !== undefined;
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 50;
+  const offset = (page - 1) * limit;
+
+  const total = db.prepare(`SELECT COUNT(*) as c FROM karyawan k ${where}`).get(...params).c;
+
+  let sql = `
     SELECT k.*, c.nama as nama_cabang, c.kode as kode_cabang
     FROM karyawan k LEFT JOIN cabang c ON k.cabang_id=c.id
     ${where} ORDER BY k.nu
-  `).all(...params);
-  res.json({ success:true, data });
+  `;
+  const dataParams = [...params];
+  if (paginate) { sql += ' LIMIT ? OFFSET ?'; dataParams.push(limit, offset); }
+  const data = db.prepare(sql).all(...dataParams);
+
+  res.json({
+    success: true,
+    data,
+    pagination: {
+      page: paginate ? page : 1,
+      limit: paginate ? limit : total,
+      total,
+      totalPages: paginate ? Math.ceil(total / limit) : 1,
+    },
+  });
 });
 
 // GET statistik karyawan masuk & keluar

@@ -47,7 +47,7 @@ export default function SearchModal({ onClose, onNavigate }) {
             style={{ flex:1, border:'none', outline:'none', fontSize:16, color:C.ink, fontFamily:'Plus Jakarta Sans, sans-serif', background:'transparent' }}/>
           {loading
             ? <Loader size={16} color={C.muted} style={{ animation:'spin 0.8s linear infinite' }}/>
-            : query && <button onClick={()=>setQuery('')} style={{ border:'none', background:'transparent', cursor:'pointer', color:C.muted, display:'flex' }}><X size={16}/></button>
+            : query && <button onClick={()=>setQuery('')} aria-label="Bersihkan pencarian" style={{ border:'none', background:'transparent', cursor:'pointer', color:C.muted, display:'flex' }}><X size={16}/></button>
           }
         </div>
 
@@ -68,10 +68,8 @@ export default function SearchModal({ onClose, onNavigate }) {
                     <p style={{ fontSize:11, fontWeight:700, color:C.muted, letterSpacing:'0.5px' }}>KARYAWAN</p>
                   </div>
                   {results.karyawan.map(k => (
-                    <button key={k.id} onClick={()=>{ onNavigate('karyawan', k); onClose() }}
-                      style={{ width:'100%', padding:'12px 20px', border:'none', background:'transparent', cursor:'pointer', display:'flex', alignItems:'center', gap:14, textAlign:'left', transition:'background 0.1s' }}
-                      onMouseEnter={e=>e.currentTarget.style.background='#F8F9FC'}
-                      onMouseLeave={e=>e.currentTarget.style.background='transparent'}>
+                    <button key={k.id} onClick={()=>{ onNavigate('karyawan', k); onClose() }} className="hover-bg-blue"
+                      style={{ width:'100%', padding:'12px 20px', border:'none', background:'transparent', cursor:'pointer', display:'flex', alignItems:'center', gap:14, textAlign:'left', transition:'background 0.1s' }}>
                       <div style={{ width:38, height:38, borderRadius:10, background:'#EEF1FA', display:'flex', alignItems:'center', justifyContent:'center', fontSize:13, fontWeight:800, color:C.navy, flexShrink:0 }}>
                         {k.nama?.split(' ').map(n=>n[0]).slice(0,2).join('')}
                       </div>
@@ -102,10 +100,8 @@ export default function SearchModal({ onClose, onNavigate }) {
                     <p style={{ fontSize:11, fontWeight:700, color:C.muted, letterSpacing:'0.5px' }}>CABANG</p>
                   </div>
                   {results.cabang.map(c => (
-                    <button key={c.id} onClick={()=>{ onNavigate('cabang', c); onClose() }}
-                      style={{ width:'100%', padding:'12px 20px', border:'none', background:'transparent', cursor:'pointer', display:'flex', alignItems:'center', gap:14, textAlign:'left', transition:'background 0.1s' }}
-                      onMouseEnter={e=>e.currentTarget.style.background='#F8F9FC'}
-                      onMouseLeave={e=>e.currentTarget.style.background='transparent'}>
+                    <button key={c.id} onClick={()=>{ onNavigate('cabang', c); onClose() }} className="hover-bg-blue"
+                      style={{ width:'100%', padding:'12px 20px', border:'none', background:'transparent', cursor:'pointer', display:'flex', alignItems:'center', gap:14, textAlign:'left', transition:'background 0.1s' }}>
                       <div style={{ width:38, height:38, borderRadius:10, background:'#EEF1FA', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
                         <Building2 size={18} color={C.navy}/>
                       </div>
@@ -148,7 +144,6 @@ export default function SearchModal({ onClose, onNavigate }) {
           </div>
         </div>
       </div>
-      <style>{`@keyframes spin { to { transform:rotate(360deg); } }`}</style>
     </div>
   )
 }

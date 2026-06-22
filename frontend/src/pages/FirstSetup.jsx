@@ -128,7 +128,7 @@ export default function FirstSetup({ onSetup }) {
                   style={{ width: '100%', padding: '13px 48px 13px 16px', borderRadius: 12, border: '1.5px solid #E8EBF4', fontSize: 14, color: '#0a0b0d', background: 'white', outline: 'none', fontFamily: 'Plus Jakarta Sans, sans-serif', transition: 'border-color 0.15s', boxSizing: 'border-box' }}
                   onFocus={e => e.target.style.borderColor = '#1A3B8F'}
                   onBlur={e => e.target.style.borderColor = '#E8EBF4'} />
-                <button type="button" onClick={() => setShowPass(s => !s)}
+                <button type="button" onClick={() => setShowPass(s => !s)} aria-label={showPass ? 'Sembunyikan password' : 'Lihat password'}
                   style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', border: 'none', background: 'transparent', cursor: 'pointer', color: '#9BA5C0', display: 'flex', alignItems: 'center' }}>
                   {showPass ? <EyeOff size={17} /> : <Eye size={17} />}
                 </button>
@@ -151,10 +151,8 @@ export default function FirstSetup({ onSetup }) {
               </div>
             )}
 
-            <button type="submit" disabled={loading}
-              style={{ width: '100%', padding: '14px', borderRadius: 12, border: 'none', background: loading ? '#9BA5C0' : '#1A3B8F', color: 'white', fontSize: 15, fontWeight: 700, cursor: loading ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, transition: 'background 0.15s', fontFamily: 'Plus Jakarta Sans, sans-serif' }}
-              onMouseEnter={e => { if (!loading) e.currentTarget.style.background = '#152E6E' }}
-              onMouseLeave={e => { if (!loading) e.currentTarget.style.background = '#1A3B8F' }}>
+            <button type="submit" disabled={loading} className="hover-darken"
+              style={{ width: '100%', padding: '14px', borderRadius: 12, border: 'none', background: loading ? '#9BA5C0' : '#1A3B8F', color: 'white', fontSize: 15, fontWeight: 700, cursor: loading ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, transition: 'background 0.15s', fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
               {loading
                 ? <div style={{ width: 18, height: 18, border: '2.5px solid white', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
                 : <><span>Buat Akun & Mulai</span><ArrowRight size={17} /></>}
@@ -165,7 +163,6 @@ export default function FirstSetup({ onSetup }) {
 
       <style>{`
         @media(max-width:768px){ .hidden-mobile{ display:none!important; } }
-        @keyframes spin { to { transform:rotate(360deg); } }
       `}</style>
     </div>
   )

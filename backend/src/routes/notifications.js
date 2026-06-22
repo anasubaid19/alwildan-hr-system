@@ -1,6 +1,8 @@
 const express = require('express')
 const router  = express.Router()
 const db      = require('../models/database')
+const pino    = require('pino')
+const logger  = pino({ level: process.env.LOG_LEVEL || 'info' })
 
 // Buat tabel
 db.exec(`
@@ -62,7 +64,7 @@ const createNotif = (type, title, message, link_page=null) => {
       INSERT INTO notifications (type, title, message, link_page)
       VALUES (?, ?, ?, ?)
     `).run(type, title, message, link_page)
-  } catch(e) { console.error('Notif error:', e.message) }
+  } catch(e) { logger.error('Notif error: ' + e.message) }
 }
 
 module.exports = router

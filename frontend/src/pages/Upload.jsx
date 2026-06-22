@@ -381,7 +381,7 @@ export default function UploadData() {
                   <p style={{ fontSize:11, color:C.muted, marginTop:1 }}>Periksa sebelum data diimport</p>
                 </div>
               </div>
-              <button onClick={()=>setShowDiff(false)} style={{ width:32, height:32, borderRadius:8, border:'none', background:'#F0F2F8', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', color:C.muted }}>
+              <button onClick={()=>setShowDiff(false)} aria-label="Tutup" style={{ width:32, height:32, borderRadius:8, border:'none', background:'#F0F2F8', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', color:C.muted }}>
                 <X size={16}/>
               </button>
             </div>
@@ -592,7 +592,7 @@ export default function UploadData() {
                   <p style={{ fontSize:11, color:'#EF4444', marginTop:1 }}>Masukkan password untuk melanjutkan</p>
                 </div>
               </div>
-              <button onClick={() => setShowHapusModal(false)}
+              <button onClick={() => setShowHapusModal(false)} aria-label="Tutup"
                 style={{ width:32, height:32, borderRadius:8, border:'none', background:'#F0F2F8', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', color:C.muted }}>
                 <X size={16}/>
               </button>
@@ -619,7 +619,7 @@ export default function UploadData() {
                     onFocus={e=>e.target.style.borderColor='#EF4444'}
                     onBlur={e=>e.target.style.borderColor='#FECACA'}
                     autoFocus/>
-                  <button type="button" onClick={() => setShowHapusPass(s=>!s)}
+                  <button type="button" onClick={() => setShowHapusPass(s=>!s)} aria-label={showHapusPass ? 'Sembunyikan password' : 'Lihat password'}
                     style={{ position:'absolute', right:12, top:'50%', transform:'translateY(-50%)', border:'none', background:'transparent', cursor:'pointer', color:C.muted, display:'flex', alignItems:'center' }}>
                     {showHapusPass ? <EyeOff size={16}/> : <Eye size={16}/>}
                   </button>
@@ -650,7 +650,6 @@ export default function UploadData() {
         </div>
       )}
 
-      <style>{`@keyframes spin { to { transform:rotate(360deg); } }`}</style>
     </div>
   )
 }

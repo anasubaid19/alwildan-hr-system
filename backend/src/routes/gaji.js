@@ -3,9 +3,27 @@ const router = express.Router();
 const db = require('../models/database');
 const bcrypt = require('bcryptjs');
 const { createNotif } = require('./notifications');
+const asyncHandler = require('../utils/asyncHandler');
 
 router.get('/', (req, res) => {
   const { periode, cabang_id } = req.query;
+  let where = 'WHERE 1=1';
+  const params = [];
+  if (periode) { where += ' AND g.periode = ?'; params.push(periode); }
+  if (cabang_id) { where += ' AND g.paying_cabang_id = ?'; params.push(cabang_id); }
+
+  const paginate = req.query.page !== undefined || req.query.limit !== undefined;
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 50;
+  const offset = (page - 1) * limit;
+
+  const total = db.prepare(`
+    SELECT COUNT(*) as c
+    FROM gaji g
+    JOIN karyawan k ON g.karyawan_id = k.id
+    ${where}
+  `).get(...params).c;
+
   let query = `
     SELECT g.*, k.nama, k.nu, k.jabatan, k.no_acc,
            c.nama as nama_cabang, c.kode as kode_cabang,
@@ -14,13 +32,22 @@ router.get('/', (req, res) => {
     JOIN karyawan k ON g.karyawan_id = k.id
     LEFT JOIN cabang c ON k.cabang_id = c.id
     LEFT JOIN cabang cp ON g.paying_cabang_id = cp.id
-    WHERE 1=1
+    ${where}
+    ORDER BY cp.kode, k.nu
   `;
-  const params = [];
-  if (periode) { query += ' AND g.periode = ?'; params.push(periode); }
-  if (cabang_id) { query += ' AND g.paying_cabang_id = ?'; params.push(cabang_id); }
-  query += ' ORDER BY cp.kode, k.nu';
-  res.json({ success: true, data: db.prepare(query).all(...params) });
+  const dataParams = [...params];
+  if (paginate) { query += ' LIMIT ? OFFSET ?'; dataParams.push(limit, offset); }
+
+  res.json({
+    success: true,
+    data: db.prepare(query).all(...dataParams),
+    pagination: {
+      page: paginate ? page : 1,
+      limit: paginate ? limit : total,
+      total,
+      totalPages: paginate ? Math.ceil(total / limit) : 1,
+    },
+  });
 });
 
 router.get('/summary', (req, res) => {
@@ -134,7 +161,7 @@ router.get('/preview-hapus', (req, res) => {
 });
 
 // DELETE /api/gaji/periode — hapus semua gaji pada cabang+periode tertentu
-router.delete('/periode', async (req, res) => {
+router.delete('/periode', asyncHandler(async (req, res) => {
   const { cabang_id, periode, password } = req.body;
   if (!cabang_id || !periode || !password)
     return res.status(400).json({ success: false, message: 'cabang_id, periode, dan password wajib diisi' });
@@ -163,6 +190,6 @@ router.delete('/periode', async (req, res) => {
   );
 
   res.json({ success: true, message: `${count} record gaji berhasil dihapus`, deleted: count });
-});
+}));
 
 module.exports = router;

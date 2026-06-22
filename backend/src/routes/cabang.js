@@ -3,6 +3,7 @@ const router = express.Router();
 const db = require('../models/database');
 const bcrypt = require('bcryptjs');
 const { createNotif } = require('./notifications');
+const asyncHandler = require('../utils/asyncHandler');
 
 router.get('/', (req, res) => {
   res.json({ success:true, data: db.prepare('SELECT * FROM cabang ORDER BY kode').all() });
@@ -33,7 +34,7 @@ router.put('/:id', (req, res) => {
   } catch { res.status(400).json({ success:false, message:'Kode sudah digunakan' }); }
 });
 
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', asyncHandler(async (req, res) => {
   if (req.user.role !== 'superadmin')
     return res.status(403).json({ success: false, message: 'Hanya Super Admin yang bisa menghapus cabang' });
 
@@ -65,6 +66,6 @@ router.delete('/:id', async (req, res) => {
   );
 
   res.json({ success: true, message: `Cabang ${cabang.nama} berhasil dihapus`, deleted: { karyawan: totalKaryawan, gaji: totalGaji } });
-});
+}));
 
 module.exports = router;

@@ -92,8 +92,6 @@ export default function Laporan() {
 
   return (
     <div style={{ maxWidth:1200, display:'flex', flexDirection:'column', gap:16 }}>
-      <style>{`@media(max-width:640px){.lap-table td,.lap-table th{padding:8px 10px!important;font-size:11px!important;}}`}</style>
-
       {/* Header */}
       <div style={{ display:'flex', flexWrap:'wrap', alignItems:'flex-start', justifyContent:'space-between', gap:12 }}>
         <div>
@@ -211,9 +209,7 @@ export default function Laporan() {
                 </thead>
                 <tbody>
                   {preview.map((r,i)=>(
-                    <tr key={i} style={{ borderTop:'1px solid #eef0f3' }}
-                      onMouseEnter={e=>e.currentTarget.style.background='#f7f7f7'}
-                      onMouseLeave={e=>e.currentTarget.style.background='transparent'}>
+                    <tr key={i} className="hover-row" style={{ borderTop:'1px solid #eef0f3' }}>
                       <td style={{ padding:'11px 12px', textAlign:'center', color:C.muted }}>{i+1}</td>
                       <td style={{ padding:'11px 12px', textAlign:'center', fontFamily:'monospace', fontSize:11, color:C.muted }}>{r.nu||'-'}</td>
                       <td style={{ padding:'11px 12px', fontWeight:600, color:C.ink, whiteSpace:'nowrap' }}>{r.nama}</td>
@@ -273,9 +269,7 @@ export default function Laporan() {
                 </thead>
                 <tbody>
                   {rekap.data.map((r,i)=>(
-                    <tr key={i} style={{ borderTop:'1px solid #eef0f3' }}
-                      onMouseEnter={e=>e.currentTarget.style.background='#f7f7f7'}
-                      onMouseLeave={e=>e.currentTarget.style.background='transparent'}>
+                    <tr key={i} className="hover-row" style={{ borderTop:'1px solid #eef0f3' }}>
                       <td style={{ padding:'11px 12px', textAlign:'center', color:C.muted }}>{i+1}</td>
                       <td style={{ padding:'11px 12px', fontWeight:600, color:C.ink }}>{r.nama}</td>
                       <td style={{ padding:'11px 12px', color:C.muted }}>{r.jabatan||'-'}</td>

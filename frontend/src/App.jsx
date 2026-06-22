@@ -218,6 +218,7 @@ export default function App() {
           {/* Search mobile */}
           <button
             onClick={()=>setShowSearch(true)}
+            aria-label="Cari"
             style={{ width:34, height:34, borderRadius:10, border:'1px solid rgba(255,255,255,0.3)', background:'rgba(255,255,255,0.15)', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', color:'white', WebkitTapHighlightColor:'transparent', touchAction:'manipulation' }}>
             <Search size={16}/>
           </button>
@@ -225,6 +226,7 @@ export default function App() {
           <div style={{ position:'relative' }}>
             <button
               onClick={()=>setShowNotif(s=>!s)}
+              aria-label="Notifikasi"
               style={{ width:34, height:34, borderRadius:10, border:'1px solid rgba(255,255,255,0.3)', background:'rgba(255,255,255,0.15)', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', color:'white', WebkitTapHighlightColor:'transparent', touchAction:'manipulation' }}>
               <Bell size={16}/>
             </button>
@@ -245,6 +247,7 @@ export default function App() {
           <div style={{ position:'relative' }}>
             <button
               onClick={()=>setShowDropdown(s=>!s)}
+              aria-label="Menu pengguna"
               style={{ width:34, height:34, borderRadius:'50%', border:'2px solid rgba(255,255,255,0.4)', cursor:'pointer', overflow:'hidden', padding:0, WebkitTapHighlightColor:'transparent', touchAction:'manipulation' }}>
               {user.avatar
                 ? <img src={user.avatar} style={{ width:'100%', height:'100%', objectFit:'cover' }}/>
@@ -260,23 +263,17 @@ export default function App() {
                     <p style={{ fontSize:11, color:'#9BA5C0', marginTop:2 }}>{user.email}</p>
                   </div>
                   <div style={{ padding:8 }}>
-                    <button onClick={()=>{ navigate('profile'); setShowDropdown(false) }}
-                      style={{ width:'100%', padding:'10px 12px', borderRadius:10, border:'none', background:'transparent', cursor:'pointer', display:'flex', alignItems:'center', gap:10, fontSize:13, color:'#0a0b0d', fontFamily:'Plus Jakarta Sans, sans-serif', fontWeight:500, textAlign:'left' }}
-                      onMouseEnter={e=>e.currentTarget.style.background='#F0F2F8'}
-                      onMouseLeave={e=>e.currentTarget.style.background='transparent'}>
+                    <button onClick={()=>{ navigate('profile'); setShowDropdown(false) }} className="hover-bg"
+                      style={{ width:'100%', padding:'10px 12px', borderRadius:10, border:'none', background:'transparent', cursor:'pointer', display:'flex', alignItems:'center', gap:10, fontSize:13, color:'#0a0b0d', fontFamily:'Plus Jakarta Sans, sans-serif', fontWeight:500, textAlign:'left' }}>
                       👤 Profil & Pengaturan
                     </button>
-                    <button onClick={()=>{ navigate('settings'); setShowDropdown(false) }}
-                      style={{ width:'100%', padding:'10px 12px', borderRadius:10, border:'none', background:'transparent', cursor:'pointer', display:'flex', alignItems:'center', gap:10, fontSize:13, color:'#0a0b0d', fontFamily:'Plus Jakarta Sans, sans-serif', fontWeight:500, textAlign:'left' }}
-                      onMouseEnter={e=>e.currentTarget.style.background='#F0F2F8'}
-                      onMouseLeave={e=>e.currentTarget.style.background='transparent'}>
+                    <button onClick={()=>{ navigate('settings'); setShowDropdown(false) }} className="hover-bg"
+                      style={{ width:'100%', padding:'10px 12px', borderRadius:10, border:'none', background:'transparent', cursor:'pointer', display:'flex', alignItems:'center', gap:10, fontSize:13, color:'#0a0b0d', fontFamily:'Plus Jakarta Sans, sans-serif', fontWeight:500, textAlign:'left' }}>
                       ⚙️ Pengaturan
                     </button>
                     <div style={{ height:1, background:'#E8EBF4', margin:'4px 0' }}/>
-                    <button onClick={logout}
-                      style={{ width:'100%', padding:'10px 12px', borderRadius:10, border:'none', background:'transparent', cursor:'pointer', display:'flex', alignItems:'center', gap:10, fontSize:13, color:'#EF4444', fontFamily:'Plus Jakarta Sans, sans-serif', fontWeight:600, textAlign:'left' }}
-                      onMouseEnter={e=>e.currentTarget.style.background='#FEF2F2'}
-                      onMouseLeave={e=>e.currentTarget.style.background='transparent'}>
+                    <button onClick={logout} className="hover-bg-red"
+                      style={{ width:'100%', padding:'10px 12px', borderRadius:10, border:'none', background:'transparent', cursor:'pointer', display:'flex', alignItems:'center', gap:10, fontSize:13, color:'#EF4444', fontFamily:'Plus Jakarta Sans, sans-serif', fontWeight:600, textAlign:'left' }}>
                       🚪 Keluar
                     </button>
                   </div>
@@ -329,11 +326,11 @@ export default function App() {
         <div style={{ display:'flex', flexDirection:'column', gap:4, flex:1 }}>
           {SIDEBAR_ICONS.slice(0,5).map(({ id, icon:Icon }) => (
             <button key={id} onClick={()=>navigate(id)} title={SIDEBAR_ICONS.find(n=>n.id===id)?.label}
+              aria-label={SIDEBAR_ICONS.find(n=>n.id===id)?.label}
+              className={active===id ? undefined : 'hover-bg'}
               style={{ width:48, height:48, borderRadius:14, border:'none', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', transition:'all 0.15s',
                 background: active===id ? '#1A3B8F' : 'transparent',
-                color: active===id ? 'white' : '#9BA5C0' }}
-              onMouseEnter={e=>{ if(active!==id){ e.currentTarget.style.background='#F0F2F8'; e.currentTarget.style.color='#1A3B8F' }}}
-              onMouseLeave={e=>{ if(active!==id){ e.currentTarget.style.background='transparent'; e.currentTarget.style.color='#9BA5C0' }}}>
+                color: active===id ? 'white' : '#9BA5C0' }}>
               <Icon size={20}/>
             </button>
           ))}
@@ -341,16 +338,13 @@ export default function App() {
 
         {/* Bottom icons */}
         <div style={{ display:'flex', flexDirection:'column', gap:4 }}>
-          <button onClick={()=>navigate('settings')} title="Pengaturan"
-            style={{ width:48, height:48, borderRadius:14, border:'none', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', background:active==='settings'?'#1A3B8F':'transparent', color:active==='settings'?'white':'#9BA5C0' }}
-            onMouseEnter={e=>{ if(active!=='settings'){ e.currentTarget.style.background='#F0F2F8'; e.currentTarget.style.color='#1A3B8F' }}}
-            onMouseLeave={e=>{ if(active!=='settings'){ e.currentTarget.style.background='transparent'; e.currentTarget.style.color='#9BA5C0' }}}>
+          <button onClick={()=>navigate('settings')} title="Pengaturan" aria-label="Pengaturan"
+            className={active==='settings' ? undefined : 'hover-bg'}
+            style={{ width:48, height:48, borderRadius:14, border:'none', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', background:active==='settings'?'#1A3B8F':'transparent', color:active==='settings'?'white':'#9BA5C0' }}>
             <Gear size={20}/>
           </button>
-          <button onClick={logout} title="Keluar"
-            style={{ width:48, height:48, borderRadius:14, border:'none', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', color:'#E05C5C', background:'transparent' }}
-            onMouseEnter={e=>{ e.currentTarget.style.background='#FEF0F0' }}
-            onMouseLeave={e=>{ e.currentTarget.style.background='transparent' }}>
+          <button onClick={logout} title="Keluar" aria-label="Keluar" className="hover-bg-red"
+            style={{ width:48, height:48, borderRadius:14, border:'none', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', color:'#E05C5C', background:'transparent' }}>
             <LogOut size={20}/>
           </button>
         </div>
@@ -368,17 +362,13 @@ export default function App() {
 
           {/* Right side */}
           <div style={{ display:'flex', alignItems:'center', gap:12 }}>
-            <button onClick={()=>setShowSearch(true)} title="Cari (⌘K)"
-              style={{ width:38, height:38, borderRadius:10, border:'1px solid #E8EBF4', background:'white', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', color:'#9BA5C0', transition:'all 0.15s' }}
-              onMouseEnter={e=>{ e.currentTarget.style.borderColor='#1A3B8F'; e.currentTarget.style.color='#1A3B8F' }}
-              onMouseLeave={e=>{ e.currentTarget.style.borderColor='#E8EBF4'; e.currentTarget.style.color='#9BA5C0' }}>
+            <button onClick={()=>setShowSearch(true)} title="Cari (⌘K)" aria-label="Cari" className="hover-border"
+              style={{ width:38, height:38, borderRadius:10, border:'1px solid #E8EBF4', background:'white', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', color:'#9BA5C0', transition:'all 0.15s' }}>
               <Search size={17}/>
             </button>
             <div style={{ position:'relative' }}>
-              <button onClick={()=>setShowNotif(s=>!s)}
-                style={{ width:38, height:38, borderRadius:10, border:'1px solid #E8EBF4', background:'white', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', color:'#9BA5C0', transition:'all 0.15s' }}
-                onMouseEnter={e=>{ e.currentTarget.style.borderColor='#1A3B8F'; e.currentTarget.style.color='#1A3B8F' }}
-                onMouseLeave={e=>{ e.currentTarget.style.borderColor='#E8EBF4'; e.currentTarget.style.color='#9BA5C0' }}>
+              <button onClick={()=>setShowNotif(s=>!s)} aria-label="Notifikasi" className="hover-border"
+                style={{ width:38, height:38, borderRadius:10, border:'1px solid #E8EBF4', background:'white', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', color:'#9BA5C0', transition:'all 0.15s' }}>
                 <Bell size={17}/>
               </button>
               {unreadCount > 0 && (
@@ -395,7 +385,7 @@ export default function App() {
               )}
             </div>
             <div style={{ position:'relative' }}>
-              <div onClick={()=>setShowDropdown(s=>!s)}
+              <div onClick={()=>setShowDropdown(s=>!s)} aria-label="Menu pengguna"
                 style={{ display:'flex', alignItems:'center', gap:10, padding:'6px 12px', borderRadius:12, border:'1px solid #E8EBF4', cursor:'pointer', background:'white', userSelect:'none' }}>
                 {user.avatar
                 ? <img src={user.avatar} style={{ width:30, height:30, borderRadius:'50%', objectFit:'cover' }}/>
@@ -421,23 +411,17 @@ export default function App() {
                       <p style={{ fontSize:11, color:'#9BA5C0', marginTop:2 }}>{user.email}</p>
                     </div>
                     <div style={{ padding:8 }}>
-                      <button onClick={()=>{ navigate('profile'); setShowDropdown(false) }}
-                        style={{ width:'100%', padding:'10px 12px', borderRadius:10, border:'none', background:'transparent', cursor:'pointer', display:'flex', alignItems:'center', gap:10, fontSize:13, color:'#0a0b0d', fontFamily:'Plus Jakarta Sans, sans-serif', fontWeight:500, textAlign:'left' }}
-                        onMouseEnter={e=>e.currentTarget.style.background='#F0F2F8'}
-                        onMouseLeave={e=>e.currentTarget.style.background='transparent'}>
+                      <button onClick={()=>{ navigate('profile'); setShowDropdown(false) }} className="hover-bg"
+                        style={{ width:'100%', padding:'10px 12px', borderRadius:10, border:'none', background:'transparent', cursor:'pointer', display:'flex', alignItems:'center', gap:10, fontSize:13, color:'#0a0b0d', fontFamily:'Plus Jakarta Sans, sans-serif', fontWeight:500, textAlign:'left' }}>
                         👤 Profil & Pengaturan
                       </button>
-                      <button onClick={()=>{ navigate('settings'); setShowDropdown(false) }}
-                        style={{ width:'100%', padding:'10px 12px', borderRadius:10, border:'none', background:'transparent', cursor:'pointer', display:'flex', alignItems:'center', gap:10, fontSize:13, color:'#0a0b0d', fontFamily:'Plus Jakarta Sans, sans-serif', fontWeight:500, textAlign:'left' }}
-                        onMouseEnter={e=>e.currentTarget.style.background='#F0F2F8'}
-                        onMouseLeave={e=>e.currentTarget.style.background='transparent'}>
+                      <button onClick={()=>{ navigate('settings'); setShowDropdown(false) }} className="hover-bg"
+                        style={{ width:'100%', padding:'10px 12px', borderRadius:10, border:'none', background:'transparent', cursor:'pointer', display:'flex', alignItems:'center', gap:10, fontSize:13, color:'#0a0b0d', fontFamily:'Plus Jakarta Sans, sans-serif', fontWeight:500, textAlign:'left' }}>
                         ⚙️ Pengaturan
                       </button>
                       <div style={{ height:1, background:'#E8EBF4', margin:'6px 0' }}/>
-                      <button onClick={logout}
-                        style={{ width:'100%', padding:'10px 12px', borderRadius:10, border:'none', background:'transparent', cursor:'pointer', display:'flex', alignItems:'center', gap:10, fontSize:13, color:'#EF4444', fontFamily:'Plus Jakarta Sans, sans-serif', fontWeight:600, textAlign:'left' }}
-                        onMouseEnter={e=>e.currentTarget.style.background='#FEF2F2'}
-                        onMouseLeave={e=>e.currentTarget.style.background='transparent'}>
+                      <button onClick={logout} className="hover-bg-red"
+                        style={{ width:'100%', padding:'10px 12px', borderRadius:10, border:'none', background:'transparent', cursor:'pointer', display:'flex', alignItems:'center', gap:10, fontSize:13, color:'#EF4444', fontFamily:'Plus Jakarta Sans, sans-serif', fontWeight:600, textAlign:'left' }}>
                         🚪 Keluar
                       </button>
                     </div>
@@ -477,7 +461,7 @@ export default function App() {
           <div style={{ background:'white', borderRadius:20, width:'100%', maxWidth:400, boxShadow:'0 20px 60px rgba(0,0,0,0.15)' }}>
             <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'18px 24px', borderBottom:'1px solid #E8EBF4' }}>
               <p style={{ fontSize:16, fontWeight:700, color:'#0a0b0d' }}>🔑 Ganti Password</p>
-              <button onClick={()=>{ setShowGantiPass(false); setPassMsg(null); setPassForm({lama:'',baru:'',konfirmasi:''}) }}
+              <button onClick={()=>{ setShowGantiPass(false); setPassMsg(null); setPassForm({lama:'',baru:'',konfirmasi:''}) }} aria-label="Tutup"
                 style={{ width:32, height:32, borderRadius:8, border:'none', background:'#F0F2F8', cursor:'pointer', fontSize:16 }}>✕</button>
             </div>
             <div style={{ padding:24, display:'flex', flexDirection:'column', gap:14 }}>

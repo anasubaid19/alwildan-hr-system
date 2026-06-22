@@ -141,7 +141,7 @@ export default function Profile({ onUpdate }) {
                   {profile.inisial}
                 </div>
               )}
-              <button onClick={() => fileRef.current?.click()}
+              <button onClick={() => fileRef.current?.click()} aria-label="Ganti foto"
                 style={{ position:'absolute', bottom:0, right:0, width:28, height:28, borderRadius:'50%', background:C.navy, border:'2px solid white', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}>
                 <Camera size={13} color="white"/>
               </button>
@@ -212,7 +212,7 @@ export default function Profile({ onUpdate }) {
                   style={{ ...inputStyle, paddingRight:44 }}
                   onFocus={e=>e.target.style.borderColor=C.navy}
                   onBlur={e=>e.target.style.borderColor=C.hairline}/>
-                <button onClick={() => setShowPass(s => ({...s, [key]:!s[key]}))}
+                <button onClick={() => setShowPass(s => ({...s, [key]:!s[key]}))} aria-label={showPass[key] ? 'Sembunyikan password' : 'Lihat password'}
                   style={{ position:'absolute', right:12, top:'50%', transform:'translateY(-50%)', border:'none', background:'transparent', cursor:'pointer', color:C.muted, display:'flex' }}>
                   {showPass[key] ? <EyeOff size={16}/> : <Eye size={16}/>}
                 </button>
@@ -242,7 +242,7 @@ export default function Profile({ onUpdate }) {
           <div style={{ background:'white', borderRadius:20, overflow:'hidden', width:'90%', maxWidth:480 }}>
             <div style={{ padding:'16px 20px', borderBottom:`1px solid ${C.hairline}`, display:'flex', alignItems:'center', justifyContent:'space-between' }}>
               <p style={{ fontSize:15, fontWeight:700, color:C.ink }}>Sesuaikan Foto</p>
-              <button onClick={()=>setShowCrop(false)}
+              <button onClick={()=>setShowCrop(false)} aria-label="Tutup"
                 style={{ width:32, height:32, borderRadius:8, border:'none', background:'#F0F2F8', cursor:'pointer', fontSize:16, color:C.muted }}>✕</button>
             </div>
 
@@ -285,7 +285,6 @@ export default function Profile({ onUpdate }) {
         </div>
       )}
 
-      <style>{`@keyframes spin { to { transform:rotate(360deg); } }`}</style>
     </div>
   )
 }

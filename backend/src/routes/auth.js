@@ -5,6 +5,9 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const rateLimit = require('express-rate-limit');
 const db = require('../models/database');
+const asyncHandler = require('../utils/asyncHandler');
+const pino = require('pino');
+const logger = pino({ level: process.env.LOG_LEVEL || 'info' });
 
 const JWT_SECRET = process.env.JWT_SECRET
 if (!JWT_SECRET) throw new Error('JWT_SECRET wajib diisi di .env')
@@ -19,7 +22,7 @@ const loginLimiter = rateLimit({
 });
 
 // POST /api/auth/login
-router.post('/login', loginLimiter, async (req, res) => {
+router.post('/login', loginLimiter, asyncHandler(async (req, res) => {
   const { email, password } = req.body;
 
   if (!email || !password)
@@ -47,7 +50,7 @@ router.post('/login', loginLimiter, async (req, res) => {
     token,
     user: { id: user.id, nama: user.nama, email: user.email, inisial: user.inisial, avatar: user.avatar||null, role: user.role || 'admin' }
   });
-});
+}));
 
 // GET /api/auth/me
 router.get('/me', (req, res) => {
@@ -69,7 +72,7 @@ router.get('/setup-status', (req, res) => {
 });
 
 // POST /api/auth/setup — buat Super Admin pertama (hanya jika belum ada user)
-router.post('/setup', async (req, res) => {
+router.post('/setup', asyncHandler(async (req, res) => {
   const count = db.prepare('SELECT COUNT(*) as c FROM users').get().c;
   if (count > 0)
     return res.status(403).json({ success: false, message: 'Setup sudah dilakukan' });
@@ -96,10 +99,10 @@ router.post('/setup', async (req, res) => {
     { expiresIn: '24h' }
   );
   res.json({ success: true, token, user: { id: result.lastInsertRowid, nama, email, inisial, role: 'superadmin' } });
-});
+}));
 
 // POST /api/auth/signup — signup dengan invite key
-router.post('/signup', async (req, res) => {
+router.post('/signup', asyncHandler(async (req, res) => {
   const { nama, email, password, invite_key } = req.body;
   if (!nama || !email || !password || !invite_key)
     return res.status(400).json({ success: false, message: 'Semua field wajib diisi' });
@@ -134,7 +137,7 @@ router.post('/signup', async (req, res) => {
     { expiresIn: '24h' }
   );
   res.json({ success: true, token, user: { id: result.lastInsertRowid, nama, email, inisial, role: key.role } });
-});
+}));
 
 // POST /api/auth/forgot-password — minta token reset password
 router.post('/forgot-password', (req, res) => {
@@ -159,14 +162,14 @@ router.post('/forgot-password', (req, res) => {
   ).run(user.id, token, expiredAt);
 
   // Tidak ada mailer: log token ke console (MVP). Di production, kirim via email.
-  console.log(`Reset password untuk ${email}: token=${token} (expired ${expiredAt})`);
+  logger.info(`Reset password untuk ${email}: token=${token} (expired ${expiredAt})`);
 
   // Sistem internal HR tanpa mailer — kembalikan token agar user bisa lanjut reset.
   res.json({ ...genericResponse, resetToken: token, expired_at: expiredAt });
 });
 
 // POST /api/auth/reset-password/:token — reset password pakai token
-router.post('/reset-password/:token', async (req, res) => {
+router.post('/reset-password/:token', asyncHandler(async (req, res) => {
   const { token } = req.params;
   const { password } = req.body;
 
@@ -188,7 +191,7 @@ router.post('/reset-password/:token', async (req, res) => {
   db.prepare("UPDATE reset_tokens SET used_at = datetime('now') WHERE id = ?").run(row.id);
 
   res.json({ success: true, message: 'Password berhasil direset. Silakan login dengan password baru.' });
-});
+}));
 
 // POST /api/auth/invite — Super Admin generate invite key
 router.post('/invite', require('../middleware/auth'), (req, res) => {
@@ -217,8 +220,26 @@ router.get('/users', require('../middleware/auth'), (req, res) => {
   if (req.user.role !== 'superadmin')
     return res.status(403).json({ success: false, message: 'Hanya Super Admin yang bisa melihat daftar user' });
 
-  const users = db.prepare('SELECT id, nama, email, inisial, role, created_at FROM users ORDER BY id ASC').all();
-  res.json({ success: true, data: users });
+  const paginate = req.query.page !== undefined || req.query.limit !== undefined;
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 50;
+  const total = db.prepare('SELECT COUNT(*) as c FROM users').get().c;
+
+  let sql = 'SELECT id, nama, email, inisial, role, created_at FROM users ORDER BY id ASC';
+  const dataParams = [];
+  if (paginate) { sql += ' LIMIT ? OFFSET ?'; dataParams.push(limit, (page - 1) * limit); }
+  const users = db.prepare(sql).all(...dataParams);
+
+  res.json({
+    success: true,
+    data: users,
+    pagination: {
+      page: paginate ? page : 1,
+      limit: paginate ? limit : total,
+      total,
+      totalPages: paginate ? Math.ceil(total / limit) : 1,
+    },
+  });
 });
 
 // GET /api/auth/invites — daftar invite key (Super Admin only)
@@ -226,13 +247,31 @@ router.get('/invites', require('../middleware/auth'), (req, res) => {
   if (req.user.role !== 'superadmin')
     return res.status(403).json({ success: false, message: 'Hanya Super Admin yang bisa melihat invite key' });
 
-  const keys = db.prepare(`
+  const paginate = req.query.page !== undefined || req.query.limit !== undefined;
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 50;
+  const total = db.prepare('SELECT COUNT(*) as c FROM invite_keys').get().c;
+
+  let sql = `
     SELECT ik.*, u.nama as created_by_nama
     FROM invite_keys ik
     LEFT JOIN users u ON u.id = ik.created_by
     ORDER BY ik.created_at DESC
-  `).all();
-  res.json({ success: true, data: keys });
+  `;
+  const dataParams = [];
+  if (paginate) { sql += ' LIMIT ? OFFSET ?'; dataParams.push(limit, (page - 1) * limit); }
+  const keys = db.prepare(sql).all(...dataParams);
+
+  res.json({
+    success: true,
+    data: keys,
+    pagination: {
+      page: paginate ? page : 1,
+      limit: paginate ? limit : total,
+      total,
+      totalPages: paginate ? Math.ceil(total / limit) : 1,
+    },
+  });
 });
 
 // GET profile
@@ -250,7 +289,7 @@ router.put('/profile', require('../middleware/auth'), (req, res) => {
 })
 
 // Ganti password
-router.post('/change-password', require('../middleware/auth'), async (req, res) => {
+router.post('/change-password', require('../middleware/auth'), asyncHandler(async (req, res) => {
   const { password_lama, password_baru } = req.body
   if (!password_lama || !password_baru)
     return res.status(400).json({ success:false, message:'Semua field wajib diisi' })
@@ -268,10 +307,10 @@ router.post('/change-password', require('../middleware/auth'), async (req, res) 
   const hashed = await bcrypt.hash(password_baru, 10)
   db.prepare('UPDATE users SET password = ? WHERE id = ?').run(hashed, req.user.id)
   res.json({ success:true, message:'Password berhasil diubah' })
-})
+}))
 
 // POST — verifikasi password tanpa mengubahnya (untuk konfirmasi aksi kritis)
-router.post('/verify-password', require('../middleware/auth'), async (req, res) => {
+router.post('/verify-password', require('../middleware/auth'), asyncHandler(async (req, res) => {
   const { password } = req.body
   if (!password) return res.status(400).json({ success:false, message:'Password wajib diisi' })
   const user = db.prepare('SELECT * FROM users WHERE id = ?').get(req.user.id)
@@ -279,6 +318,6 @@ router.post('/verify-password', require('../middleware/auth'), async (req, res) 
   const valid = await bcrypt.compare(password, user.password)
   if (!valid) return res.status(401).json({ success:false, message:'Password tidak sesuai' })
   res.json({ success:true })
-})
+}))
 
 module.exports = router;

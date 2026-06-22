@@ -11,7 +11,7 @@ function Modal({ title, onClose, children }) {
       <div style={{ background:'#fff', borderRadius:20, width:'100%', maxWidth:420, boxShadow:'0 20px 60px rgba(0,0,0,0.15)' }}>
         <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'18px 24px', borderBottom:'1px solid #eef0f3' }}>
           <p style={{ fontSize:15, fontWeight:700, color:C.ink }}>{title}</p>
-          <button onClick={onClose} style={{ width:32, height:32, display:'flex', alignItems:'center', justifyContent:'center', borderRadius:8, border:'none', background:'#eef0f3', cursor:'pointer', color:C.muted }}><X size={16}/></button>
+          <button onClick={onClose} aria-label="Tutup" style={{ width:32, height:32, display:'flex', alignItems:'center', justifyContent:'center', borderRadius:8, border:'none', background:'#eef0f3', cursor:'pointer', color:C.muted }}><X size={16}/></button>
         </div>
         <div style={{ padding:24 }}>{children}</div>
       </div>
@@ -130,12 +130,12 @@ export default function Cabang() {
                   <Building2 size={20} color={C.navy}/>
                 </div>
                 <div style={{ display:'flex', gap:6 }}>
-                  <button onClick={()=>openEdit(c)}
+                  <button onClick={()=>openEdit(c)} aria-label="Edit cabang"
                     style={{ width:32, height:32, display:'flex', alignItems:'center', justifyContent:'center', borderRadius:8, border:'none', background:'#eff6ff', cursor:'pointer', color:'#2563eb' }}>
                     <Pencil size={14}/>
                   </button>
                   {isSuperAdmin && (
-                    <button onClick={()=>openHapus(c)}
+                    <button onClick={()=>openHapus(c)} aria-label="Hapus cabang"
                       style={{ width:32, height:32, display:'flex', alignItems:'center', justifyContent:'center', borderRadius:8, border:'none', background:'#fff5f5', cursor:'pointer', color:C.red }}>
                       <Trash2 size={14}/>
                     </button>
@@ -245,7 +245,6 @@ export default function Cabang() {
         </Modal>
       )}
 
-      <style>{`@keyframes spin { to { transform:rotate(360deg); } }`}</style>
     </div>
   )
 }
