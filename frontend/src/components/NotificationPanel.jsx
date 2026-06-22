@@ -1,13 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import axios from 'axios'
 import { Bell, Upload, FileSpreadsheet, Info, CheckCheck, X, LogIn } from 'lucide-react'
-
-const authHeaders = () => {
-  const t = localStorage.getItem('aw_token')
-  return t ? { Authorization: 'Bearer ' + t } : {}
-}
-
-const C = { primary:'#1A3B8F', gold:'#C8962E', ink:'#0a0b0d', muted:'#9BA5C0', hairline:'#E8EBF4', green:'#22C55E' }
+import { C, authHeaders } from '../utils/constants'
 
 const ICONS = {
   upload: { icon: Upload,          bg:'#ECFDF5', color:'#059669' },
@@ -85,14 +79,14 @@ export default function NotificationPanel({ onClose, onNavigate, onUnreadChange 
         <div style={{ display:'flex', alignItems:'center', gap:10 }}>
           <p style={{ fontSize:15, fontWeight:700, color:C.ink }}>Notifikasi</p>
           {unread > 0 && (
-            <span style={{ background:C.primary, color:'white', fontSize:11, fontWeight:700, padding:'2px 8px', borderRadius:100 }}>{unread}</span>
+            <span style={{ background:C.navy, color:'white', fontSize:11, fontWeight:700, padding:'2px 8px', borderRadius:100 }}>{unread}</span>
           )}
         </div>
         <div style={{ display:'flex', gap:8 }}>
           <div style={{ display:'flex', gap:6 }}>
             {unread > 0 && (
               <button onClick={markAllRead}
-                style={{ display:'flex', alignItems:'center', gap:5, padding:'5px 10px', borderRadius:8, border:'none', background:'#EEF1FA', color:C.primary, fontSize:11, fontWeight:700, cursor:'pointer' }}>
+                style={{ display:'flex', alignItems:'center', gap:5, padding:'5px 10px', borderRadius:8, border:'none', background:'#EEF1FA', color:C.navy, fontSize:11, fontWeight:700, cursor:'pointer' }}>
                 <CheckCheck size={12}/> Tandai dibaca
               </button>
             )}
@@ -110,7 +104,7 @@ export default function NotificationPanel({ onClose, onNavigate, onUnreadChange 
       <div style={{ maxHeight:400, overflowY:'auto' }}>
         {loading ? (
           <div style={{ display:'flex', justifyContent:'center', padding:32 }}>
-            <div style={{ width:24, height:24, border:'2.5px solid ' + C.primary, borderTopColor:'transparent', borderRadius:'50%', animation:'spin 0.8s linear infinite' }}/>
+            <div style={{ width:24, height:24, border:'2.5px solid ' + C.navy, borderTopColor:'transparent', borderRadius:'50%', animation:'spin 0.8s linear infinite' }}/>
           </div>
         ) : notifs.length === 0 ? (
           <div style={{ padding:'40px 20px', textAlign:'center' }}>
@@ -136,7 +130,7 @@ export default function NotificationPanel({ onClose, onNavigate, onUnreadChange 
                   <div style={{ display:'flex', alignItems:'flex-start', justifyContent:'space-between', gap:8 }}>
                     <p style={{ fontSize:13, fontWeight: n.is_read ? 600 : 700, color:C.ink, lineHeight:1.4 }}>{n.title}</p>
                     <div style={{ display:'flex', alignItems:'center', gap:4, flexShrink:0 }}>
-                      {!n.is_read && <div style={{ width:8, height:8, borderRadius:'50%', background:C.primary, marginTop:4 }}/>}
+                      {!n.is_read && <div style={{ width:8, height:8, borderRadius:'50%', background:C.navy, marginTop:4 }}/>}
                       <button onClick={e=>deleteNotif(e,n.id)}
                         style={{ width:24, height:24, borderRadius:6, border:'none', background:'#F0F2F8', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', color:C.muted, transition:'all 0.15s', flexShrink:0 }}
                         onMouseEnter={e=>{ e.currentTarget.style.background='#FEF2F2'; e.currentTarget.style.color='#EF4444' }}

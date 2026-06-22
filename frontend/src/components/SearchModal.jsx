@@ -1,13 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import axios from 'axios'
 import { Search, Users, Building2, X, ArrowRight, Loader } from 'lucide-react'
-
-const authHeaders = () => {
-  const t = localStorage.getItem('aw_token')
-  return t ? { Authorization: 'Bearer ' + t } : {}
-}
-
-const C = { primary:'#1A3B8F', gold:'#C8962E', ink:'#0a0b0d', muted:'#9BA5C0', hairline:'#E8EBF4' }
+import { C, authHeaders } from '../utils/constants'
 
 export default function SearchModal({ onClose, onNavigate }) {
   const [query, setQuery]     = useState('')
@@ -47,7 +41,7 @@ export default function SearchModal({ onClose, onNavigate }) {
 
         {/* Input */}
         <div style={{ display:'flex', alignItems:'center', gap:12, padding:'16px 20px', borderBottom: searched ? `1px solid ${C.hairline}` : 'none' }}>
-          <Search size={18} color={C.primary}/>
+          <Search size={18} color={C.navy}/>
           <input ref={inputRef} value={query} onChange={e=>setQuery(e.target.value)}
             placeholder="Cari karyawan, jabatan, atau cabang..."
             style={{ flex:1, border:'none', outline:'none', fontSize:16, color:C.ink, fontFamily:'Plus Jakarta Sans, sans-serif', background:'transparent' }}/>
@@ -78,13 +72,13 @@ export default function SearchModal({ onClose, onNavigate }) {
                       style={{ width:'100%', padding:'12px 20px', border:'none', background:'transparent', cursor:'pointer', display:'flex', alignItems:'center', gap:14, textAlign:'left', transition:'background 0.1s' }}
                       onMouseEnter={e=>e.currentTarget.style.background='#F8F9FC'}
                       onMouseLeave={e=>e.currentTarget.style.background='transparent'}>
-                      <div style={{ width:38, height:38, borderRadius:10, background:'#EEF1FA', display:'flex', alignItems:'center', justifyContent:'center', fontSize:13, fontWeight:800, color:C.primary, flexShrink:0 }}>
+                      <div style={{ width:38, height:38, borderRadius:10, background:'#EEF1FA', display:'flex', alignItems:'center', justifyContent:'center', fontSize:13, fontWeight:800, color:C.navy, flexShrink:0 }}>
                         {k.nama?.split(' ').map(n=>n[0]).slice(0,2).join('')}
                       </div>
                       <div style={{ flex:1, minWidth:0 }}>
                         <p style={{ fontSize:14, fontWeight:700, color:C.ink, whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>{k.nama}</p>
                         <p style={{ fontSize:12, color:C.muted, marginTop:2 }}>
-                          {k.jabatan} · <span style={{ color:C.primary, fontWeight:600 }}>{k.kode_cabang}</span>
+                          {k.jabatan} · <span style={{ color:C.navy, fontWeight:600 }}>{k.kode_cabang}</span>
                         </p>
                       </div>
                       <div style={{ display:'flex', alignItems:'center', gap:8, flexShrink:0 }}>
@@ -113,7 +107,7 @@ export default function SearchModal({ onClose, onNavigate }) {
                       onMouseEnter={e=>e.currentTarget.style.background='#F8F9FC'}
                       onMouseLeave={e=>e.currentTarget.style.background='transparent'}>
                       <div style={{ width:38, height:38, borderRadius:10, background:'#EEF1FA', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
-                        <Building2 size={18} color={C.primary}/>
+                        <Building2 size={18} color={C.navy}/>
                       </div>
                       <div style={{ flex:1 }}>
                         <p style={{ fontSize:14, fontWeight:700, color:C.ink }}>{c.nama}</p>

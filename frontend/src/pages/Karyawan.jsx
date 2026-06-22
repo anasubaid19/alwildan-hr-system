@@ -1,13 +1,7 @@
 import { useEffect, useState } from 'react'
 import axios from 'axios'
 import { Search, Plus, Pencil, Trash2, X, Save, Users, Filter, Eye, Wallet } from 'lucide-react'
-
-const authHeaders = () => {
-  const t = localStorage.getItem('aw_token')
-  return t ? { Authorization: 'Bearer ' + t } : {}
-}
-
-const C = { primary:'#1A3B8F', gold:'#C8962E', ink:'#0a0b0d', muted:'#9BA5C0', hairline:'#E8EBF4', bg:'#F0F2F8', green:'#22C55E', red:'#EF4444' }
+import { C, authHeaders } from '../utils/constants'
 
 function Modal({ title, onClose, children }) {
   return (
@@ -113,7 +107,7 @@ export default function Karyawan() {
         </select>
       ) : (
         <input type={type} value={form[name]} onChange={e=>setForm(f=>({...f,[name]:e.target.value}))} style={inputStyle}
-          onFocus={e=>e.target.style.borderColor=C.primary} onBlur={e=>e.target.style.borderColor=C.hairline}/>
+          onFocus={e=>e.target.style.borderColor=C.navy} onBlur={e=>e.target.style.borderColor=C.hairline}/>
       )}
     </div>
   )
@@ -124,7 +118,7 @@ export default function Karyawan() {
     padding:'3px 10px', borderRadius:100, fontSize:11, fontWeight:700
   })
 
-  const jabatanBadge = { background:'#EEF1FA', color:C.primary, padding:'3px 10px', borderRadius:100, fontSize:11, fontWeight:700 }
+  const jabatanBadge = { background:'#EEF1FA', color:C.navy, padding:'3px 10px', borderRadius:100, fontSize:11, fontWeight:700 }
 
   return (
     <div style={{ maxWidth:1200, display:'flex', flexDirection:'column', gap:20 }}>
@@ -136,7 +130,7 @@ export default function Karyawan() {
           <p style={{ fontSize:13, color:C.muted, marginTop:3 }}>{filtered.length} karyawan ditemukan</p>
         </div>
         <button onClick={openTambah}
-          style={{ display:'flex', alignItems:'center', gap:8, padding:'11px 22px', borderRadius:100, border:'none', background:C.primary, color:'white', fontSize:13, fontWeight:700, cursor:'pointer' }}>
+          style={{ display:'flex', alignItems:'center', gap:8, padding:'11px 22px', borderRadius:100, border:'none', background:C.navy, color:'white', fontSize:13, fontWeight:700, cursor:'pointer' }}>
           <Plus size={16}/> Tambah Karyawan
         </button>
       </div>
@@ -147,7 +141,7 @@ export default function Karyawan() {
           <Search size={15} style={{ position:'absolute', left:12, top:'50%', transform:'translateY(-50%)', color:C.muted }}/>
           <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Cari nama, jabatan, atau NU..."
             style={{ ...inputStyle, paddingLeft:38 }}
-            onFocus={e=>e.target.style.borderColor=C.primary} onBlur={e=>e.target.style.borderColor=C.hairline}/>
+            onFocus={e=>e.target.style.borderColor=C.navy} onBlur={e=>e.target.style.borderColor=C.hairline}/>
         </div>
         <div style={{ display:'flex', alignItems:'center', gap:8 }}>
           <Filter size={14} color={C.muted}/>
@@ -163,7 +157,7 @@ export default function Karyawan() {
       <div style={{ background:'white', borderRadius:20, border:`1px solid ${C.hairline}`, overflow:'hidden' }}>
         {loading ? (
           <div style={{ display:'flex', justifyContent:'center', alignItems:'center', height:200 }}>
-            <div style={{ width:28, height:28, border:`2.5px solid ${C.primary}`, borderTopColor:'transparent', borderRadius:'50%', animation:'spin 0.8s linear infinite' }}/>
+            <div style={{ width:28, height:28, border:`2.5px solid ${C.navy}`, borderTopColor:'transparent', borderRadius:'50%', animation:'spin 0.8s linear infinite' }}/>
           </div>
         ) : filtered.length === 0 ? (
           <div style={{ display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', height:200, gap:12 }}>
@@ -210,7 +204,7 @@ export default function Karyawan() {
                           <Eye size={14}/>
                         </button>
                         <button onClick={()=>openEdit(k)}
-                          style={{ width:32, height:32, borderRadius:8, border:'none', background:'#EEF1FA', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', color:C.primary }}>
+                          style={{ width:32, height:32, borderRadius:8, border:'none', background:'#EEF1FA', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', color:C.navy }}>
                           <Pencil size={14}/>
                         </button>
                         <button onClick={()=>openHapus(k)}
@@ -256,7 +250,7 @@ export default function Karyawan() {
               Batal
             </button>
             <button onClick={handleSave} disabled={saving}
-              style={{ display:'flex', alignItems:'center', gap:8, padding:'10px 24px', borderRadius:100, border:'none', background:saving?C.muted:C.primary, color:'white', fontSize:13, fontWeight:700, cursor:saving?'not-allowed':'pointer' }}>
+              style={{ display:'flex', alignItems:'center', gap:8, padding:'10px 24px', borderRadius:100, border:'none', background:saving?C.muted:C.navy, color:'white', fontSize:13, fontWeight:700, cursor:saving?'not-allowed':'pointer' }}>
               <Save size={14}/>{saving?'Menyimpan...':'Simpan'}
             </button>
           </div>
@@ -317,7 +311,7 @@ export default function Karyawan() {
               placeholder="Masukkan password Anda..."
               autoFocus
               style={{ width:'100%', padding:'11px 14px', borderRadius:10, border:`1.5px solid ${hapusPassErr?C.red:C.hairline}`, fontSize:13, color:C.ink, background:'white', fontFamily:'Plus Jakarta Sans, sans-serif', outline:'none', boxSizing:'border-box' }}
-              onFocus={e=>e.target.style.borderColor=hapusPassErr?C.red:C.primary}
+              onFocus={e=>e.target.style.borderColor=hapusPassErr?C.red:C.navy}
               onBlur={e=>e.target.style.borderColor=hapusPassErr?C.red:C.hairline}
             />
             {hapusPassErr && (
@@ -361,7 +355,7 @@ export default function Karyawan() {
             <div style={{ padding:24, overflowY:'auto', flex:1 }}>
               {loadingGaji ? (
                 <div style={{ display:'flex', justifyContent:'center', padding:40 }}>
-                  <div style={{ width:28, height:28, border:`2.5px solid ${C.primary}`, borderTopColor:'transparent', borderRadius:'50%', animation:'spin 0.8s linear infinite' }}/>
+                  <div style={{ width:28, height:28, border:`2.5px solid ${C.navy}`, borderTopColor:'transparent', borderRadius:'50%', animation:'spin 0.8s linear infinite' }}/>
                 </div>
               ) : !gajiDetail ? (
                 <p style={{ textAlign:'center', color:C.muted, padding:40 }}>Gagal memuat data gaji</p>
@@ -376,11 +370,11 @@ export default function Karyawan() {
                   <div style={{ background:'#EEF1FA', borderRadius:14, padding:'14px 18px', marginBottom:20, display:'flex', justifyContent:'space-between', alignItems:'center' }}>
                     <div>
                       <p style={{ fontSize:11, color:C.muted, fontWeight:600, textTransform:'uppercase', letterSpacing:'0.5px' }}>Total Diterima (semua cabang)</p>
-                      <p style={{ fontSize:22, fontWeight:800, color:C.primary, fontFamily:'monospace', marginTop:4 }}>
+                      <p style={{ fontSize:22, fontWeight:800, color:C.navy, fontFamily:'monospace', marginTop:4 }}>
                         Rp {Number(gajiDetail.total||0).toLocaleString('id-ID')}
                       </p>
                     </div>
-                    <span style={{ fontSize:12, fontWeight:700, color:C.primary, background:'white', padding:'5px 14px', borderRadius:100 }}>
+                    <span style={{ fontSize:12, fontWeight:700, color:C.navy, background:'white', padding:'5px 14px', borderRadius:100 }}>
                       {gajiDetail.pembayaran.length} transaksi
                     </span>
                   </div>
@@ -399,7 +393,7 @@ export default function Karyawan() {
                         <tr key={i} style={{ borderTop:`1px solid ${C.hairline}` }}>
                           <td style={{ padding:'10px 12px', textAlign:'center', fontFamily:'monospace', fontSize:11, color:C.muted }}>{p.periode}</td>
                           <td style={{ padding:'10px 12px' }}>
-                            <span style={{ fontSize:11, fontWeight:700, background:'#EEF1FA', color:C.primary, padding:'3px 10px', borderRadius:100 }}>
+                            <span style={{ fontSize:11, fontWeight:700, background:'#EEF1FA', color:C.navy, padding:'3px 10px', borderRadius:100 }}>
                               {p.kode_cabang||'-'}
                             </span>
                             {p.nama_cabang && <span style={{ fontSize:11, color:C.muted, marginLeft:6 }}>{p.nama_cabang}</span>}
@@ -407,14 +401,14 @@ export default function Karyawan() {
                           <td style={{ padding:'10px 12px', textAlign:'right', fontFamily:'monospace', fontSize:11, color:C.ink }}>
                             {Number(p.jumlah_gaji||0).toLocaleString('id-ID')}
                           </td>
-                          <td style={{ padding:'10px 12px', textAlign:'right', fontFamily:'monospace', fontWeight:700, color:C.primary }}>
+                          <td style={{ padding:'10px 12px', textAlign:'right', fontFamily:'monospace', fontWeight:700, color:C.navy }}>
                             {Number(p.jml_diterima||0).toLocaleString('id-ID')}
                           </td>
                         </tr>
                       ))}
                     </tbody>
                     <tfoot>
-                      <tr style={{ background:C.primary }}>
+                      <tr style={{ background:C.navy }}>
                         <td colSpan={2} style={{ padding:'10px 12px', fontWeight:700, color:'white', fontSize:12 }}>Total</td>
                         <td style={{ padding:'10px 12px', textAlign:'right', fontWeight:700, color:'white', fontFamily:'monospace', fontSize:11 }}>
                           {Number(gajiDetail.pembayaran.reduce((s,p)=>s+(p.jumlah_gaji||0),0)).toLocaleString('id-ID')}

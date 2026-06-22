@@ -5,6 +5,11 @@ const path = require('path');
 
 dotenv.config({ path: path.join(__dirname, '../../.env') });
 
+if (!process.env.JWT_SECRET) {
+  console.error('FATAL: JWT_SECRET tidak diset di environment')
+  process.exit(1)
+}
+
 const app = express();
 const PORT = process.env.PORT || 3010;
 const auth = require('./middleware/auth');
@@ -29,5 +34,10 @@ app.use('/api/laporan',  auth, require('./routes/laporan'));
 app.get('/api/health', (req, res) => {
   res.json({ status:'ok', message:'AL-WILDAN HR System Running' });
 });
+
+app.use((err, req, res, next) => {
+  console.error('Unhandled error:', err)
+  res.status(500).json({ success: false, message: 'Terjadi kesalahan server' })
+})
 
 app.listen(PORT, () => console.log(`Backend running on http://localhost:${PORT}`));

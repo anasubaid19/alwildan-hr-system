@@ -134,7 +134,7 @@ router.get('/preview-hapus', (req, res) => {
 });
 
 // DELETE /api/gaji/periode — hapus semua gaji pada cabang+periode tertentu
-router.delete('/periode', (req, res) => {
+router.delete('/periode', async (req, res) => {
   const { cabang_id, periode, password } = req.body;
   if (!cabang_id || !periode || !password)
     return res.status(400).json({ success: false, message: 'cabang_id, periode, dan password wajib diisi' });
@@ -142,7 +142,7 @@ router.delete('/periode', (req, res) => {
   const user = db.prepare('SELECT * FROM users WHERE id = ?').get(req.user.id);
   if (!user) return res.status(404).json({ success: false, message: 'User tidak ditemukan' });
 
-  const valid = bcrypt.compareSync(password, user.password);
+  const valid = await bcrypt.compare(password, user.password);
   if (!valid) return res.status(401).json({ success: false, message: 'Password tidak sesuai' });
 
   const cabang = db.prepare('SELECT nama, kode FROM cabang WHERE id = ?').get(cabang_id);

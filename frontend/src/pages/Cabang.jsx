@@ -1,10 +1,8 @@
 import { useEffect, useState } from 'react'
 import axios from 'axios'
 import { Building2, Plus, Pencil, Trash2, X, Save, Users } from 'lucide-react'
+import { C, authHeaders } from '../utils/constants'
 
-const authHeaders = () => { const t = localStorage.getItem('aw_token'); return t ? { Authorization: 'Bearer ' + t } : {} }
-
-const C = { primary:'#1A3B8F', ink:'#0a0b0d', muted:'#7c828a', hairline:'#dee1e6', red:'#cf202f' }
 const s = { card:{ background:'#fff', border:'1px solid #dee1e6', borderRadius:16, overflow:'hidden' } }
 
 function Modal({ title, onClose, children }) {
@@ -27,7 +25,7 @@ function Field({ label, value, onChange, placeholder, hint }) {
       <label style={{ display:'block', fontSize:12, fontWeight:600, color:C.ink, marginBottom:6 }}>{label}</label>
       <input value={value} onChange={e=>onChange(e.target.value)} placeholder={placeholder}
         style={{ width:'100%', padding:'10px 14px', borderRadius:10, border:'1px solid #dee1e6', fontSize:13, color:C.ink, background:'#fff', outline:'none' }}
-        onFocus={e=>e.target.style.borderColor=C.primary}
+        onFocus={e=>e.target.style.borderColor=C.navy}
         onBlur={e=>e.target.style.borderColor='#dee1e6'} />
       {hint && <p style={{ fontSize:11, color:C.muted, marginTop:4 }}>{hint}</p>}
     </div>
@@ -105,7 +103,7 @@ export default function Cabang() {
           <p style={{ fontSize:12, color:C.muted, marginTop:3 }}>{list.length} cabang terdaftar</p>
         </div>
         <button onClick={openTambah}
-          style={{ display:'flex', alignItems:'center', gap:8, padding:'10px 20px', borderRadius:100, border:'none', background:C.primary, color:'#fff', fontSize:13, fontWeight:600, cursor:'pointer' }}>
+          style={{ display:'flex', alignItems:'center', gap:8, padding:'10px 20px', borderRadius:100, border:'none', background:C.navy, color:'#fff', fontSize:13, fontWeight:600, cursor:'pointer' }}>
           <Plus size={15}/> Tambah Cabang
         </button>
       </div>
@@ -113,13 +111,13 @@ export default function Cabang() {
       {/* Grid */}
       {loading ? (
         <div style={{ display:'flex', justifyContent:'center', padding:60 }}>
-          <div style={{ width:28, height:28, border:`2px solid ${C.primary}`, borderTopColor:'transparent', borderRadius:'50%', animation:'spin 0.8s linear infinite' }}/>
+          <div style={{ width:28, height:28, border:`2px solid ${C.navy}`, borderTopColor:'transparent', borderRadius:'50%', animation:'spin 0.8s linear infinite' }}/>
         </div>
       ) : list.length===0 ? (
         <div style={{ ...s.card, padding:60, textAlign:'center' }}>
           <Building2 size={32} color={C.muted} style={{ margin:'0 auto 12px' }}/>
           <p style={{ color:C.muted, fontSize:14 }}>Belum ada cabang terdaftar</p>
-          <button onClick={openTambah} style={{ marginTop:16, padding:'9px 20px', borderRadius:100, border:'none', background:C.primary, color:'#fff', fontSize:13, fontWeight:600, cursor:'pointer' }}>
+          <button onClick={openTambah} style={{ marginTop:16, padding:'9px 20px', borderRadius:100, border:'none', background:C.navy, color:'#fff', fontSize:13, fontWeight:600, cursor:'pointer' }}>
             Tambah Cabang Pertama
           </button>
         </div>
@@ -129,7 +127,7 @@ export default function Cabang() {
             <div key={c.id} style={{ background:'#fff', border:'1px solid #dee1e6', borderRadius:16, padding:20, display:'flex', flexDirection:'column', gap:16 }}>
               <div style={{ display:'flex', alignItems:'flex-start', justifyContent:'space-between' }}>
                 <div style={{ width:44, height:44, borderRadius:12, background:'#EEF2FB', display:'flex', alignItems:'center', justifyContent:'center' }}>
-                  <Building2 size={20} color={C.primary}/>
+                  <Building2 size={20} color={C.navy}/>
                 </div>
                 <div style={{ display:'flex', gap:6 }}>
                   <button onClick={()=>openEdit(c)}
@@ -170,7 +168,7 @@ export default function Cabang() {
           <div style={{ display:'flex', justifyContent:'flex-end', gap:10, marginTop:8 }}>
             <button onClick={close} style={{ padding:'9px 18px', borderRadius:100, border:'1px solid #dee1e6', background:'#fff', color:C.muted, fontSize:13, fontWeight:600, cursor:'pointer' }}>Batal</button>
             <button onClick={handleSave} disabled={saving}
-              style={{ display:'flex', alignItems:'center', gap:6, padding:'9px 18px', borderRadius:100, border:'none', background:saving?'#dee1e6':C.primary, color:'#fff', fontSize:13, fontWeight:600, cursor:saving?'not-allowed':'pointer' }}>
+              style={{ display:'flex', alignItems:'center', gap:6, padding:'9px 18px', borderRadius:100, border:'none', background:saving?'#dee1e6':C.navy, color:'#fff', fontSize:13, fontWeight:600, cursor:saving?'not-allowed':'pointer' }}>
               <Save size={14}/>{saving?'Menyimpan...':'Simpan'}
             </button>
           </div>
@@ -227,7 +225,7 @@ export default function Cabang() {
               placeholder="Masukkan password Anda..."
               autoFocus
               style={{ width:'100%', padding:'11px 14px', borderRadius:10, border:`1.5px solid ${hapusPassErr?C.red:'#dee1e6'}`, fontSize:13, color:C.ink, background:'#fff', fontFamily:'Plus Jakarta Sans, sans-serif', outline:'none', boxSizing:'border-box' }}
-              onFocus={e=>e.target.style.borderColor=hapusPassErr?C.red:C.primary}
+              onFocus={e=>e.target.style.borderColor=hapusPassErr?C.red:C.navy}
               onBlur={e=>e.target.style.borderColor=hapusPassErr?C.red:'#dee1e6'}
             />
             {hapusPassErr && (

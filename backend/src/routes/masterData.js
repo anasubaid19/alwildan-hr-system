@@ -104,7 +104,15 @@ router.post('/upload', upload.single('file'), (req, res) => {
       }
     });
 
+    try {
+      fs.readdirSync(uploadDir).forEach(f => {
+        if (f !== path.basename(req.file.path)) fs.unlinkSync(path.join(uploadDir, f))
+      })
+      fs.unlinkSync(req.file.path)
+    } catch {}
+
   } catch(e) {
+    try { if (req.file) fs.unlinkSync(req.file.path) } catch {}
     res.status(500).json({ success: false, message: e.message });
   }
 });

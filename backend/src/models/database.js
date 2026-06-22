@@ -8,7 +8,7 @@ dotenv.config({ path: path.join(__dirname, '../../../.env') });
 
 const DB_PATH = process.env.DB_PATH
   ? path.resolve(process.env.DB_PATH)              // absolute (Docker) dipakai apa adanya
-  : path.join(__dirname, '../../data/alwildan.db'); // default cwd-independent: backend/data/
+  : path.join(__dirname, '../../../data/alwildan.db'); // default: data/alwildan.db (root project — kompatibel Docker)
 
 const dbDir = path.dirname(DB_PATH);
 if (!fs.existsSync(dbDir)) fs.mkdirSync(dbDir, { recursive: true });
@@ -131,5 +131,27 @@ db.exec(`
     FOREIGN KEY (user_id) REFERENCES users(id)
   )
 `);
+
+// Migration: karyawan status column
+const karyawanColumns = db.prepare("PRAGMA table_info(karyawan)").all().map(c => c.name);
+if (!karyawanColumns.includes('status')) {
+  db.exec("ALTER TABLE karyawan ADD COLUMN status TEXT DEFAULT 'aktif'");
+  console.log('Migration: kolom status ditambahkan');
+}
+
+// Performance indexes
+db.exec(`CREATE INDEX IF NOT EXISTS idx_karyawan_cabang ON karyawan(cabang_id)`)
+db.exec(`CREATE INDEX IF NOT EXISTS idx_karyawan_nama ON karyawan(nama)`)
+db.exec(`CREATE INDEX IF NOT EXISTS idx_karyawan_status ON karyawan(status)`)
+db.exec(`CREATE INDEX IF NOT EXISTS idx_gaji_karyawan ON gaji(karyawan_id)`)
+db.exec(`CREATE INDEX IF NOT EXISTS idx_gaji_periode ON gaji(periode)`)
+db.exec(`CREATE INDEX IF NOT EXISTS idx_gaji_paying_cabang ON gaji(paying_cabang_id)`)
+db.exec(`CREATE INDEX IF NOT EXISTS idx_gaji_periode_cabang ON gaji(periode, paying_cabang_id)`)
+db.exec(`CREATE INDEX IF NOT EXISTS idx_reset_tokens_token ON reset_tokens(token)`)
+db.exec(`CREATE INDEX IF NOT EXISTS idx_invite_keys_key ON invite_keys(key)`)
+
+const existingTables = db.prepare("SELECT name FROM sqlite_master WHERE type='table'").all().map(t => t.name)
+if (existingTables.includes('notifications'))
+  db.exec(`CREATE INDEX IF NOT EXISTS idx_notifications_unread ON notifications(is_read)`)
 
 module.exports = db;

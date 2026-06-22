@@ -1,22 +1,11 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useMemo } from 'react'
 import axios from 'axios'
 import { Users, Wallet, TrendingUp, Building2, UserPlus, UserMinus, ArrowUpRight, ArrowDownRight, Calendar, Filter } from 'lucide-react'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, AreaChart, Area } from 'recharts'
+import { C, authHeaders } from '../utils/constants'
 
 const MONTHS = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Ags','Sep','Okt','Nov','Des']
 const FULL_MONTHS = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember']
-
-const C = {
-  navy:   '#1A3B8F',
-  gold:   '#C8962E',
-  ink:    '#0a0b0d',
-  muted:  '#9BA5C0',
-  hairline:'#E8EBF4',
-  bg:     '#F0F2F8',
-  white:  '#ffffff',
-  green:  '#22C55E',
-  red:    '#EF4444',
-}
 
 const fmt    = v => { const n=Number(v||0); return Math.abs(n)>=1000000?'Rp '+(n/1000000).toFixed(1)+'jt':'Rp '+n.toLocaleString('id-ID') }
 const fmtFull= v => 'Rp '+Number(v||0).toLocaleString('id-ID')
@@ -112,11 +101,6 @@ export default function Dashboard() {
   const firstName = nameParts.length > 1 && nameParts[0].toLowerCase() === 'pak' ? nameParts.slice(0,2).join(' ') : nameParts[0] || 'HR'
   const tahunOptions = Array.from({length:5},(_,i)=>String(now.getFullYear()-i))
 
-  const authHeaders = () => {
-    const t = localStorage.getItem('aw_token')
-    return t ? { Authorization: `Bearer ${t}` } : {}
-  }
-
   useEffect(()=>{
     axios.get('/api/cabang', { headers: authHeaders() })
       .then(r=>setCabangList(r.data.data))
@@ -138,16 +122,22 @@ export default function Dashboard() {
     .finally(()=>setLoading(false))
   },[filterType,filterBulan,filterTahun,filterCabang])
 
-  const totalKaryawan = summary.reduce((a,b)=>a+b.total_karyawan,0)
-  const totalGaji     = summary.reduce((a,b)=>a+(b.total_gaji||0),0)
-  const totalDiterima = summary.reduce((a,b)=>a+(b.total_diterima||0),0)
-  const totalPotongan = summary.reduce((a,b)=>a+Math.max(0,(b.total_gaji||0)-(b.total_diterima||0)),0)
+  const totals = useMemo(() => {
+    const totalKaryawan = summary.reduce((a,b) => a + b.total_karyawan, 0)
+    const totalGaji = summary.reduce((a,b) => a + (b.total_gaji||0), 0)
+    const totalDiterima = summary.reduce((a,b) => a + (b.total_diterima||0), 0)
+    const totalPotongan = summary.reduce((a,b) => a + Math.max(0,(b.total_gaji||0)-(b.total_diterima||0)), 0)
+    return { totalKaryawan, totalGaji, totalDiterima, totalPotongan }
+  }, [summary])
 
   const labelPeriode = filterType==='bulan'
     ? `${FULL_MONTHS[parseInt(filterBulan)-1]} ${filterTahun}`
     : `Tahun ${filterTahun}`
 
-  const barData = summary.map(c=>({ name:c.kode?.replace('AL-WILDAN ','AW '), gaji:c.total_gaji||0, diterima:c.total_diterima||0 }))
+  const barData = useMemo(() =>
+    summary.map(c=>({ name:c.kode?.replace('AL-WILDAN ','AW '), gaji:c.total_gaji||0, diterima:c.total_diterima||0 })),
+    [summary]
+  )
 
   // trendData sekarang dari state (data real)
 
@@ -214,9 +204,9 @@ export default function Dashboard() {
 
         {/* KPI Row 1 */}
         <div className="kpi-grid">
-          <KPICard title="Total Cabang"     value={cabangList.length}      sub={`${totalKaryawan} karyawan aktif`}    icon={Building2}  iconBg="#EEF1FA" bgColor={C.navy}  trendVal={`${cabangList.length} cabang`} trend="up"/>
-          <KPICard title="Total Penggajian" value={fmt(totalGaji)}         sub="Sebelum potongan"                     icon={TrendingUp} iconBg="#FDF6E8" bgColor={C.gold}  trendVal={labelPeriode} trend="up"/>
-          <KPICard title="Total Diterima"   value={fmt(totalDiterima)}     sub={`Potongan ${fmt(totalPotongan)}`}     icon={Wallet}     iconBg="#ECFDF5" bgColor="#22C55E" trendVal={`${totalKaryawan} org`} trend="up"/>
+          <KPICard title="Total Cabang"     value={cabangList.length}      sub={`${totals.totalKaryawan} karyawan aktif`}    icon={Building2}  iconBg="#EEF1FA" bgColor={C.navy}  trendVal={`${cabangList.length} cabang`} trend="up"/>
+          <KPICard title="Total Penggajian" value={fmt(totals.totalGaji)}         sub="Sebelum potongan"                     icon={TrendingUp} iconBg="#FDF6E8" bgColor={C.gold}  trendVal={labelPeriode} trend="up"/>
+          <KPICard title="Total Diterima"   value={fmt(totals.totalDiterima)}     sub={`Potongan ${fmt(totals.totalPotongan)}`}     icon={Wallet}     iconBg="#ECFDF5" bgColor="#22C55E" trendVal={`${totals.totalKaryawan} org`} trend="up"/>
         </div>
 
         {/* KPI Row 2 */}
@@ -265,7 +255,7 @@ export default function Dashboard() {
                   {filterCabang ? cabangList.find(c=>c.id==filterCabang)?.kode : 'Semua Cabang'}
                 </span>
               </div>
-              <p style={{ fontSize:28, fontWeight:800, color:'white', marginTop:8, fontFamily:'JetBrains Mono, monospace', letterSpacing:'-0.5px' }}>{fmt(totalDiterima)}</p>
+              <p style={{ fontSize:28, fontWeight:800, color:'white', marginTop:8, fontFamily:'JetBrains Mono, monospace', letterSpacing:'-0.5px' }}>{fmt(totals.totalDiterima)}</p>
               <div style={{ display:'flex', alignItems:'center', gap:6, marginTop:6 }}>
                 <div style={{ display:'flex', alignItems:'center', gap:4, fontSize:12, fontWeight:700, color:C.gold, background:'rgba(200,150,46,0.2)', padding:'3px 10px', borderRadius:100 }}>
                   <ArrowUpRight size={13}/> {labelPeriode}
@@ -353,12 +343,12 @@ export default function Dashboard() {
               <tfoot>
                 <tr style={{ background:C.navy }}>
                   <td style={{ padding:'14px 20px', fontWeight:800, color:'white', fontSize:13 }}>Total</td>
-                  <td style={{ padding:'14px 20px', textAlign:'center', fontWeight:800, color:'white' }}>{totalKaryawan} org</td>
-                  <td style={{ padding:'14px 20px', textAlign:'right', fontWeight:800, color:'white', fontFamily:'monospace' }}>{fmtFull(totalGaji)}</td>
-                  <td style={{ padding:'14px 20px', textAlign:'right', fontWeight:800, color:'#fca5a5', fontFamily:'monospace' }}>-{fmtFull(totalPotongan)}</td>
-                  <td style={{ padding:'14px 20px', textAlign:'right', fontWeight:800, color:C.gold, fontFamily:'monospace' }}>{fmtFull(totalDiterima)}</td>
+                  <td style={{ padding:'14px 20px', textAlign:'center', fontWeight:800, color:'white' }}>{totals.totalKaryawan} org</td>
+                  <td style={{ padding:'14px 20px', textAlign:'right', fontWeight:800, color:'white', fontFamily:'monospace' }}>{fmtFull(totals.totalGaji)}</td>
+                  <td style={{ padding:'14px 20px', textAlign:'right', fontWeight:800, color:'#fca5a5', fontFamily:'monospace' }}>-{fmtFull(totals.totalPotongan)}</td>
+                  <td style={{ padding:'14px 20px', textAlign:'right', fontWeight:800, color:C.gold, fontFamily:'monospace' }}>{fmtFull(totals.totalDiterima)}</td>
                   <td style={{ padding:'14px 20px', textAlign:'center', fontWeight:800, color:'white', fontFamily:'monospace' }}>
-                    {totalGaji>0?Math.min(100,Math.round((totalDiterima/totalGaji)*100)):0}%
+                    {totals.totalGaji>0?Math.min(100,Math.round((totals.totalDiterima/totals.totalGaji)*100)):0}%
                   </td>
                 </tr>
               </tfoot>

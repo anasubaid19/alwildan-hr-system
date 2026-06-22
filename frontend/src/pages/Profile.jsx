@@ -2,13 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import axios from 'axios'
 import { Camera, Save, Eye, EyeOff, CheckCircle, XCircle, User, ZoomIn, ZoomOut, RotateCcw } from 'lucide-react'
 import Cropper from 'react-easy-crop'
-
-const authHeaders = () => {
-  const t = localStorage.getItem('aw_token')
-  return t ? { Authorization: 'Bearer ' + t } : {}
-}
-
-const C = { primary:'#1A3B8F', gold:'#C8962E', ink:'#0a0b0d', muted:'#9BA5C0', hairline:'#E8EBF4', green:'#22C55E', red:'#EF4444' }
+import { C, authHeaders } from '../utils/constants'
 
 export default function Profile({ onUpdate }) {
   const [profile, setProfile]   = useState(null)
@@ -113,7 +107,7 @@ export default function Profile({ onUpdate }) {
 
   if (!profile) return (
     <div style={{ display:'flex', justifyContent:'center', alignItems:'center', height:300 }}>
-      <div style={{ width:28, height:28, border:`2.5px solid ${C.primary}`, borderTopColor:'transparent', borderRadius:'50%', animation:'spin 0.8s linear infinite' }}/>
+      <div style={{ width:28, height:28, border:`2.5px solid ${C.navy}`, borderTopColor:'transparent', borderRadius:'50%', animation:'spin 0.8s linear infinite' }}/>
     </div>
   )
 
@@ -128,7 +122,7 @@ export default function Profile({ onUpdate }) {
       <div style={card}>
         <div style={{ padding:'20px 24px', borderBottom:`1px solid ${C.hairline}`, display:'flex', alignItems:'center', gap:14 }}>
           <div style={{ width:44, height:44, borderRadius:14, background:'#EEF1FA', display:'flex', alignItems:'center', justifyContent:'center' }}>
-            <User size={20} color={C.primary}/>
+            <User size={20} color={C.navy}/>
           </div>
           <div>
             <p style={{ fontSize:15, fontWeight:700, color:C.ink }}>Informasi Profil</p>
@@ -148,7 +142,7 @@ export default function Profile({ onUpdate }) {
                 </div>
               )}
               <button onClick={() => fileRef.current?.click()}
-                style={{ position:'absolute', bottom:0, right:0, width:28, height:28, borderRadius:'50%', background:C.primary, border:'2px solid white', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}>
+                style={{ position:'absolute', bottom:0, right:0, width:28, height:28, borderRadius:'50%', background:C.navy, border:'2px solid white', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}>
                 <Camera size={13} color="white"/>
               </button>
               <input ref={fileRef} type="file" accept="image/*" style={{ display:'none' }}
@@ -168,7 +162,7 @@ export default function Profile({ onUpdate }) {
           <div>
             <label style={{ display:'block', fontSize:12, fontWeight:700, color:C.ink, marginBottom:8 }}>Nama Lengkap</label>
             <input value={nama} onChange={e => setNama(e.target.value)} style={inputStyle}
-              onFocus={e=>e.target.style.borderColor=C.primary} onBlur={e=>e.target.style.borderColor=C.hairline}/>
+              onFocus={e=>e.target.style.borderColor=C.navy} onBlur={e=>e.target.style.borderColor=C.hairline}/>
           </div>
 
           <div>
@@ -187,7 +181,7 @@ export default function Profile({ onUpdate }) {
 
         <div style={{ padding:'14px 24px', background:'#F8F9FC', borderTop:`1px solid ${C.hairline}`, display:'flex', justifyContent:'flex-end' }}>
           <button onClick={handleSaveProfile} disabled={saving}
-            style={{ display:'flex', alignItems:'center', gap:8, padding:'10px 24px', borderRadius:100, border:'none', background:saving?C.muted:C.primary, color:'white', fontSize:13, fontWeight:700, cursor:saving?'not-allowed':'pointer' }}>
+            style={{ display:'flex', alignItems:'center', gap:8, padding:'10px 24px', borderRadius:100, border:'none', background:saving?C.muted:C.navy, color:'white', fontSize:13, fontWeight:700, cursor:saving?'not-allowed':'pointer' }}>
             <Save size={14}/> {saving?'Menyimpan...':'Simpan Profil'}
           </button>
         </div>
@@ -216,7 +210,7 @@ export default function Profile({ onUpdate }) {
                   onChange={e => setPassForm(f => ({...f, [key]:e.target.value}))}
                   placeholder="••••••••"
                   style={{ ...inputStyle, paddingRight:44 }}
-                  onFocus={e=>e.target.style.borderColor=C.primary}
+                  onFocus={e=>e.target.style.borderColor=C.navy}
                   onBlur={e=>e.target.style.borderColor=C.hairline}/>
                 <button onClick={() => setShowPass(s => ({...s, [key]:!s[key]}))}
                   style={{ position:'absolute', right:12, top:'50%', transform:'translateY(-50%)', border:'none', background:'transparent', cursor:'pointer', color:C.muted, display:'flex' }}>
@@ -236,7 +230,7 @@ export default function Profile({ onUpdate }) {
 
         <div style={{ padding:'14px 24px', background:'#F8F9FC', borderTop:`1px solid ${C.hairline}`, display:'flex', justifyContent:'flex-end' }}>
           <button onClick={handleGantiPass} disabled={savingPass}
-            style={{ display:'flex', alignItems:'center', gap:8, padding:'10px 24px', borderRadius:100, border:'none', background:savingPass?C.muted:C.primary, color:'white', fontSize:13, fontWeight:700, cursor:savingPass?'not-allowed':'pointer' }}>
+            style={{ display:'flex', alignItems:'center', gap:8, padding:'10px 24px', borderRadius:100, border:'none', background:savingPass?C.muted:C.navy, color:'white', fontSize:13, fontWeight:700, cursor:savingPass?'not-allowed':'pointer' }}>
             🔑 {savingPass?'Menyimpan...':'Ganti Password'}
           </button>
         </div>
@@ -272,7 +266,7 @@ export default function Profile({ onUpdate }) {
               <ZoomOut size={16} color={C.muted}/>
               <input type="range" min={1} max={3} step={0.05} value={zoom}
                 onChange={e => setZoom(Number(e.target.value))}
-                style={{ flex:1, accentColor:C.primary }}/>
+                style={{ flex:1, accentColor:C.navy }}/>
               <ZoomIn size={16} color={C.muted}/>
             </div>
 
@@ -283,7 +277,7 @@ export default function Profile({ onUpdate }) {
                 Batal
               </button>
               <button onClick={handleCropConfirm}
-                style={{ padding:'10px 24px', borderRadius:100, border:'none', background:C.primary, color:'white', fontSize:13, fontWeight:700, cursor:'pointer' }}>
+                style={{ padding:'10px 24px', borderRadius:100, border:'none', background:C.navy, color:'white', fontSize:13, fontWeight:700, cursor:'pointer' }}>
                 Gunakan Foto
               </button>
             </div>

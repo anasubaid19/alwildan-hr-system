@@ -1,5 +1,6 @@
 const jwt = require('jsonwebtoken');
-const JWT_SECRET = process.env.JWT_SECRET || 'alwildan-hr-secret-2026';
+const JWT_SECRET = process.env.JWT_SECRET
+if (!JWT_SECRET) throw new Error('JWT_SECRET wajib diisi di .env')
 
 module.exports = (req, res, next) => {
   const token = req.headers.authorization?.split(' ')[1];

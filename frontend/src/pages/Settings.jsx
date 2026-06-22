@@ -1,13 +1,7 @@
 import { useEffect, useState, useRef } from 'react'
 import axios from 'axios'
 import { Save, Wifi, Eye, EyeOff, RefreshCw, CheckCircle, XCircle, Settings2, Upload, FileSpreadsheet, Trash2, Users, KeyRound, Copy, Check, Plus, ShieldCheck } from 'lucide-react'
-
-const authHeaders = () => {
-  const t = localStorage.getItem('aw_token')
-  return t ? { Authorization: 'Bearer ' + t } : {}
-}
-
-const C = { primary:'#1A3B8F', gold:'#C8962E', ink:'#0a0b0d', muted:'#9BA5C0', hairline:'#E8EBF4', bg:'#F0F2F8', green:'#22C55E', red:'#EF4444' }
+import { C, authHeaders } from '../utils/constants'
 
 const PROVIDERS = [
   { id:'ollama',       label:'Ollama Lokal',        url:'http://localhost:11434/v1',            desc:'Gratis, data tidak keluar server' },
@@ -188,7 +182,7 @@ export default function Settings() {
         {/* Card Header */}
         <div style={{ padding:'20px 24px', borderBottom:`1px solid ${C.hairline}`, display:'flex', alignItems:'center', gap:14 }}>
           <div style={{ width:44, height:44, borderRadius:14, background:'#EEF1FA', display:'flex', alignItems:'center', justifyContent:'center' }}>
-            <Settings2 size={20} color={C.primary}/>
+            <Settings2 size={20} color={C.navy}/>
           </div>
           <div>
             <p style={{ fontSize:15, fontWeight:700, color:C.ink }}>AI Provider</p>
@@ -203,10 +197,10 @@ export default function Settings() {
             <div style={{ display:'grid', gridTemplateColumns:'repeat(2, 1fr)', gap:10 }}>
               {PROVIDERS.map(p => (
                 <button key={p.id} onClick={() => handleProvider(p.id)}
-                  style={{ padding:'12px 16px', borderRadius:12, border:`1.5px solid ${form.ai_provider===p.id?C.primary:C.hairline}`,
+                  style={{ padding:'12px 16px', borderRadius:12, border:`1.5px solid ${form.ai_provider===p.id?C.navy:C.hairline}`,
                     background: form.ai_provider===p.id ? '#EEF1FA' : 'white',
                     cursor:'pointer', textAlign:'left', transition:'all 0.15s' }}>
-                  <p style={{ fontSize:13, fontWeight:700, color: form.ai_provider===p.id?C.primary:C.ink }}>{p.label}</p>
+                  <p style={{ fontSize:13, fontWeight:700, color: form.ai_provider===p.id?C.navy:C.ink }}>{p.label}</p>
                   <p style={{ fontSize:11, color:C.muted, marginTop:2 }}>{p.desc}</p>
                 </button>
               ))}
@@ -217,7 +211,7 @@ export default function Settings() {
           <Field label="Base URL">
             <input type="text" value={form.ai_base_url} onChange={e=>setForm(f=>({...f,ai_base_url:e.target.value}))}
               placeholder="https://api.example.com/v1" style={{ ...inputStyle, fontFamily:'monospace' }}
-              onFocus={e=>e.target.style.borderColor=C.primary} onBlur={e=>e.target.style.borderColor=C.hairline}/>
+              onFocus={e=>e.target.style.borderColor=C.navy} onBlur={e=>e.target.style.borderColor=C.hairline}/>
           </Field>
 
           {/* API Key */}
@@ -226,7 +220,7 @@ export default function Settings() {
               <input type={showKey?'text':'password'} value={form.ai_api_key}
                 onChange={e=>setForm(f=>({...f,ai_api_key:e.target.value}))}
                 placeholder="Masukkan API key..." style={{ ...inputStyle, fontFamily:'monospace', paddingRight:44 }}
-                onFocus={e=>e.target.style.borderColor=C.primary} onBlur={e=>e.target.style.borderColor=C.hairline}/>
+                onFocus={e=>e.target.style.borderColor=C.navy} onBlur={e=>e.target.style.borderColor=C.hairline}/>
               <button onClick={()=>setShowKey(s=>!s)}
                 style={{ position:'absolute', right:12, top:'50%', transform:'translateY(-50%)', border:'none', background:'transparent', cursor:'pointer', color:C.muted, display:'flex' }}>
                 {showKey ? <EyeOff size={16}/> : <Eye size={16}/>}
@@ -247,7 +241,7 @@ export default function Settings() {
                 ) : (
                   <input type="text" value={form.ai_model} onChange={e=>setForm(f=>({...f,ai_model:e.target.value}))}
                     placeholder="contoh: llama-3.1-8b-instant" style={{ ...inputStyle, fontFamily:'monospace' }}
-                    onFocus={e=>e.target.style.borderColor=C.primary} onBlur={e=>e.target.style.borderColor=C.hairline}/>
+                    onFocus={e=>e.target.style.borderColor=C.navy} onBlur={e=>e.target.style.borderColor=C.hairline}/>
                 )}
               </div>
               <button onClick={fetchModels} disabled={loadingModels}
@@ -266,7 +260,7 @@ export default function Settings() {
               <div style={{ display:'flex', alignItems:'center', gap:10 }}>
                 {testStatus==='ok'      && <CheckCircle size={16} color={C.green}/>}
                 {testStatus==='error'   && <XCircle size={16} color={C.red}/>}
-                {testStatus==='loading' && <div style={{ width:16, height:16, border:`2px solid ${C.primary}`, borderTopColor:'transparent', borderRadius:'50%', animation:'spin 0.8s linear infinite' }}/>}
+                {testStatus==='loading' && <div style={{ width:16, height:16, border:`2px solid ${C.navy}`, borderTopColor:'transparent', borderRadius:'50%', animation:'spin 0.8s linear infinite' }}/>}
                 {!testStatus            && <Wifi size={16} color={C.muted}/>}
                 <p style={{ fontSize:13, color: testStatus==='ok'?'#166534':testStatus==='error'?C.red:C.muted }}>
                   {testMsg || 'Test koneksi sebelum menyimpan'}
@@ -285,7 +279,7 @@ export default function Settings() {
         <div style={{ padding:'16px 24px', background:'#F8F9FC', borderTop:`1px solid ${C.hairline}`, display:'flex', justifyContent:'flex-end' }}>
           <button onClick={handleSave} disabled={saving}
             style={{ display:'flex', alignItems:'center', gap:8, padding:'11px 24px', borderRadius:100, border:'none',
-              background: saved ? '#22C55E' : saving ? C.muted : C.primary,
+              background: saved ? '#22C55E' : saving ? C.muted : C.navy,
               color:'white', fontSize:14, fontWeight:700, cursor:saving?'not-allowed':'pointer', transition:'background 0.2s' }}>
             {saved ? <><CheckCircle size={16}/> Tersimpan!</> : saving ? 'Menyimpan...' : <><Save size={16}/> Simpan Settings</>}
           </button>
@@ -314,7 +308,7 @@ export default function Settings() {
       <div style={{ background:'white', borderRadius:20, border:`1px solid ${C.hairline}`, overflow:'hidden' }}>
         <div style={{ padding:'20px 24px', borderBottom:`1px solid ${C.hairline}`, display:'flex', alignItems:'center', gap:14 }}>
           <div style={{ width:44, height:44, borderRadius:14, background:'#EEF1FA', display:'flex', alignItems:'center', justifyContent:'center' }}>
-            <FileSpreadsheet size={20} color={C.primary}/>
+            <FileSpreadsheet size={20} color={C.navy}/>
           </div>
           <div>
             <p style={{ fontSize:15, fontWeight:700, color:C.ink }}>Data Utama HR Pusat</p>
@@ -347,7 +341,7 @@ export default function Settings() {
                 <p style={{ fontSize:12, fontWeight:700, color:C.ink, marginBottom:10 }}>Kolom Terdeteksi ({master.columns?.length})</p>
                 <div style={{ display:'flex', flexWrap:'wrap', gap:6 }}>
                   {master.columns?.map(col => (
-                    <span key={col} style={{ background:'#EEF1FA', color:C.primary, fontSize:11, fontWeight:700, padding:'4px 10px', borderRadius:100 }}>{col}</span>
+                    <span key={col} style={{ background:'#EEF1FA', color:C.navy, fontSize:11, fontWeight:700, padding:'4px 10px', borderRadius:100 }}>{col}</span>
                   ))}
                 </div>
               </div>
@@ -386,17 +380,17 @@ export default function Settings() {
                 onChange={e => handleMasterUpload(e.target.files[0])}/>
               <div onClick={() => masterRef.current?.click()}
                 style={{ border:`2px dashed ${C.hairline}`, borderRadius:14, padding:'40px 24px', textAlign:'center', cursor:'pointer', transition:'all 0.15s' }}
-                onMouseEnter={e => { e.currentTarget.style.borderColor=C.primary; e.currentTarget.style.background='#F8F9FC' }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor=C.navy; e.currentTarget.style.background='#F8F9FC' }}
                 onMouseLeave={e => { e.currentTarget.style.borderColor=C.hairline; e.currentTarget.style.background='transparent' }}>
                 {masterUploading ? (
                   <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:12 }}>
-                    <div style={{ width:36, height:36, border:`3px solid ${C.primary}`, borderTopColor:'transparent', borderRadius:'50%', animation:'spin 0.8s linear infinite' }}/>
+                    <div style={{ width:36, height:36, border:`3px solid ${C.navy}`, borderTopColor:'transparent', borderRadius:'50%', animation:'spin 0.8s linear infinite' }}/>
                     <p style={{ fontSize:13, color:C.muted }}>Menganalisis file...</p>
                   </div>
                 ) : (
                   <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:12 }}>
                     <div style={{ width:52, height:52, borderRadius:14, background:'#EEF1FA', display:'flex', alignItems:'center', justifyContent:'center' }}>
-                      <Upload size={24} color={C.primary}/>
+                      <Upload size={24} color={C.navy}/>
                     </div>
                     <div>
                       <p style={{ fontSize:14, fontWeight:700, color:C.ink }}>Upload File Excel HR Pusat</p>
@@ -423,14 +417,14 @@ export default function Settings() {
           {/* Header */}
           <div style={{ padding:'20px 24px', borderBottom:`1px solid ${C.hairline}`, display:'flex', alignItems:'center', gap:14 }}>
             <div style={{ width:44, height:44, borderRadius:14, background:'#EEF1FA', display:'flex', alignItems:'center', justifyContent:'center' }}>
-              <ShieldCheck size={20} color={C.primary}/>
+              <ShieldCheck size={20} color={C.navy}/>
             </div>
             <div style={{ flex:1 }}>
               <p style={{ fontSize:15, fontWeight:700, color:C.ink }}>Manajemen User</p>
               <p style={{ fontSize:12, color:C.muted, marginTop:2 }}>Kelola akun dan undang user baru dengan invite key</p>
             </div>
             <button onClick={() => { setShowInviteForm(s=>!s); setInviteMsg(null) }}
-              style={{ display:'flex', alignItems:'center', gap:7, padding:'9px 16px', borderRadius:100, border:'none', background: showInviteForm ? '#F0F2F8' : C.primary, color: showInviteForm ? C.ink : 'white', fontSize:13, fontWeight:700, cursor:'pointer' }}>
+              style={{ display:'flex', alignItems:'center', gap:7, padding:'9px 16px', borderRadius:100, border:'none', background: showInviteForm ? '#F0F2F8' : C.navy, color: showInviteForm ? C.ink : 'white', fontSize:13, fontWeight:700, cursor:'pointer' }}>
               <Plus size={15}/> Invite User
             </button>
           </div>
@@ -448,7 +442,7 @@ export default function Settings() {
                       onChange={e => setInviteForm(f => ({ ...f, email: e.target.value }))}
                       placeholder="email@alwildan.sch.id"
                       style={{ ...inputStyle, width:'100%', boxSizing:'border-box' }}
-                      onFocus={e=>e.target.style.borderColor=C.primary}
+                      onFocus={e=>e.target.style.borderColor=C.navy}
                       onBlur={e=>e.target.style.borderColor=C.hairline}/>
                   </div>
                   <div>
@@ -456,8 +450,8 @@ export default function Settings() {
                     <div style={{ display:'flex', gap:10 }}>
                       {['admin','pegawai'].map(r => (
                         <button key={r} type="button" onClick={() => setInviteForm(f => ({ ...f, role:r }))}
-                          style={{ flex:1, padding:'10px 16px', borderRadius:10, border:`1.5px solid ${inviteForm.role===r ? C.primary : C.hairline}`, background: inviteForm.role===r ? '#EEF1FA' : 'white', cursor:'pointer' }}>
-                          <p style={{ fontSize:13, fontWeight:700, color: inviteForm.role===r ? C.primary : C.ink }}>
+                          style={{ flex:1, padding:'10px 16px', borderRadius:10, border:`1.5px solid ${inviteForm.role===r ? C.navy : C.hairline}`, background: inviteForm.role===r ? '#EEF1FA' : 'white', cursor:'pointer' }}>
+                          <p style={{ fontSize:13, fontWeight:700, color: inviteForm.role===r ? C.navy : C.ink }}>
                             {r === 'admin' ? 'Admin' : 'Pegawai'}
                           </p>
                           <p style={{ fontSize:11, color:C.muted, marginTop:2 }}>
@@ -488,7 +482,7 @@ export default function Settings() {
 
                   <div style={{ display:'flex', justifyContent:'flex-end' }}>
                     <button type="submit" disabled={inviteLoading}
-                      style={{ display:'flex', alignItems:'center', gap:8, padding:'10px 22px', borderRadius:100, border:'none', background: inviteLoading ? C.muted : C.primary, color:'white', fontSize:13, fontWeight:700, cursor: inviteLoading ? 'not-allowed' : 'pointer' }}>
+                      style={{ display:'flex', alignItems:'center', gap:8, padding:'10px 22px', borderRadius:100, border:'none', background: inviteLoading ? C.muted : C.navy, color:'white', fontSize:13, fontWeight:700, cursor: inviteLoading ? 'not-allowed' : 'pointer' }}>
                       {inviteLoading
                         ? <div style={{ width:14, height:14, border:'2px solid white', borderTopColor:'transparent', borderRadius:'50%', animation:'spin 0.8s linear infinite' }}/>
                         : <><KeyRound size={14}/> Generate Key</>}
@@ -504,7 +498,7 @@ export default function Settings() {
               <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
                 {users.map(u => (
                   <div key={u.id} style={{ display:'flex', alignItems:'center', gap:14, padding:'12px 16px', borderRadius:12, border:`1px solid ${C.hairline}`, background:'#F8F9FC' }}>
-                    <div style={{ width:36, height:36, borderRadius:'50%', background: u.role==='superadmin' ? '#FEF3C7' : '#EEF1FA', display:'flex', alignItems:'center', justifyContent:'center', fontSize:12, fontWeight:800, color: u.role==='superadmin' ? '#B45309' : C.primary, flexShrink:0 }}>
+                    <div style={{ width:36, height:36, borderRadius:'50%', background: u.role==='superadmin' ? '#FEF3C7' : '#EEF1FA', display:'flex', alignItems:'center', justifyContent:'center', fontSize:12, fontWeight:800, color: u.role==='superadmin' ? '#B45309' : C.navy, flexShrink:0 }}>
                       {u.inisial || u.nama?.slice(0,2).toUpperCase()}
                     </div>
                     <div style={{ flex:1, minWidth:0 }}>
@@ -541,7 +535,7 @@ export default function Settings() {
                     return (
                       <div key={inv.id} style={{ borderRadius:12, border:`1px solid ${C.hairline}`, background:'#F8F9FC', overflow:'hidden' }}>
                         <div style={{ display:'flex', alignItems:'center', gap:12, padding:'12px 16px' }}>
-                          <KeyRound size={16} color={used||expired ? C.muted : C.primary}/>
+                          <KeyRound size={16} color={used||expired ? C.muted : C.navy}/>
                           <div style={{ flex:1, minWidth:0 }}>
                             <code style={{ fontSize:12, fontWeight:700, color: used||expired ? C.muted : C.ink, fontFamily:'monospace', wordBreak:'break-all' }}>{inv.key}</code>
                             <p style={{ fontSize:11, color:C.muted, marginTop:3 }}>

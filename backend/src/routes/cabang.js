@@ -33,7 +33,7 @@ router.put('/:id', (req, res) => {
   } catch { res.status(400).json({ success:false, message:'Kode sudah digunakan' }); }
 });
 
-router.delete('/:id', (req, res) => {
+router.delete('/:id', async (req, res) => {
   if (req.user.role !== 'superadmin')
     return res.status(403).json({ success: false, message: 'Hanya Super Admin yang bisa menghapus cabang' });
 
@@ -42,7 +42,7 @@ router.delete('/:id', (req, res) => {
     return res.status(400).json({ success: false, message: 'Password wajib diisi' });
 
   const user = db.prepare('SELECT * FROM users WHERE id = ?').get(req.user.id);
-  if (!bcrypt.compareSync(password, user.password))
+  if (!await bcrypt.compare(password, user.password))
     return res.status(401).json({ success: false, message: 'Password tidak sesuai' });
 
   const cabang = db.prepare('SELECT * FROM cabang WHERE id = ?').get(req.params.id);

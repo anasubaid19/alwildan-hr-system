@@ -1,13 +1,8 @@
 import { useState, useRef, useEffect } from 'react'
 import axios from 'axios'
 import { Upload, FileSpreadsheet, CheckCircle, XCircle, ArrowRight, RotateCcw, Save, CloudUpload, AlertTriangle, X, Sparkles, Trash2, ChevronDown, Eye, EyeOff } from 'lucide-react'
+import { C, authHeaders } from '../utils/constants'
 
-const authHeaders = () => {
-  const t = localStorage.getItem('aw_token')
-  return t ? { Authorization: 'Bearer ' + t } : {}
-}
-
-const C = { primary:'#1A3B8F', gold:'#C8962E', ink:'#0a0b0d', muted:'#9BA5C0', hairline:'#E8EBF4', bg:'#F0F2F8' }
 const HR_COLUMNS = ['NO','NU','NAMA','JABATAN','GENDER','GELAR','THN AKTIF','NO ACC','JUMLAH GAJI','GAPOK','PENDDK','JABATAN_TUNJ','TRANSPORT','BPJS KS','LAINS','POT THR','POT BPJS TK','Deposit ITBA','Jml Diterima','Punishment','Pinjaman','(abaikan)']
 const STEPS = ['Upload File','Konfirmasi Mapping','Selesai']
 
@@ -159,7 +154,7 @@ export default function UploadData() {
         {STEPS.map((s,i) => (
           <div key={i} style={{ display:'flex', alignItems:'center', gap:8 }}>
             <div style={{ display:'flex', alignItems:'center', gap:8, padding:'6px 14px', borderRadius:100, fontSize:12, fontWeight:700, transition:'all 0.2s',
-              background: step===i ? C.primary : step>i ? '#ECFDF5' : C.hairline,
+              background: step===i ? C.navy : step>i ? '#ECFDF5' : C.hairline,
               color: step===i ? 'white' : step>i ? '#059669' : C.muted }}>
               {step>i ? <CheckCircle size={13}/> : <span style={{ width:16, height:16, borderRadius:'50%', border:`2px solid ${step===i?'rgba(255,255,255,0.5)':C.muted}`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:10 }}>{i+1}</span>}
               {s}
@@ -174,8 +169,8 @@ export default function UploadData() {
         <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
           {/* Info hint */}
           <div style={{ display:'flex', alignItems:'center', gap:10, padding:'12px 16px', background:'#EEF1FA', borderRadius:12, border:`1px solid ${C.hairline}` }}>
-            <Sparkles size={16} color={C.primary}/>
-            <p style={{ fontSize:12, color:C.primary, fontWeight:600 }}>
+            <Sparkles size={16} color={C.navy}/>
+            <p style={{ fontSize:12, color:C.navy, fontWeight:600 }}>
               Cabang & periode akan <strong>terdeteksi otomatis</strong> dari nama file atau isi Excel. Anda tetap bisa mengubahnya setelah upload.
             </p>
           </div>
@@ -183,14 +178,14 @@ export default function UploadData() {
           {/* Dropzone */}
           <div onDragOver={e=>{e.preventDefault();setDragging(true)}} onDragLeave={()=>setDragging(false)}
             onDrop={handleDrop} onClick={()=>fileRef.current?.click()}
-            style={{ background:dragging?'#EEF1FA':'white', borderRadius:20, border:`2px dashed ${dragging?C.primary:C.hairline}`,
+            style={{ background:dragging?'#EEF1FA':'white', borderRadius:20, border:`2px dashed ${dragging?C.navy:C.hairline}`,
               padding:'64px 40px', textAlign:'center', cursor:'pointer', transition:'all 0.2s' }}>
             <input ref={fileRef} type="file" accept=".xlsx,.xls,.csv" style={{ display:'none' }}
               onChange={e=>handleFile(e.target.files[0])}/>
             {loading ? (
               <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:16 }}>
                 <div style={{ width:56, height:56, borderRadius:16, background:'#EEF1FA', display:'flex', alignItems:'center', justifyContent:'center' }}>
-                  <div style={{ width:28, height:28, border:`3px solid ${C.primary}`, borderTopColor:'transparent', borderRadius:'50%', animation:'spin 0.8s linear infinite' }}/>
+                  <div style={{ width:28, height:28, border:`3px solid ${C.navy}`, borderTopColor:'transparent', borderRadius:'50%', animation:'spin 0.8s linear infinite' }}/>
                 </div>
                 <div>
                   <p style={{ fontSize:16, fontWeight:700, color:C.ink }}>AI sedang menganalisis kolom...</p>
@@ -199,14 +194,14 @@ export default function UploadData() {
               </div>
             ) : (
               <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:16 }}>
-                <div style={{ width:72, height:72, borderRadius:20, background:dragging?C.primary:'#EEF1FA', display:'flex', alignItems:'center', justifyContent:'center', transition:'all 0.2s' }}>
+                <div style={{ width:72, height:72, borderRadius:20, background:dragging?C.navy:'#EEF1FA', display:'flex', alignItems:'center', justifyContent:'center', transition:'all 0.2s' }}>
                   {dragging
                     ? <CloudUpload size={36} color="white"/>
-                    : <FileSpreadsheet size={36} color={C.primary}/>}
+                    : <FileSpreadsheet size={36} color={C.navy}/>}
                 </div>
                 <div>
                   <p style={{ fontSize:18, fontWeight:700, color:C.ink }}>{dragging?'Lepaskan file di sini':'Drop file Excel di sini'}</p>
-                  <p style={{ fontSize:13, color:C.muted, marginTop:6 }}>atau <span style={{ color:C.primary, fontWeight:700 }}>klik untuk pilih file</span> · .xlsx, .xls, .csv · maks 10MB</p>
+                  <p style={{ fontSize:13, color:C.muted, marginTop:6 }}>atau <span style={{ color:C.navy, fontWeight:700 }}>klik untuk pilih file</span> · .xlsx, .xls, .csv · maks 10MB</p>
                 </div>
                 <div style={{ display:'flex', gap:8, marginTop:4 }}>
                   {['.xlsx','.xls','.csv'].map(ext=>(
@@ -226,7 +221,7 @@ export default function UploadData() {
           {/* Panel Cabang & Periode — auto-detect */}
           <div style={{ ...card, padding:20 }}>
             <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:14 }}>
-              <Sparkles size={15} color={C.primary}/>
+              <Sparkles size={15} color={C.navy}/>
               <p style={{ fontSize:13, fontWeight:700, color:C.ink }}>Informasi Penggajian</p>
               {(autoDetected.cabang || autoDetected.periode) && (
                 <span style={{ fontSize:10, fontWeight:700, background:'#ECFDF5', color:'#059669', padding:'2px 8px', borderRadius:100, marginLeft:4 }}>
@@ -240,7 +235,7 @@ export default function UploadData() {
                   Cabang {autoDetected.cabang && <span style={{ color:'#059669', fontSize:10 }}>✓ auto</span>}
                 </label>
                 <select value={cabangId} onChange={e=>{ setCabangId(e.target.value); setAutoDetected(a=>({...a,cabang:false})) }}
-                  style={{ width:'100%', padding:'10px 14px', borderRadius:10, border:`1.5px solid ${cabangId?C.primary:C.hairline}`, fontSize:13, color:C.ink, background:cabangId?'#F0F6FF':'white', fontFamily:'Plus Jakarta Sans, sans-serif', cursor:'pointer' }}>
+                  style={{ width:'100%', padding:'10px 14px', borderRadius:10, border:`1.5px solid ${cabangId?C.navy:C.hairline}`, fontSize:13, color:C.ink, background:cabangId?'#F0F6FF':'white', fontFamily:'Plus Jakarta Sans, sans-serif', cursor:'pointer' }}>
                   <option value="">— Pilih Cabang —</option>
                   {cabangList.map(c=><option key={c.id} value={c.id}>{c.nama}</option>)}
                 </select>
@@ -250,7 +245,7 @@ export default function UploadData() {
                   Periode {autoDetected.periode && <span style={{ color:'#059669', fontSize:10 }}>✓ auto</span>}
                 </label>
                 <input type="month" value={periode} onChange={e=>{ setPeriode(e.target.value); setAutoDetected(a=>({...a,periode:false})) }}
-                  style={{ width:'100%', padding:'10px 14px', borderRadius:10, border:`1.5px solid ${periode?C.primary:C.hairline}`, fontSize:13, color:C.ink, background:periode?'#F0F6FF':'white', fontFamily:'Plus Jakarta Sans, sans-serif' }}/>
+                  style={{ width:'100%', padding:'10px 14px', borderRadius:10, border:`1.5px solid ${periode?C.navy:C.hairline}`, fontSize:13, color:C.ink, background:periode?'#F0F6FF':'white', fontFamily:'Plus Jakarta Sans, sans-serif' }}/>
               </div>
             </div>
             {(!cabangId || !periode) && (
@@ -265,7 +260,7 @@ export default function UploadData() {
             <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', flexWrap:'wrap', gap:12 }}>
               <div style={{ display:'flex', alignItems:'center', gap:14 }}>
                 <div style={{ width:48, height:48, borderRadius:14, background:'#EEF1FA', display:'flex', alignItems:'center', justifyContent:'center' }}>
-                  <FileSpreadsheet size={24} color={C.primary}/>
+                  <FileSpreadsheet size={24} color={C.navy}/>
                 </div>
                 <div>
                   <p style={{ fontWeight:700, color:C.ink, fontSize:15 }}>{result.filename}</p>
@@ -273,12 +268,12 @@ export default function UploadData() {
                 </div>
               </div>
               <div style={{ background:'#EEF1FA', borderRadius:14, padding:'12px 20px', textAlign:'center' }}>
-                <p style={{ fontSize:22, fontWeight:800, color:C.primary }}>{mappedCount}<span style={{ fontSize:14, color:C.muted }}>/{result.headers?.length}</span></p>
+                <p style={{ fontSize:22, fontWeight:800, color:C.navy }}>{mappedCount}<span style={{ fontSize:14, color:C.muted }}>/{result.headers?.length}</span></p>
                 <p style={{ fontSize:11, color:C.muted, marginTop:2 }}>kolom terpetakan</p>
               </div>
             </div>
             <div style={{ marginTop:16, height:6, background:C.hairline, borderRadius:100, overflow:'hidden' }}>
-              <div style={{ width:`${result.headers?.length?(mappedCount/result.headers.length)*100:0}%`, height:'100%', background:C.primary, borderRadius:100, transition:'width 0.3s' }}/>
+              <div style={{ width:`${result.headers?.length?(mappedCount/result.headers.length)*100:0}%`, height:'100%', background:C.navy, borderRadius:100, transition:'width 0.3s' }}/>
             </div>
           </div>
 
@@ -311,7 +306,7 @@ export default function UploadData() {
                           <select value={mapped||''} onChange={e=>setMapping(m=>({...m,[col]:e.target.value||null}))}
                             style={{ padding:'6px 10px', borderRadius:8, border:`1.5px solid ${isOk?'#BBDEFB':mapped==='(abaikan)'?C.hairline:'#FCD34D'}`,
                               fontSize:12, background:isOk?'#EEF1FA':mapped==='(abaikan)'?'#F8F9FC':'#FFFBEB',
-                              color:isOk?C.primary:C.ink, fontFamily:'Plus Jakarta Sans, sans-serif', cursor:'pointer', minWidth:160 }}>
+                              color:isOk?C.navy:C.ink, fontFamily:'Plus Jakarta Sans, sans-serif', cursor:'pointer', minWidth:160 }}>
                             <option value="">— Tidak dipetakan —</option>
                             {HR_COLUMNS.map(c=><option key={c} value={c}>{c}</option>)}
                           </select>
@@ -333,7 +328,7 @@ export default function UploadData() {
               <RotateCcw size={15}/> Upload Ulang
             </button>
             <button onClick={handleConfirm} disabled={saving || !cabangId || !periode}
-              style={{ display:'flex', alignItems:'center', gap:8, padding:'12px 28px', borderRadius:100, border:'none', background:(saving||!cabangId||!periode)?C.muted:C.primary, color:'white', fontSize:14, fontWeight:700, cursor:(saving||!cabangId||!periode)?'not-allowed':'pointer' }}>
+              style={{ display:'flex', alignItems:'center', gap:8, padding:'12px 28px', borderRadius:100, border:'none', background:(saving||!cabangId||!periode)?C.muted:C.navy, color:'white', fontSize:14, fontWeight:700, cursor:(saving||!cabangId||!periode)?'not-allowed':'pointer' }}>
               {saving ? <><div style={{ width:16, height:16, border:'2px solid white', borderTopColor:'transparent', borderRadius:'50%', animation:'spin 0.8s linear infinite' }}/> Memeriksa...</> : <><Save size={15}/> Konfirmasi & Simpan</>}
             </button>
           </div>
@@ -350,7 +345,7 @@ export default function UploadData() {
           <p style={{ fontSize:14, color:C.muted, marginTop:8 }}>{saveResult.message}</p>
           <div style={{ display:'flex', justifyContent:'center', gap:28, margin:'28px 0', flexWrap:'wrap' }}>
             <div style={{ textAlign:'center' }}>
-              <p style={{ fontSize:36, fontWeight:800, color:C.primary }}>{saveResult.inserted ?? 0}</p>
+              <p style={{ fontSize:36, fontWeight:800, color:C.navy }}>{saveResult.inserted ?? 0}</p>
               <p style={{ fontSize:12, color:C.muted, marginTop:4 }}>Karyawan baru</p>
             </div>
             <div style={{ width:1, background:C.hairline }}/>
@@ -365,7 +360,7 @@ export default function UploadData() {
             </div>
           </div>
           <button onClick={reset}
-            style={{ display:'inline-flex', alignItems:'center', gap:8, padding:'12px 28px', borderRadius:100, border:'none', background:C.primary, color:'white', fontSize:14, fontWeight:700, cursor:'pointer' }}>
+            style={{ display:'inline-flex', alignItems:'center', gap:8, padding:'12px 28px', borderRadius:100, border:'none', background:C.navy, color:'white', fontSize:14, fontWeight:700, cursor:'pointer' }}>
             <Upload size={16}/> Upload File Lain
           </button>
         </div>
@@ -486,7 +481,7 @@ export default function UploadData() {
                 Periksa Ulang
               </button>
               <button onClick={handleConfirmFinal} disabled={saving}
-                style={{ display:'flex', alignItems:'center', gap:8, padding:'11px 28px', borderRadius:100, border:'none', background:saving?C.muted:C.primary, color:'white', fontSize:14, fontWeight:700, cursor:saving?'not-allowed':'pointer' }}>
+                style={{ display:'flex', alignItems:'center', gap:8, padding:'11px 28px', borderRadius:100, border:'none', background:saving?C.muted:C.navy, color:'white', fontSize:14, fontWeight:700, cursor:saving?'not-allowed':'pointer' }}>
                 {saving ? <><div style={{ width:16, height:16, border:'2px solid white', borderTopColor:'transparent', borderRadius:'50%', animation:'spin 0.8s linear infinite' }}/> Menyimpan...</> : <><Save size={15}/> Ya, Import Sekarang</>}
               </button>
             </div>

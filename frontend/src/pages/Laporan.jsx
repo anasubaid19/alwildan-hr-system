@@ -1,13 +1,9 @@
 import { useEffect, useState } from 'react'
 import axios from 'axios'
 import { FileText, Download, Filter, FileSpreadsheet, File, Users } from 'lucide-react'
+import { C, authHeaders } from '../utils/constants'
 
 const MONTHS = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember']
-const C = { primary:'#1A3B8F', accent:'#C8962E', ink:'#0a0b0d', muted:'#7c828a', hairline:'#dee1e6' }
-const authHeaders = () => {
-  const t = localStorage.getItem('aw_token')
-  return t ? { Authorization: 'Bearer ' + t } : {}
-}
 const s = { card:{ background:'#fff', border:'1px solid #dee1e6', borderRadius:16, overflow:'hidden' }, head:{ padding:'16px 20px', borderBottom:'1px solid #eef0f3' } }
 const fmtFull = v => 'Rp '+Number(v||0).toLocaleString('id-ID')
 
@@ -121,7 +117,7 @@ export default function Laporan() {
           <div style={{ display:'flex', alignItems:'center', gap:6, color:C.muted, fontSize:12 }}><Filter size={13}/> Filter Laporan</div>
           <div style={{ display:'flex', borderRadius:8, overflow:'hidden', border:'1px solid #dee1e6' }}>
             {['bulan','tahun'].map(t=>(
-              <button key={t} onClick={()=>setFilterType(t)} style={{ padding:'6px 12px', fontSize:12, fontWeight:600, cursor:'pointer', border:'none', background:filterType===t?C.primary:'#fff', color:filterType===t?'#fff':C.muted }}>
+              <button key={t} onClick={()=>setFilterType(t)} style={{ padding:'6px 12px', fontSize:12, fontWeight:600, cursor:'pointer', border:'none', background:filterType===t?C.navy:'#fff', color:filterType===t?'#fff':C.muted }}>
                 {t==='bulan'?'Per Bulan':'Per Tahun'}
               </button>
             ))}
@@ -147,7 +143,7 @@ export default function Laporan() {
       {/* Summary Cards */}
       <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:12 }}>
         {[
-          { label:'Total Penggajian', value:fmtFull(totalGaji),     color:C.primary },
+          { label:'Total Penggajian', value:fmtFull(totalGaji),     color:C.navy },
           { label:'Total Potongan',   value:fmtFull(totalPotongan), color:'#dc2626'  },
           { label:'Total Diterima',   value:fmtFull(totalDiterima), color:'#059669'  },
         ].map(item=>(
@@ -162,7 +158,7 @@ export default function Laporan() {
       <div style={{ display:'flex', gap:8 }}>
         {[['detail','Detail per Karyawan',FileText],['rekap','Rekap per Karyawan',Users]].map(([v,label,Icon])=>(
           <button key={v} onClick={()=>setActiveView(v)}
-            style={{ display:'flex', alignItems:'center', gap:6, padding:'8px 16px', borderRadius:100, border:`1.5px solid ${activeView===v?C.primary:C.hairline}`, background:activeView===v?C.primary:'white', color:activeView===v?'white':C.muted, fontSize:12, fontWeight:600, cursor:'pointer' }}>
+            style={{ display:'flex', alignItems:'center', gap:6, padding:'8px 16px', borderRadius:100, border:`1.5px solid ${activeView===v?C.navy:C.hairline}`, background:activeView===v?C.navy:'white', color:activeView===v?'white':C.muted, fontSize:12, fontWeight:600, cursor:'pointer' }}>
             <Icon size={13}/>{label}
           </button>
         ))}
@@ -180,7 +176,7 @@ export default function Laporan() {
             </p>
           </div>
           {(activeView==='detail'?preview:rekap.data).length>0 && (
-            <span style={{ fontSize:12, fontWeight:600, color:C.primary, background:'#EEF2FB', padding:'4px 12px', borderRadius:100 }}>
+            <span style={{ fontSize:12, fontWeight:600, color:C.navy, background:'#EEF2FB', padding:'4px 12px', borderRadius:100 }}>
               {(activeView==='detail'?preview:rekap.data).length} {activeView==='rekap'?'karyawan':'baris'}
             </span>
           )}
@@ -188,7 +184,7 @@ export default function Laporan() {
 
         {loading ? (
           <div style={{ display:'flex', justifyContent:'center', padding:48 }}>
-            <div style={{ width:28, height:28, border:`2px solid ${C.primary}`, borderTopColor:'transparent', borderRadius:'50%', animation:'spin 0.8s linear infinite' }}/>
+            <div style={{ width:28, height:28, border:`2px solid ${C.navy}`, borderTopColor:'transparent', borderRadius:'50%', animation:'spin 0.8s linear infinite' }}/>
           </div>
         ) : activeView === 'detail' ? (
           preview.length===0 ? (
@@ -234,14 +230,14 @@ export default function Laporan() {
                       <td style={{ padding:'11px 12px', textAlign:'right', fontFamily:'monospace', fontWeight:600, color:C.ink }}>
                         {Number(r.jumlah_gaji||0).toLocaleString('id-ID')}
                       </td>
-                      <td style={{ padding:'11px 12px', textAlign:'right', fontFamily:'monospace', fontWeight:700, color:C.primary }}>
+                      <td style={{ padding:'11px 12px', textAlign:'right', fontFamily:'monospace', fontWeight:700, color:C.navy }}>
                         {Number(r.jml_diterima||0).toLocaleString('id-ID')}
                       </td>
                     </tr>
                   ))}
                 </tbody>
                 <tfoot>
-                  <tr style={{ background:C.primary }}>
+                  <tr style={{ background:C.navy }}>
                     <td colSpan={12} style={{ padding:'12px', fontWeight:700, color:'#fff', fontSize:12 }}>Total Keseluruhan</td>
                     <td style={{ padding:'12px', textAlign:'right', fontWeight:700, color:'#fff', fontFamily:'monospace' }}>
                       {fmtFull(totalGaji)}
@@ -272,7 +268,7 @@ export default function Laporan() {
                     {rekap.cabangCols.map(k=>(
                       <th key={k} style={{ padding:'10px 12px', textAlign:'right', fontSize:10, fontWeight:700, color:C.muted, minWidth:110 }}>{k}</th>
                     ))}
-                    <th style={{ padding:'10px 12px', textAlign:'right', fontSize:10, fontWeight:700, color:C.primary, minWidth:120 }}>TOTAL</th>
+                    <th style={{ padding:'10px 12px', textAlign:'right', fontSize:10, fontWeight:700, color:C.navy, minWidth:120 }}>TOTAL</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -288,14 +284,14 @@ export default function Laporan() {
                           {r[k] ? Number(r[k]).toLocaleString('id-ID') : '-'}
                         </td>
                       ))}
-                      <td style={{ padding:'11px 12px', textAlign:'right', fontFamily:'monospace', fontWeight:700, color:C.primary }}>
+                      <td style={{ padding:'11px 12px', textAlign:'right', fontFamily:'monospace', fontWeight:700, color:C.navy }}>
                         {Number(r.total||0).toLocaleString('id-ID')}
                       </td>
                     </tr>
                   ))}
                 </tbody>
                 <tfoot>
-                  <tr style={{ background:C.primary }}>
+                  <tr style={{ background:C.navy }}>
                     <td colSpan={3} style={{ padding:'12px', fontWeight:700, color:'#fff', fontSize:12 }}>Total</td>
                     {rekap.cabangCols.map(k=>(
                       <td key={k} style={{ padding:'12px', textAlign:'right', fontWeight:700, color:'#fff', fontFamily:'monospace', fontSize:11 }}>

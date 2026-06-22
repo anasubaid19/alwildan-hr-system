@@ -33,6 +33,12 @@ const getMasterContext = () => {
 const uploadDir = path.join(__dirname, '../../uploads');
 if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
 
+const isPathSafe = (userPath) => {
+  const resolved = path.resolve(userPath)
+  const allowed = path.resolve(uploadDir)
+  return resolved.startsWith(allowed)
+}
+
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, uploadDir),
   filename: (req, file, cb) => cb(null, `${Date.now()}-${file.originalname}`)
@@ -225,6 +231,7 @@ Balas HANYA dengan JSON object seperti ini (tanpa penjelasan, tanpa markdown):
     });
 
   } catch (e) {
+    try { if (req.file) fs.unlinkSync(req.file.path) } catch {}
     res.status(500).json({ success: false, message: e.message });
   }
 });
@@ -234,6 +241,8 @@ router.post('/check-diff', (req, res) => {
   const { filepath, mapping, cabang_id, periode } = req.body
   if (!filepath || !mapping || !cabang_id || !periode)
     return res.status(400).json({ success: false, message: 'Data tidak lengkap' })
+
+  if (!isPathSafe(filepath)) return res.status(400).json({ success: false, message: 'File path tidak valid' })
 
   try {
     const workbook = XLSX.readFile(filepath)
@@ -253,6 +262,11 @@ router.post('/check-diff', (req, res) => {
 
     const newRows = [], updateRows = [], unchangedRows = []
 
+    const existingKaryawan = new Map()
+    db.prepare('SELECT id, nama, jabatan, gender, no_acc, nu FROM karyawan WHERE cabang_id = ?')
+      .all(cabang_id)
+      .forEach(k => existingKaryawan.set(k.nama.trim().toLowerCase(), k))
+
     dataRows.forEach(row => {
       const nama = String(getVal(row, 'NAMA') || '').trim()
       if (!nama) return
@@ -265,9 +279,7 @@ router.post('/check-diff', (req, res) => {
         nu:      String(getVal(row, 'NU')      || ''),
       }
 
-      const existing = db.prepare(
-        'SELECT id, nama, jabatan, gender, no_acc, nu FROM karyawan WHERE nama = ? AND cabang_id = ?'
-      ).get(nama, cabang_id)
+      const existing = existingKaryawan.get(nama.trim().toLowerCase())
 
       if (!existing) {
         newRows.push(incoming)
@@ -296,6 +308,8 @@ router.post('/confirm', async (req, res) => {
   if (!filepath || !mapping || !cabang_id || !periode)
     return res.status(400).json({ success: false, message: 'Data tidak lengkap' });
 
+  if (!isPathSafe(filepath)) return res.status(400).json({ success: false, message: 'File path tidak valid' });
+
   try {
     const workbook = XLSX.readFile(filepath);
     const sheet = getValidSheet(workbook);
@@ -305,15 +319,22 @@ router.post('/confirm', async (req, res) => {
     const headers = rows[0].map(h => String(h || '').trim());
     const dataRows = rows.slice(1).filter(r => r.some(c => c !== undefined && c !== ''));
 
-    // Upsert: insert baru atau update jika nama+cabang_id sudah ada
+    const existingKaryawan = new Map()
+    const semuaKaryawan = db.prepare('SELECT id, nama, nu, jabatan, gender, gelar, thn_aktif, no_acc FROM karyawan WHERE cabang_id = ?').all(cabang_id)
+    semuaKaryawan.forEach(k => existingKaryawan.set(k.nama.trim().toLowerCase(), k))
+
     const upsertKaryawan = (nu, nama, jabatan, gender, gelar, thn_aktif, no_acc, cabang_id) => {
-      const existing = db.prepare('SELECT id FROM karyawan WHERE nama = ? AND cabang_id = ?').get(nama, cabang_id)
+      const key = nama.trim().toLowerCase()
+      const existing = existingKaryawan.get(key)
       if (existing) {
         db.prepare('UPDATE karyawan SET nu=?, jabatan=?, gender=?, gelar=?, thn_aktif=?, no_acc=?, updated_at=CURRENT_TIMESTAMP WHERE id=?')
           .run(nu, jabatan, gender, gelar, thn_aktif, no_acc, existing.id)
+        return existing.id
       } else {
-        db.prepare('INSERT INTO karyawan (nu, nama, jabatan, gender, gelar, thn_aktif, no_acc, cabang_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)')
+        const r = db.prepare('INSERT INTO karyawan (nu, nama, jabatan, gender, gelar, thn_aktif, no_acc, cabang_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)')
           .run(nu, nama, jabatan, gender, gelar, thn_aktif, no_acc, cabang_id)
+        existingKaryawan.set(key, { id: r.lastInsertRowid })
+        return r.lastInsertRowid
       }
     };
 
@@ -344,9 +365,9 @@ router.post('/confirm', async (req, res) => {
       const nama = String(getVal(row, 'NAMA') || '').trim();
       if (!nama) { skipped++; return; }
 
-      const wasExisting = !!db.prepare('SELECT id FROM karyawan WHERE nama = ? AND cabang_id = ?').get(nama, cabang_id)
+      const wasExisting = existingKaryawan.has(nama.trim().toLowerCase())
 
-      upsertKaryawan(
+      const karyawanId = upsertKaryawan(
         nu, nama,
         String(getVal(row, 'JABATAN') || ''),
         String(getVal(row, 'GENDER') || ''),
@@ -355,9 +376,6 @@ router.post('/confirm', async (req, res) => {
         String(getVal(row, 'NO ACC') || ''),
         cabang_id
       );
-
-      const karyawanRow = db.prepare('SELECT id FROM karyawan WHERE nama = ? AND cabang_id = ?').get(nama, cabang_id)
-      if (!karyawanRow) { skipped++; return; }
 
       const gapok              = toNum(getVal(row, 'GAPOK'));
       const tunjangan_penddk   = toNum(getVal(row, 'PENDDK'));
@@ -380,7 +398,7 @@ router.post('/confirm', async (req, res) => {
       const jml_diterima = jumlah_gaji - pot_thr - pot_bpjs_tk - deposit_itba;
 
       insertGaji.run(
-        karyawanRow.id, periode, cabang_id,
+        karyawanId, periode, cabang_id,
         gapok, tunjangan_penddk, tunjangan_jabatan, transport,
         bpjs_ks, lains, lembur,
         pot_thr, pot_bpjs_tk, deposit_itba,
@@ -406,6 +424,8 @@ router.post('/confirm', async (req, res) => {
     );
 
     res.json({ success: true, inserted, updated, skipped, message: `${totalProses} karyawan diproses (${inserted} baru, ${updated} diperbarui)` });
+
+    try { fs.unlinkSync(filepath) } catch {}
 
   } catch (e) {
     res.status(500).json({ success: false, message: e.message });

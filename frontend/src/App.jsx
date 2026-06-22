@@ -1,15 +1,17 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, lazy, Suspense } from 'react'
+
+const Dashboard = lazy(() => import('./pages/Dashboard'))
+const Karyawan = lazy(() => import('./pages/Karyawan'))
+const Settings = lazy(() => import('./pages/Settings'))
+const UploadData = lazy(() => import('./pages/Upload'))
+const Cabang = lazy(() => import('./pages/Cabang'))
+const Laporan = lazy(() => import('./pages/Laporan'))
+
 import Login from './pages/Login'
 import FirstSetup from './pages/FirstSetup'
 import Signup from './pages/Signup'
 import ForgotPassword from './pages/ForgotPassword'
 import ResetPassword from './pages/ResetPassword'
-import Dashboard from './pages/Dashboard'
-import Karyawan from './pages/Karyawan'
-import Settings from './pages/Settings'
-import UploadData from './pages/Upload'
-import Cabang from './pages/Cabang'
-import Laporan from './pages/Laporan'
 import Profile from './pages/Profile'
 import SearchModal from './components/SearchModal'
 import NotificationPanel from './components/NotificationPanel'
@@ -197,6 +199,12 @@ export default function App() {
 
   const firstName = user.nama?.split(' ')[0] || 'HR'
 
+  const suspenseFallback = (
+    <div style={{ display:'flex', alignItems:'center', justifyContent:'center', height:300 }}>
+      <div style={{ width:28, height:28, border:'2.5px solid #1A3B8F', borderTopColor:'transparent', borderRadius:'50%', animation:'spin 0.8s linear infinite' }}/>
+    </div>
+  )
+
   /* ── MOBILE ── */
   if (mobile) return (
     <div style={{ display:'flex', flexDirection:'column', height:'100vh', background:'#F0F2F8' }}>
@@ -279,7 +287,9 @@ export default function App() {
         </div>
       </header>
       <main style={{ flex:1, overflowY:'auto', padding:16, paddingBottom:80 }}>
-        {PAGES[active] || null}
+        <Suspense fallback={suspenseFallback}>
+          {PAGES[active] || null}
+        </Suspense>
       </main>
       {/* Mobile bottom nav */}
       <nav style={{ height:64, background:'white', borderTop:'1px solid #E8EBF4', display:'flex', alignItems:'center', flexShrink:0 }}>
@@ -440,14 +450,16 @@ export default function App() {
 
         {/* Page Content */}
         <main style={{ flex:1, overflowY:'auto', padding:'24px 28px' }} className="fade-in">
-          {active === 'profile'
-            ? <Profile onUpdate={u => setUser(prev => ({...prev, ...u}))}/>
-            : (PAGES[active] || (
-                <div style={{ display:'flex', alignItems:'center', justifyContent:'center', height:300, color:'#9BA5C0', fontSize:14 }}>
-                  Halaman sedang dikembangkan
-                </div>
-              ))
-          }
+          <Suspense fallback={suspenseFallback}>
+            {active === 'profile'
+              ? <Profile onUpdate={u => setUser(prev => ({...prev, ...u}))}/>
+              : (PAGES[active] || (
+                  <div style={{ display:'flex', alignItems:'center', justifyContent:'center', height:300, color:'#9BA5C0', fontSize:14 }}>
+                    Halaman sedang dikembangkan
+                  </div>
+                ))
+            }
+          </Suspense>
         </main>
       </div>
 

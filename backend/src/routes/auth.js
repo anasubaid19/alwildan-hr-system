@@ -6,7 +6,8 @@ const jwt = require('jsonwebtoken');
 const rateLimit = require('express-rate-limit');
 const db = require('../models/database');
 
-const JWT_SECRET = process.env.JWT_SECRET || 'alwildan-hr-secret-2026';
+const JWT_SECRET = process.env.JWT_SECRET
+if (!JWT_SECRET) throw new Error('JWT_SECRET wajib diisi di .env')
 
 // Proteksi brute force: maks 10 percobaan login per IP tiap 15 menit
 const loginLimiter = rateLimit({
@@ -18,7 +19,7 @@ const loginLimiter = rateLimit({
 });
 
 // POST /api/auth/login
-router.post('/login', loginLimiter, (req, res) => {
+router.post('/login', loginLimiter, async (req, res) => {
   const { email, password } = req.body;
 
   if (!email || !password)
@@ -29,7 +30,7 @@ router.post('/login', loginLimiter, (req, res) => {
   if (!user)
     return res.status(401).json({ success: false, message: 'Email tidak ditemukan' });
 
-  const valid = bcrypt.compareSync(password, user.password);
+  const valid = await bcrypt.compare(password, user.password);
   if (!valid)
     return res.status(401).json({ success: false, message: 'Password salah' });
 
@@ -68,7 +69,7 @@ router.get('/setup-status', (req, res) => {
 });
 
 // POST /api/auth/setup — buat Super Admin pertama (hanya jika belum ada user)
-router.post('/setup', (req, res) => {
+router.post('/setup', async (req, res) => {
   const count = db.prepare('SELECT COUNT(*) as c FROM users').get().c;
   if (count > 0)
     return res.status(403).json({ success: false, message: 'Setup sudah dilakukan' });
@@ -83,7 +84,7 @@ router.post('/setup', (req, res) => {
   if (existing)
     return res.status(400).json({ success: false, message: 'Email sudah terdaftar' });
 
-  const hashed = bcrypt.hashSync(password, 10);
+  const hashed = await bcrypt.hash(password, 10);
   const inisial = nama.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
   const result = db.prepare(
     "INSERT INTO users (nama, email, password, inisial, role) VALUES (?, ?, ?, ?, 'superadmin')"
@@ -98,7 +99,7 @@ router.post('/setup', (req, res) => {
 });
 
 // POST /api/auth/signup — signup dengan invite key
-router.post('/signup', (req, res) => {
+router.post('/signup', async (req, res) => {
   const { nama, email, password, invite_key } = req.body;
   if (!nama || !email || !password || !invite_key)
     return res.status(400).json({ success: false, message: 'Semua field wajib diisi' });
@@ -119,7 +120,7 @@ router.post('/signup', (req, res) => {
   if (existing)
     return res.status(400).json({ success: false, message: 'Email sudah terdaftar' });
 
-  const hashed = bcrypt.hashSync(password, 10);
+  const hashed = await bcrypt.hash(password, 10);
   const inisial = nama.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
   const result = db.prepare(
     'INSERT INTO users (nama, email, password, inisial, role) VALUES (?, ?, ?, ?, ?)'
@@ -165,7 +166,7 @@ router.post('/forgot-password', (req, res) => {
 });
 
 // POST /api/auth/reset-password/:token — reset password pakai token
-router.post('/reset-password/:token', (req, res) => {
+router.post('/reset-password/:token', async (req, res) => {
   const { token } = req.params;
   const { password } = req.body;
 
@@ -182,7 +183,7 @@ router.post('/reset-password/:token', (req, res) => {
   if (new Date(row.expired_at) < new Date())
     return res.status(400).json({ success: false, message: 'Token sudah kadaluarsa' });
 
-  const hashed = bcrypt.hashSync(password, 10);
+  const hashed = await bcrypt.hash(password, 10);
   db.prepare('UPDATE users SET password = ? WHERE id = ?').run(hashed, row.user_id);
   db.prepare("UPDATE reset_tokens SET used_at = datetime('now') WHERE id = ?").run(row.id);
 
@@ -249,7 +250,7 @@ router.put('/profile', require('../middleware/auth'), (req, res) => {
 })
 
 // Ganti password
-router.post('/change-password', require('../middleware/auth'), (req, res) => {
+router.post('/change-password', require('../middleware/auth'), async (req, res) => {
   const { password_lama, password_baru } = req.body
   if (!password_lama || !password_baru)
     return res.status(400).json({ success:false, message:'Semua field wajib diisi' })
@@ -261,21 +262,21 @@ router.post('/change-password', require('../middleware/auth'), (req, res) => {
   const user   = db.prepare('SELECT * FROM users WHERE id = ?').get(req.user.id)
   if (!user) return res.status(404).json({ success:false, message:'User tidak ditemukan' })
 
-  const valid = bcrypt.compareSync(password_lama, user.password)
+  const valid = await bcrypt.compare(password_lama, user.password)
   if (!valid) return res.status(400).json({ success:false, message:'Password lama tidak sesuai' })
 
-  const hashed = bcrypt.hashSync(password_baru, 10)
+  const hashed = await bcrypt.hash(password_baru, 10)
   db.prepare('UPDATE users SET password = ? WHERE id = ?').run(hashed, req.user.id)
   res.json({ success:true, message:'Password berhasil diubah' })
 })
 
 // POST — verifikasi password tanpa mengubahnya (untuk konfirmasi aksi kritis)
-router.post('/verify-password', require('../middleware/auth'), (req, res) => {
+router.post('/verify-password', require('../middleware/auth'), async (req, res) => {
   const { password } = req.body
   if (!password) return res.status(400).json({ success:false, message:'Password wajib diisi' })
   const user = db.prepare('SELECT * FROM users WHERE id = ?').get(req.user.id)
   if (!user) return res.status(404).json({ success:false, message:'User tidak ditemukan' })
-  const valid = bcrypt.compareSync(password, user.password)
+  const valid = await bcrypt.compare(password, user.password)
   if (!valid) return res.status(401).json({ success:false, message:'Password tidak sesuai' })
   res.json({ success:true })
 })
