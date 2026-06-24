@@ -141,6 +141,10 @@ if (!karyawanColumns.includes('status')) {
   db.exec("ALTER TABLE karyawan ADD COLUMN status TEXT DEFAULT 'aktif'");
   logger.info('Migration: kolom status ditambahkan');
 }
+if (!karyawanColumns.includes('thn_keluar')) {
+  db.exec('ALTER TABLE karyawan ADD COLUMN thn_keluar TEXT');
+  logger.info('Migration: kolom thn_keluar ditambahkan');
+}
 
 // Performance indexes
 db.exec(`CREATE INDEX IF NOT EXISTS idx_karyawan_cabang ON karyawan(cabang_id)`)

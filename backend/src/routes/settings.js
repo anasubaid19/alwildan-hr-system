@@ -1,6 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../models/database');
+const auth = require('../middleware/auth');
+const pino = require('pino');
+const logger = pino({ level: process.env.LOG_LEVEL || 'info' });
 
 db.exec(`
   CREATE TABLE IF NOT EXISTS settings (
@@ -30,7 +33,7 @@ router.get('/', (req, res) => {
   res.json({ success: true, data });
 });
 
-router.put('/', (req, res) => {
+router.put('/', auth.requireRole('admin','superadmin'), (req, res) => {
   const allowed = ['ai_provider', 'ai_base_url', 'ai_api_key', 'ai_model'];
   const update = db.prepare(`
     INSERT INTO settings (key, value, updated_at) VALUES (?, ?, CURRENT_TIMESTAMP)
@@ -46,7 +49,7 @@ router.put('/', (req, res) => {
 });
 
 // POST test koneksi — pakai nilai dari body (form)
-router.post('/test-ai', async (req, res) => {
+router.post('/test-ai', auth.requireRole('admin','superadmin'), async (req, res) => {
   const base_url = req.body.ai_base_url || get('ai_base_url');
   const api_key  = req.body.ai_api_key === '••••••••' ? get('ai_api_key') : (req.body.ai_api_key || get('ai_api_key'));
   const model    = req.body.ai_model || get('ai_model');
@@ -69,12 +72,13 @@ router.post('/test-ai', async (req, res) => {
     const reply = data.choices?.[0]?.message?.content || 'No response';
     res.json({ success: true, message: `Koneksi berhasil! Model: ${model} → "${reply.trim()}"` });
   } catch (e) {
-    res.status(500).json({ success: false, message: `Gagal terhubung: ${e.message}` });
+    logger.error(e, 'AI connection error');
+    res.status(500).json({ success: false, message: 'Gagal terhubung ke AI provider. Cek URL dan API key.' });
   }
 });
 
 // POST fetch models — pakai nilai dari body (form)
-router.post('/models', async (req, res) => {
+router.post('/models', auth.requireRole('admin','superadmin'), async (req, res) => {
   const base_url = req.body.ai_base_url || get('ai_base_url');
   const api_key  = req.body.ai_api_key === '••••••••' ? get('ai_api_key') : (req.body.ai_api_key || get('ai_api_key'));
   try {
@@ -85,7 +89,8 @@ router.post('/models', async (req, res) => {
     const models = data.data?.map(m => m.id).sort() || [];
     res.json({ success: true, data: models });
   } catch (e) {
-    res.status(500).json({ success: false, message: e.message });
+    logger.error(e, 'AI connection error');
+    res.status(500).json({ success: false, message: 'Gagal terhubung ke AI provider. Cek URL dan API key.' });
   }
 });
 

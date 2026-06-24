@@ -6,6 +6,9 @@ const path    = require('path');
 const fs      = require('fs');
 const db      = require('../models/database');
 const { createNotif } = require('./notifications');
+const auth    = require('../middleware/auth');
+const pino    = require('pino');
+const logger  = pino({ level: process.env.LOG_LEVEL || 'info' });
 
 // Tabel master_data
 db.exec(`
@@ -44,7 +47,7 @@ router.get('/', (req, res) => {
 });
 
 // POST — upload file master
-router.post('/upload', upload.single('file'), (req, res) => {
+router.post('/upload', auth.requireRole('admin','superadmin'), upload.single('file'), (req, res) => {
   if (!req.file) return res.status(400).json({ success: false, message: 'File tidak ditemukan' });
 
   try {
@@ -113,12 +116,13 @@ router.post('/upload', upload.single('file'), (req, res) => {
 
   } catch(e) {
     try { if (req.file) fs.unlinkSync(req.file.path) } catch {}
-    res.status(500).json({ success: false, message: e.message });
+    logger.error(e, 'Master data upload error');
+    res.status(500).json({ success: false, message: 'Gagal memproses file master' });
   }
 });
 
 // DELETE — hapus master data
-router.delete('/', (req, res) => {
+router.delete('/', auth.requireRole('admin','superadmin'), (req, res) => {
   db.prepare('DELETE FROM master_data').run();
   res.json({ success: true, message: 'Master data dihapus' });
 });

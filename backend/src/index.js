@@ -18,7 +18,7 @@ const PORT = process.env.PORT || 3010;
 const auth = require('./middleware/auth');
 
 app.use(require('pino-http')({ logger }));
-app.use(cors());
+app.use(cors({ origin: process.env.FRONTEND_ORIGIN ? process.env.FRONTEND_ORIGIN.split(',') : false }));
 app.use(express.json());
 
 // Di belakang nginx (Docker): percayai 1 proxy hop agar rate limiter melihat IP client asli

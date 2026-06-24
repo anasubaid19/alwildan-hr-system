@@ -198,6 +198,8 @@ export default function App() {
   if (!user) return <Login onLogin={login} />
 
   const firstName = user.nama?.split(' ')[0] || 'HR'
+  const canEdit = ['admin','superadmin'].includes(user?.role)
+  const navIcons = canEdit ? SIDEBAR_ICONS : SIDEBAR_ICONS.filter(i => !['upload','cabang'].includes(i.id))
 
   const suspenseFallback = (
     <div style={{ display:'flex', alignItems:'center', justifyContent:'center', height:300 }}>
@@ -290,7 +292,7 @@ export default function App() {
       </main>
       {/* Mobile bottom nav */}
       <nav style={{ height:64, background:'white', borderTop:'1px solid #E8EBF4', display:'flex', alignItems:'center', flexShrink:0 }}>
-        {[...SIDEBAR_ICONS.slice(0,4), SIDEBAR_ICONS[4]].map(({ id, icon:Icon, label }) => (
+        {navIcons.filter(n => n.id !== 'settings').map(({ id, icon:Icon, label }) => (
           <button key={id} onClick={()=>navigate(id)} style={{ flex:1, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:4, border:'none', background:'transparent', cursor:'pointer', color:active===id?'#1A3B8F':'#9BA5C0' }}>
             <div style={{ width:36, height:36, borderRadius:10, background:active===id?'#EEF1FA':'transparent', display:'flex', alignItems:'center', justifyContent:'center' }}>
               <Icon size={19}/>
@@ -324,7 +326,7 @@ export default function App() {
 
         {/* Nav icons */}
         <div style={{ display:'flex', flexDirection:'column', gap:4, flex:1 }}>
-          {SIDEBAR_ICONS.slice(0,5).map(({ id, icon:Icon }) => (
+          {navIcons.filter(n => n.id !== 'settings').map(({ id, icon:Icon }) => (
             <button key={id} onClick={()=>navigate(id)} title={SIDEBAR_ICONS.find(n=>n.id===id)?.label}
               aria-label={SIDEBAR_ICONS.find(n=>n.id===id)?.label}
               className={active===id ? undefined : 'hover-bg'}

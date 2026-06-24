@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../models/database');
+const auth = require('../middleware/auth');
 
 router.get('/', (req, res) => {
   const { cabang_id, status } = req.query;
@@ -57,7 +58,7 @@ router.get('/:id', (req, res) => {
   res.json({ success:true, data });
 });
 
-router.post('/', (req, res) => {
+router.post('/', auth.requireRole('admin','superadmin'), (req, res) => {
   const { no,nu,nama,jabatan,gender,gelar,thn_aktif,no_acc,cabang_id,status } = req.body;
   if (!nama) return res.status(400).json({ success:false, message:'Nama wajib diisi' });
   const r = db.prepare(`
@@ -67,7 +68,7 @@ router.post('/', (req, res) => {
   res.json({ success:true, id:r.lastInsertRowid });
 });
 
-router.put('/:id', (req, res) => {
+router.put('/:id', auth.requireRole('admin','superadmin'), (req, res) => {
   const { no,nu,nama,jabatan,gender,gelar,thn_aktif,thn_keluar,no_acc,cabang_id,status } = req.body;
   db.prepare(`
     UPDATE karyawan SET no=?,nu=?,nama=?,jabatan=?,gender=?,gelar=?,
@@ -77,7 +78,7 @@ router.put('/:id', (req, res) => {
   res.json({ success:true });
 });
 
-router.delete('/:id', (req, res) => {
+router.delete('/:id', auth.requireRole('admin','superadmin'), (req, res) => {
   db.prepare('DELETE FROM karyawan WHERE id=?').run(req.params.id);
   res.json({ success:true });
 });

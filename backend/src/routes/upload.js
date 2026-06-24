@@ -7,6 +7,10 @@ const fs = require('fs');
 const db = require('../models/database');
 const { getSettings } = require('./settings');
 const { createNotif }  = require('./notifications');
+const asyncHandler = require('../utils/asyncHandler');
+const auth = require('../middleware/auth');
+const pino = require('pino');
+const logger = pino({ level: process.env.LOG_LEVEL || 'info' });
 
 // Sheet yang diabaikan saat upload
 const IGNORED_SHEETS = ['SIP GAJI', 'SIP GAJI H'];
@@ -107,7 +111,7 @@ const detectCabang = (text, cabangList) => {
 };
 
 // POST /api/upload/analyze — upload & analisis kolom via AI
-router.post('/analyze', upload.single('file'), async (req, res) => {
+router.post('/analyze', auth.requireRole('admin','superadmin'), upload.single('file'), asyncHandler(async (req, res) => {
   if (!req.file) return res.status(400).json({ success: false, message: 'File tidak ditemukan' });
 
   try {
@@ -232,12 +236,13 @@ Balas HANYA dengan JSON object seperti ini (tanpa penjelasan, tanpa markdown):
 
   } catch (e) {
     try { if (req.file) fs.unlinkSync(req.file.path) } catch {}
-    res.status(500).json({ success: false, message: e.message });
+    logger.error(e, 'Upload error');
+    res.status(500).json({ success: false, message: 'Gagal memproses file' });
   }
-});
+}));
 
 // POST /api/upload/check-diff — preview perubahan sebelum konfirmasi
-router.post('/check-diff', (req, res) => {
+router.post('/check-diff', auth.requireRole('admin','superadmin'), (req, res) => {
   const { filepath, mapping, cabang_id, periode } = req.body
   if (!filepath || !mapping || !cabang_id || !periode)
     return res.status(400).json({ success: false, message: 'Data tidak lengkap' })
@@ -297,12 +302,13 @@ router.post('/check-diff', (req, res) => {
 
     res.json({ success: true, new: newRows, update: updateRows, unchanged: unchangedRows })
   } catch (e) {
-    res.status(500).json({ success: false, message: e.message })
+    logger.error(e, 'Upload error')
+    res.status(500).json({ success: false, message: 'Gagal memproses file' })
   }
 })
 
 // POST /api/upload/confirm — simpan data setelah HR konfirmasi mapping
-router.post('/confirm', async (req, res) => {
+router.post('/confirm', auth.requireRole('admin','superadmin'), asyncHandler(async (req, res) => {
   const { filepath, mapping, cabang_id, periode } = req.body;
 
   if (!filepath || !mapping || !cabang_id || !periode)
@@ -360,6 +366,7 @@ router.post('/confirm', async (req, res) => {
 
     let inserted = 0, updated = 0, skipped = 0;
 
+    const tx = db.transaction(() => {
     dataRows.forEach(row => {
       const nu   = String(getVal(row, 'NU') || '').trim();
       const nama = String(getVal(row, 'NAMA') || '').trim();
@@ -409,11 +416,14 @@ router.post('/confirm', async (req, res) => {
       if (wasExisting) updated++; else inserted++;
     });
 
-    const totalProses = inserted + updated;
     db.prepare(`
       INSERT INTO upload_log (cabang_id, filename, periode, status, catatan)
       VALUES (?, ?, ?, 'success', ?)
     `).run(cabang_id, path.basename(filepath), periode, `${inserted} baru, ${updated} diperbarui, ${skipped} dilewati`);
+    });
+    tx();
+
+    const totalProses = inserted + updated;
 
     const cabang = db.prepare('SELECT nama FROM cabang WHERE id = ?').get(cabang_id);
     createNotif(
@@ -428,8 +438,9 @@ router.post('/confirm', async (req, res) => {
     try { fs.unlinkSync(filepath) } catch {}
 
   } catch (e) {
-    res.status(500).json({ success: false, message: e.message });
+    logger.error(e, 'Upload error');
+    res.status(500).json({ success: false, message: 'Gagal memproses file' });
   }
-});
+}));
 
 module.exports = router;

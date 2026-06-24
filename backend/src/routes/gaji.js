@@ -4,6 +4,7 @@ const db = require('../models/database');
 const bcrypt = require('bcryptjs');
 const { createNotif } = require('./notifications');
 const asyncHandler = require('../utils/asyncHandler');
+const auth = require('../middleware/auth');
 
 router.get('/', (req, res) => {
   const { periode, cabang_id } = req.query;
@@ -161,7 +162,7 @@ router.get('/preview-hapus', (req, res) => {
 });
 
 // DELETE /api/gaji/periode — hapus semua gaji pada cabang+periode tertentu
-router.delete('/periode', asyncHandler(async (req, res) => {
+router.delete('/periode', auth.requireRole('admin','superadmin'), asyncHandler(async (req, res) => {
   const { cabang_id, periode, password } = req.body;
   if (!cabang_id || !periode || !password)
     return res.status(400).json({ success: false, message: 'cabang_id, periode, dan password wajib diisi' });

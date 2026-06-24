@@ -31,11 +31,11 @@ router.post('/login', loginLimiter, asyncHandler(async (req, res) => {
   const user = db.prepare('SELECT * FROM users WHERE email = ?').get(email);
 
   if (!user)
-    return res.status(401).json({ success: false, message: 'Email tidak ditemukan' });
+    return res.status(401).json({ success: false, message: 'Email atau password salah' });
 
   const valid = await bcrypt.compare(password, user.password);
   if (!valid)
-    return res.status(401).json({ success: false, message: 'Password salah' });
+    return res.status(401).json({ success: false, message: 'Email atau password salah' });
 
   const token = jwt.sign(
     { id: user.id, email: user.email, nama: user.nama, inisial: user.inisial, role: user.role || 'admin' },
@@ -164,8 +164,8 @@ router.post('/forgot-password', (req, res) => {
   // Tidak ada mailer: log token ke console (MVP). Di production, kirim via email.
   logger.info(`Reset password untuk ${email}: token=${token} (expired ${expiredAt})`);
 
-  // Sistem internal HR tanpa mailer — kembalikan token agar user bisa lanjut reset.
-  res.json({ ...genericResponse, resetToken: token, expired_at: expiredAt });
+  // Token TIDAK dikembalikan ke response — admin HR menyalin link dari log pino lalu mengirim manual ke user.
+  res.json(genericResponse);
 });
 
 // POST /api/auth/reset-password/:token — reset password pakai token

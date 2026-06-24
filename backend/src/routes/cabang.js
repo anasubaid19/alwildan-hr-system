@@ -4,6 +4,7 @@ const db = require('../models/database');
 const bcrypt = require('bcryptjs');
 const { createNotif } = require('./notifications');
 const asyncHandler = require('../utils/asyncHandler');
+const auth = require('../middleware/auth');
 
 router.get('/', (req, res) => {
   res.json({ success:true, data: db.prepare('SELECT * FROM cabang ORDER BY kode').all() });
@@ -16,7 +17,7 @@ router.get('/:id', (req, res) => {
   res.json({ success:true, data:{ ...c, total_karyawan:total.total } });
 });
 
-router.post('/', (req, res) => {
+router.post('/', auth.requireRole('admin','superadmin'), (req, res) => {
   const { kode, nama } = req.body;
   if (!kode||!nama) return res.status(400).json({ success:false, message:'Kode dan nama wajib diisi' });
   try {
@@ -25,7 +26,7 @@ router.post('/', (req, res) => {
   } catch { res.status(400).json({ success:false, message:'Kode cabang sudah digunakan' }); }
 });
 
-router.put('/:id', (req, res) => {
+router.put('/:id', auth.requireRole('admin','superadmin'), (req, res) => {
   const { kode, nama } = req.body;
   if (!kode||!nama) return res.status(400).json({ success:false, message:'Kode dan nama wajib diisi' });
   try {
@@ -34,10 +35,7 @@ router.put('/:id', (req, res) => {
   } catch { res.status(400).json({ success:false, message:'Kode sudah digunakan' }); }
 });
 
-router.delete('/:id', asyncHandler(async (req, res) => {
-  if (req.user.role !== 'superadmin')
-    return res.status(403).json({ success: false, message: 'Hanya Super Admin yang bisa menghapus cabang' });
-
+router.delete('/:id', auth.requireRole('superadmin'), asyncHandler(async (req, res) => {
   const { password } = req.body;
   if (!password)
     return res.status(400).json({ success: false, message: 'Password wajib diisi' });
@@ -53,10 +51,13 @@ router.delete('/:id', asyncHandler(async (req, res) => {
   const totalKaryawan = db.prepare('SELECT COUNT(*) as c FROM karyawan WHERE cabang_id = ?').get(req.params.id).c;
   const totalGaji     = db.prepare('SELECT COUNT(*) as c FROM gaji WHERE paying_cabang_id = ?').get(req.params.id).c;
 
-  // Cascade delete
-  db.prepare('DELETE FROM gaji WHERE paying_cabang_id = ?').run(req.params.id);
-  db.prepare('DELETE FROM karyawan WHERE cabang_id = ?').run(req.params.id);
-  db.prepare('DELETE FROM cabang WHERE id = ?').run(req.params.id);
+  // Cascade delete dalam satu transaksi
+  const tx = db.transaction(() => {
+    db.prepare('DELETE FROM gaji WHERE paying_cabang_id = ?').run(req.params.id);
+    db.prepare('DELETE FROM karyawan WHERE cabang_id = ?').run(req.params.id);
+    db.prepare('DELETE FROM cabang WHERE id = ?').run(req.params.id);
+  });
+  tx();
 
   createNotif(
     'delete',

@@ -35,6 +35,7 @@ function Field({ label, value, onChange, placeholder, hint }) {
 export default function Cabang() {
   const currentUser  = (() => { try { return JSON.parse(localStorage.getItem('aw_user') || '{}') } catch { return {} } })()
   const isSuperAdmin = currentUser.role === 'superadmin'
+  const canEdit      = ['admin','superadmin'].includes(currentUser.role)
 
   const [list, setList]       = useState([])
   const [loading, setLoading] = useState(true)
@@ -102,10 +103,12 @@ export default function Cabang() {
           <h2 style={{ fontSize:18, fontWeight:700, color:C.ink }}>Manajemen Cabang</h2>
           <p style={{ fontSize:12, color:C.muted, marginTop:3 }}>{list.length} cabang terdaftar</p>
         </div>
+        {canEdit && (
         <button onClick={openTambah}
           style={{ display:'flex', alignItems:'center', gap:8, padding:'10px 20px', borderRadius:100, border:'none', background:C.navy, color:'#fff', fontSize:13, fontWeight:600, cursor:'pointer' }}>
           <Plus size={15}/> Tambah Cabang
         </button>
+        )}
       </div>
 
       {/* Grid */}
@@ -117,9 +120,11 @@ export default function Cabang() {
         <div style={{ ...s.card, padding:60, textAlign:'center' }}>
           <Building2 size={32} color={C.muted} style={{ margin:'0 auto 12px' }}/>
           <p style={{ color:C.muted, fontSize:14 }}>Belum ada cabang terdaftar</p>
+          {canEdit && (
           <button onClick={openTambah} style={{ marginTop:16, padding:'9px 20px', borderRadius:100, border:'none', background:C.navy, color:'#fff', fontSize:13, fontWeight:600, cursor:'pointer' }}>
             Tambah Cabang Pertama
           </button>
+          )}
         </div>
       ) : (
         <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(260px, 1fr))', gap:14 }}>
@@ -130,10 +135,12 @@ export default function Cabang() {
                   <Building2 size={20} color={C.navy}/>
                 </div>
                 <div style={{ display:'flex', gap:6 }}>
+                  {canEdit && (
                   <button onClick={()=>openEdit(c)} aria-label="Edit cabang"
                     style={{ width:32, height:32, display:'flex', alignItems:'center', justifyContent:'center', borderRadius:8, border:'none', background:'#eff6ff', cursor:'pointer', color:'#2563eb' }}>
                     <Pencil size={14}/>
                   </button>
+                  )}
                   {isSuperAdmin && (
                     <button onClick={()=>openHapus(c)} aria-label="Hapus cabang"
                       style={{ width:32, height:32, display:'flex', alignItems:'center', justifyContent:'center', borderRadius:8, border:'none', background:'#fff5f5', cursor:'pointer', color:C.red }}>

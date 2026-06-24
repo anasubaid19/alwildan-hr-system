@@ -140,6 +140,18 @@ export default function UploadData() {
     } finally { setHapusLoading(false) }
   }
 
+  const currentUser = (() => { try { return JSON.parse(localStorage.getItem('aw_user') || '{}') } catch { return {} } })()
+  const canEdit = ['admin','superadmin'].includes(currentUser.role)
+
+  if (!canEdit) return (
+    <div style={{ maxWidth:960, display:'flex', alignItems:'center', justifyContent:'center', minHeight:300 }}>
+      <div style={{ textAlign:'center', color:C.muted }}>
+        <p style={{ fontSize:16, fontWeight:700, color:C.ink, marginBottom:6 }}>Akses Terbatas</p>
+        <p style={{ fontSize:14 }}>Hanya Admin yang dapat mengakses halaman upload data.</p>
+      </div>
+    </div>
+  )
+
   return (
     <div style={{ maxWidth:960, display:'flex', flexDirection:'column', gap:20 }}>
 

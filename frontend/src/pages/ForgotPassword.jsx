@@ -21,7 +21,6 @@ export default function ForgotPassword({ onBack }) {
   }
 
   if (success) {
-    const resetLink = `/reset-password/${success.resetToken}`
     return (
       <div style={{ minHeight: '100vh', display: 'flex', background: '#F0F2F8', fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
         <div style={{ width: 480, background: '#1A3B8F', display: 'flex', flexDirection: 'column', padding: 48, flexShrink: 0 }}
@@ -38,11 +37,11 @@ export default function ForgotPassword({ onBack }) {
           </div>
           <div style={{ marginBottom: 'auto', paddingTop: 80 }}>
             <h1 style={{ fontSize: 38, fontWeight: 800, color: 'white', lineHeight: 1.15, letterSpacing: '-1px', marginBottom: 20 }}>
-              <span style={{ color: '#C8962E' }}>Reset</span> Password<br />
-              telah dikirim
+              <span style={{ color: '#C8962E' }}>Permintaan</span> Reset<br />
+              telah diterima
             </h1>
             <p style={{ color: 'rgba(255,255,255,0.55)', fontSize: 15, lineHeight: 1.7, maxWidth: 320 }}>
-              Gunakan link di samping untuk membuat password baru. Link berlaku selama 1 jam.
+              Admin HR akan mengirimkan link reset password Anda melalui WhatsApp/email. Link berlaku selama 1 jam.
             </p>
           </div>
           <p style={{ color: 'rgba(255,255,255,0.25)', fontSize: 12, marginTop: 32 }}>© 2026 AL-WILDAN Islamic School</p>
@@ -65,18 +64,10 @@ export default function ForgotPassword({ onBack }) {
               <CheckCircle size={26} color="#059669" />
             </div>
 
-            <h2 style={{ fontSize: 26, fontWeight: 800, color: '#0a0b0d', letterSpacing: '-0.5px', marginBottom: 6 }}>Cek Email Anda</h2>
+            <h2 style={{ fontSize: 26, fontWeight: 800, color: '#0a0b0d', letterSpacing: '-0.5px', marginBottom: 6 }}>Permintaan Reset Diterima</h2>
             <p style={{ fontSize: 14, color: '#9BA5C0', marginBottom: 24, lineHeight: 1.6 }}>
-              Jika email <strong>{email}</strong> terdaftar di sistem, link reset password telah tersedia di bawah.
+              Jika email terdaftar, Admin HR telah menerima notifikasi dan akan mengirim link reset password Anda melalui WhatsApp/email. Link berlaku 1 jam.
             </p>
-
-            <div style={{ background: '#F0F2F8', borderRadius: 12, padding: 16, marginBottom: 24, border: '1px solid #E8EBF4' }}>
-              <p style={{ fontSize: 12, color: '#9BA5C0', marginBottom: 8, fontWeight: 600 }}>LINK RESET PASSWORD</p>
-              <a href={resetLink}
-                style={{ color: '#1A3B8F', fontSize: 14, fontWeight: 700, wordBreak: 'break-all', textDecoration: 'underline' }}>
-                {window.location.origin}{resetLink}
-              </a>
-            </div>
 
             <button onClick={onBack} className="hover-bg-blue"
               style={{ width: '100%', padding: '14px', borderRadius: 12, border: '1.5px solid #E8EBF4', background: 'white', color: '#1A3B8F', fontSize: 15, fontWeight: 700, cursor: 'pointer', fontFamily: 'Plus Jakarta Sans, sans-serif' }}>

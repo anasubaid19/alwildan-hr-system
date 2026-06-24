@@ -38,6 +38,9 @@ export default function Karyawan() {
   const [hapusPass, setHapusPass]   = useState('')
   const [hapusPassErr, setHapusPassErr] = useState('')
 
+  const currentUser = (() => { try { return JSON.parse(localStorage.getItem('aw_user') || '{}') } catch { return {} } })()
+  const canEdit = ['admin','superadmin'].includes(currentUser.role)
+
   const fetchAll = (cabang_id = filterCabang) => {
     setLoading(true)
     const h = authHeaders()
@@ -129,10 +132,12 @@ export default function Karyawan() {
           <h2 style={{ fontSize:18, fontWeight:700, color:C.ink }}>Data Karyawan</h2>
           <p style={{ fontSize:13, color:C.muted, marginTop:3 }}>{filtered.length} karyawan ditemukan</p>
         </div>
+        {canEdit && (
         <button onClick={openTambah}
           style={{ display:'flex', alignItems:'center', gap:8, padding:'11px 22px', borderRadius:100, border:'none', background:C.navy, color:'white', fontSize:13, fontWeight:700, cursor:'pointer' }}>
           <Plus size={16}/> Tambah Karyawan
         </button>
+        )}
       </div>
 
       {/* Filter Bar */}
@@ -201,6 +206,7 @@ export default function Karyawan() {
                           style={{ width:32, height:32, borderRadius:8, border:'none', background:'#F0FDF4', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', color:'#16a34a' }}>
                           <Eye size={14}/>
                         </button>
+                        {canEdit && (<>
                         <button onClick={()=>openEdit(k)} aria-label="Edit karyawan"
                           style={{ width:32, height:32, borderRadius:8, border:'none', background:'#EEF1FA', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', color:C.navy }}>
                           <Pencil size={14}/>
@@ -209,6 +215,7 @@ export default function Karyawan() {
                           style={{ width:32, height:32, borderRadius:8, border:'none', background:'#FEF2F2', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', color:C.red }}>
                           <Trash2 size={14}/>
                         </button>
+                        </>)}
                       </div>
                     </td>
                   </tr>
