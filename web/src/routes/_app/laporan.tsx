@@ -1,6 +1,8 @@
 import { useMutation, useQuery } from "@tanstack/react-query"
 import { createFileRoute } from "@tanstack/react-router"
-import { Download, FileSpreadsheet, FileText } from "lucide-react"
+import jsPDF from "jspdf"
+import autoTable from "jspdf-autotable"
+import { Download, FileDown, FileSpreadsheet, FileText } from "lucide-react"
 import { useState } from "react"
 import { toast } from "sonner"
 import * as XLSX from "xlsx"
@@ -154,8 +156,115 @@ function LaporanPage() {
     ])
   }
 
+  function buildPdf(rows: LaporanRow[]) {
+    const doc = new jsPDF({
+      orientation: "landscape",
+      unit: "pt",
+      format: "a4",
+    })
+    const pw = doc.internal.pageSize.getWidth()
+    doc.setFillColor(26, 59, 143)
+    doc.rect(0, 0, pw, 60, "F")
+    doc.setTextColor(255)
+    doc.setFont("helvetica", "bold")
+    doc.setFontSize(15)
+    doc.text("LAPORAN PENGGAJIAN — AL-WILDAN ISLAMIC SCHOOL", 32, 26)
+    doc.setFont("helvetica", "normal")
+    doc.setFontSize(9)
+    doc.text(
+      `Periode: ${label}  ·  ${rows.length} baris  ·  ${new Date().toLocaleDateString("id-ID")}`,
+      32,
+      44
+    )
+
+    const totalGaji = rows.reduce((a, r) => a + Number(r.jumlahGaji), 0)
+    const totalDiterima = rows.reduce((a, r) => a + Number(r.jmlDiterima), 0)
+    const totalPot = Math.abs(totalGaji - totalDiterima)
+    doc.setTextColor(10)
+    doc.setFontSize(9)
+    doc.text(
+      `Total Penggajian: ${rupiah.format(totalGaji)}     Total Potongan: ${rupiah.format(totalPot)}     Total Diterima: ${rupiah.format(totalDiterima)}`,
+      32,
+      78
+    )
+
+    autoTable(doc, {
+      startY: 88,
+      head: [
+        [
+          "NO",
+          "NU",
+          "NAMA",
+          "JABATAN",
+          "CABANG",
+          "PERIODE",
+          "GAPOK",
+          "TRANSP.",
+          "BPJS KS",
+          "POT BPJSTK",
+          "LAINS",
+          "TOTAL",
+          "DITERIMA",
+        ],
+      ],
+      body: rows.map((r, i) => [
+        i + 1,
+        r.nu ?? "",
+        r.nama,
+        r.jabatan ?? "",
+        r.cabangKode ?? "",
+        r.periode,
+        nf.format(Number(r.gapok)),
+        nf.format(Number(r.transport)),
+        nf.format(Number(r.bpjsKs)),
+        nf.format(Number(r.potBpjsTk)),
+        nf.format(Number(r.lains)),
+        nf.format(Number(r.jumlahGaji)),
+        nf.format(Number(r.jmlDiterima)),
+      ]),
+      foot: [
+        [
+          "",
+          "",
+          "TOTAL",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          nf.format(totalGaji),
+          nf.format(totalDiterima),
+        ],
+      ],
+      styles: { fontSize: 7, cellPadding: 2 },
+      headStyles: { fillColor: [26, 59, 143], textColor: 255, fontSize: 6.5 },
+      footStyles: {
+        fillColor: [26, 59, 143],
+        textColor: 255,
+        fontStyle: "bold",
+      },
+      alternateRowStyles: { fillColor: [247, 247, 247] },
+      columnStyles: {
+        0: { halign: "center" },
+        6: { halign: "right" },
+        7: { halign: "right" },
+        8: { halign: "right" },
+        9: { halign: "right" },
+        10: { halign: "right" },
+        11: { halign: "right" },
+        12: { halign: "right" },
+      },
+      margin: { left: 32, right: 32 },
+    })
+
+    doc.save(`laporan-gaji-${label}.pdf`)
+  }
+
   const exportMut = useMutation({
-    mutationFn: async (kind: "xlsx" | "csv" | "rekap") => {
+    mutationFn: async (kind: "xlsx" | "csv" | "pdf" | "rekap") => {
       if (kind === "rekap") {
         const rekap = await getRekap({ data: filters })
         const wb = XLSX.utils.book_new()
@@ -165,6 +274,10 @@ function LaporanPage() {
       }
       const rows = await getLaporanAll({ data: filters })
       if (rows.length === 0) throw new Error("Tidak ada data untuk diexport")
+      if (kind === "pdf") {
+        buildPdf(rows)
+        return
+      }
       const ws = buildDetailSheet(rows)
       if (kind === "csv") {
         const csv = `﻿${XLSX.utils.sheet_to_csv(ws)}`
@@ -243,6 +356,14 @@ function LaporanPage() {
             onClick={() => exportMut.mutate("csv")}
           >
             <Download /> CSV
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={exportMut.isPending}
+            onClick={() => exportMut.mutate("pdf")}
+          >
+            <FileDown /> PDF
           </Button>
           <Button
             variant="outline"
