@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { createFileRoute } from "@tanstack/react-router"
-import { FileSpreadsheet, RotateCcw, UploadCloud } from "lucide-react"
+import { FileSpreadsheet, RotateCcw, Sparkles, UploadCloud } from "lucide-react"
 import { type ChangeEvent, useState } from "react"
 import { toast } from "sonner"
 
@@ -29,6 +29,7 @@ import {
 import { listCabang } from "@/server/cabang"
 import {
   type AnalyzeResult,
+  aiMapping,
   analyzeUpload,
   commitUpload,
   type PreviewResult,
@@ -89,6 +90,22 @@ function UploadPage() {
         },
       }),
     onSuccess: (res) => setPreview(res),
+    onError: (err: Error) => toast.error(err.message),
+  })
+
+  const aiMapMut = useMutation({
+    mutationFn: () =>
+      aiMapping({
+        data: {
+          headers: analysis?.headers ?? [],
+          sample: analysis?.sample ?? [],
+        },
+      }),
+    onSuccess: (res) => {
+      setMapping(res)
+      setPreview(null)
+      toast.success("Pemetaan AI diterapkan")
+    },
     onError: (err: Error) => toast.error(err.message),
   })
 
@@ -274,7 +291,15 @@ function UploadPage() {
                 </Table>
               </div>
 
-              <div className="mt-4 flex justify-end">
+              <div className="mt-4 flex items-center justify-between gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => aiMapMut.mutate()}
+                  disabled={aiMapMut.isPending}
+                >
+                  {aiMapMut.isPending ? <Spinner /> : <Sparkles />} Petakan
+                  dengan AI
+                </Button>
                 <Button
                   onClick={() => previewMut.mutate()}
                   disabled={!canPreview}

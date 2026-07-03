@@ -5,6 +5,7 @@ import * as XLSX from "xlsx"
 import { requireRole } from "@/lib/auth"
 import { db } from "@/lib/db"
 import { cabang, gaji, karyawan, uploadLog } from "@/lib/db/schema"
+import { readAiConfig } from "@/server/settings"
 
 // ── Konstanta & kolom standar HR ──────────────────────────────────────
 const IGNORED_SHEETS = ["SIP GAJI", "SIP GAJI H"]
@@ -182,6 +183,84 @@ export function heuristicMapping(headers: string[]): Mapping {
   }
   return mapping
 }
+
+// ── Pemetaan kolom via AI (OpenAI-compatible), fallback heuristik ──────
+function buildMappingPrompt(headers: string[], sample: Rec[]): string {
+  return `Kamu asisten HR yang memetakan kolom data gaji karyawan.
+
+Kolom standar HR Pusat yang dibutuhkan:
+${HR_COLUMNS.join(", ")}
+
+Istilah penting:
+- NU = Nomor Urut karyawan
+- NAMA = nama sesuai gelar (prioritaskan yang mengandung gelar akademik)
+- LEMBUR = penambah gaji (bukan potongan), masuk JUMLAH GAJI
+- BPJS KS = BPJS Kesehatan, bagian JUMLAH GAJI (bukan potongan)
+- POT BPJS TK = BPJS Ketenagakerjaan, ini potongan
+- THP / Jml Diterima / TOTAL DITERIMA / TAKE HOME PAY -> Jml Diterima
+- JUMLAH GAJI = bruto (GAPOK + PENDDK + JABATAN_TUNJ + TRANSPORT + BPJS KS + LAINS + LEMBUR)
+
+Kolom dari file cabang:
+${headers.join(", ")}
+
+Contoh data (maks 3 baris):
+${JSON.stringify(sample, null, 2)}
+
+Petakan tiap kolom cabang ke kolom standar yang paling sesuai; null bila tak ada padanan.
+Balas HANYA JSON tanpa markdown:
+{"mapping": {"kolom_cabang": "KOLOM_STANDAR_atau_null"}}`
+}
+
+/** Pemetaan kolom via AI provider (config dari settings). Akses: admin. */
+export const aiMapping = createServerFn({ method: "POST" })
+  .validator((d: { headers: string[]; sample: Rec[] }) => d)
+  .handler(async ({ data }): Promise<Mapping> => {
+    await requireRole("admin")
+    const { headers, sample } = data
+    const { baseUrl, apiKey, model } = await readAiConfig()
+    if (!apiKey || !model) {
+      throw new Error("AI belum dikonfigurasi — atur di menu Settings.")
+    }
+
+    const res = await fetch(`${baseUrl}/chat/completions`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model,
+        messages: [
+          { role: "user", content: buildMappingPrompt(headers, sample) },
+        ],
+        max_tokens: 1000,
+        temperature: 0.1,
+      }),
+    })
+    if (!res.ok) throw new Error(`AI error ${res.status}`)
+
+    const json = (await res.json()) as {
+      choices?: { message?: { content?: string } }[]
+    }
+    const text = json.choices?.[0]?.message?.content ?? "{}"
+
+    // Parse; bila gagal, fallback ke heuristik.
+    let raw: Record<string, unknown> = {}
+    try {
+      const clean = text.replace(/```json|```/g, "").trim()
+      raw = (JSON.parse(clean).mapping ?? {}) as Record<string, unknown>
+    } catch {
+      return heuristicMapping(headers)
+    }
+
+    const valid = new Set<string>(HR_COLUMNS)
+    const result: Mapping = {}
+    for (const h of headers) {
+      const v = raw[h]
+      result[h] = typeof v === "string" && valid.has(v) ? v : null
+    }
+    return result
+  })
 
 // ── Helper ambil nilai kolom standar dari record ──────────────────────
 function getVal(rec: Rec, mapping: Mapping, stdCol: string): string {
