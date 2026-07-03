@@ -19,8 +19,10 @@ import {
   Wallet,
 } from "lucide-react"
 import { useTheme } from "next-themes"
+import { useEffect, useState } from "react"
 
 import { NotificationBell } from "@/components/layout/notification-bell"
+import { SearchCommand } from "@/components/layout/search-command"
 import { Button } from "@/components/ui/button"
 import { Kbd } from "@/components/ui/kbd"
 import { type AppRole, hasAtLeast } from "@/lib/auth/roles"
@@ -88,6 +90,18 @@ function ThemeToggle() {
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const nav = useVisibleNav()
+  const [searchOpen, setSearchOpen] = useState(false)
+
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault()
+        setSearchOpen((v) => !v)
+      }
+    }
+    document.addEventListener("keydown", onKey)
+    return () => document.removeEventListener("keydown", onKey)
+  }, [])
 
   return (
     <div className="flex min-h-svh bg-background">
@@ -126,6 +140,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <header className="flex h-14 items-center gap-3 border-b bg-background px-4">
           <button
             type="button"
+            onClick={() => setSearchOpen(true)}
             className="flex h-9 flex-1 items-center gap-2 rounded-lg border bg-popover px-3 text-muted-foreground text-sm transition-colors hover:bg-accent/50 sm:max-w-xs"
           >
             <Search className="size-4" />
@@ -161,6 +176,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </Link>
         ))}
       </nav>
+
+      <SearchCommand open={searchOpen} onOpenChange={setSearchOpen} />
     </div>
   )
 }
