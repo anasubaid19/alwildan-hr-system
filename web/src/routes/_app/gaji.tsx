@@ -83,6 +83,7 @@ const PENDAPATAN: [GajiMoneyField, string][] = [
   ["transport", "Transport"],
   ["bpjsKs", "BPJS KS"],
   ["lains", "Lain-lain"],
+  ["lembur", "Lembur"],
 ]
 const POTONGAN: [GajiMoneyField, string][] = [
   ["potThr", "Pot. THR"],
@@ -105,10 +106,11 @@ function useDebounced<T>(value: T, delay = 300): T {
   return debounced
 }
 
-type GajiFormValues = { karyawanId: string; periode: string } & Record<
-  GajiMoneyField,
-  string
->
+type GajiFormValues = {
+  karyawanId: string
+  periode: string
+  payingCabangId: string
+} & Record<GajiMoneyField, string>
 
 function GajiPage() {
   const qc = useQueryClient()
@@ -369,6 +371,7 @@ function GajiPage() {
         onOpenChange={setFormOpen}
         editing={editing}
         karyawanList={karyawanList}
+        cabangList={cabangList}
         pending={saveMutation.isPending}
         onSubmit={(values) =>
           saveMutation.mutate({ id: editing?.id, ...values })
@@ -410,6 +413,7 @@ function GajiFormDialog({
   onOpenChange,
   editing,
   karyawanList,
+  cabangList,
   pending,
   onSubmit,
 }: {
@@ -417,6 +421,7 @@ function GajiFormDialog({
   onOpenChange: (open: boolean) => void
   editing: GajiRow | null
   karyawanList: { id: number; nama: string; cabangKode: string | null }[]
+  cabangList: { id: number; kode: string; nama: string }[]
   pending: boolean
   onSubmit: (values: GajiFormValues) => void
 }) {
@@ -427,6 +432,9 @@ function GajiFormDialog({
     return {
       karyawanId: editing?.karyawanId ? String(editing.karyawanId) : "",
       periode: editing?.periode ?? "",
+      payingCabangId: editing?.payingCabangId
+        ? String(editing.payingCabangId)
+        : "",
       ...money,
     }
   })
@@ -465,7 +473,7 @@ function GajiFormDialog({
             </DialogDescription>
           </DialogHeader>
 
-          <div className="grid gap-4 py-4 sm:grid-cols-2">
+          <div className="grid gap-4 py-4 sm:grid-cols-3">
             <div className="flex flex-col gap-2">
               <Label htmlFor="karyawan">Karyawan</Label>
               <NativeSelect
@@ -482,6 +490,22 @@ function GajiFormDialog({
                   <NativeSelectOption key={k.id} value={String(k.id)}>
                     {k.nama}
                     {k.cabangKode ? ` (${k.cabangKode})` : ""}
+                  </NativeSelectOption>
+                ))}
+              </NativeSelect>
+            </div>
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="paying-cabang">Cabang Pembayar</Label>
+              <NativeSelect
+                id="paying-cabang"
+                className="w-full"
+                value={form.payingCabangId}
+                onChange={(e) => set("payingCabangId", e.target.value)}
+              >
+                <NativeSelectOption value="">Tanpa cabang</NativeSelectOption>
+                {cabangList.map((c) => (
+                  <NativeSelectOption key={c.id} value={String(c.id)}>
+                    {c.kode} — {c.nama}
                   </NativeSelectOption>
                 ))}
               </NativeSelect>

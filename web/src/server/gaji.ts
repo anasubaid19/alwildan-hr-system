@@ -13,6 +13,7 @@ export const GAJI_MONEY_FIELDS = [
   "transport",
   "bpjsKs",
   "lains",
+  "lembur",
   "potThr",
   "potBpjsTk",
   "depositItba",
@@ -29,6 +30,7 @@ export type GajiRow = {
   karyawanId: number
   periode: string
   karyawanNama: string | null
+  payingCabangId: number | null
   cabangKode: string | null
 } & Record<GajiMoneyField, string>
 
@@ -42,6 +44,7 @@ export type ListGajiResult = {
 type GajiInput = {
   karyawanId?: number | string | null
   periode?: string
+  payingCabangId?: number | string | null
 } & Partial<Record<GajiMoneyField, number | string | null>>
 
 function toMoney(v: unknown): string {
@@ -70,7 +73,12 @@ function parseGajiInput(d: GajiInput) {
   const money = Object.fromEntries(
     GAJI_MONEY_FIELDS.map((f) => [f, toMoney(d[f])])
   ) as Record<GajiMoneyField, string>
-  return { karyawanId, periode, ...money }
+  return {
+    karyawanId,
+    periode,
+    payingCabangId: toInt(d.payingCabangId),
+    ...money,
+  }
 }
 
 function isForeignKeyViolation(err: unknown): boolean {
@@ -79,6 +87,15 @@ function isForeignKeyViolation(err: unknown): boolean {
     err !== null &&
     "code" in err &&
     (err as { code: unknown }).code === "23503"
+  )
+}
+
+function isUniqueViolation(err: unknown): boolean {
+  return (
+    typeof err === "object" &&
+    err !== null &&
+    "code" in err &&
+    (err as { code: unknown }).code === "23505"
   )
 }
 
@@ -105,7 +122,7 @@ export const listGaji = createServerFn()
     const conds: SQL[] = []
     if (data.search) conds.push(ilike(karyawan.nama, `%${data.search}%`))
     if (data.periode) conds.push(eq(gaji.periode, data.periode))
-    if (data.cabangId) conds.push(eq(karyawan.cabangId, data.cabangId))
+    if (data.cabangId) conds.push(eq(gaji.payingCabangId, data.cabangId))
     const where = conds.length ? and(...conds) : undefined
 
     const moneyCols = Object.fromEntries(
@@ -119,12 +136,13 @@ export const listGaji = createServerFn()
           karyawanId: gaji.karyawanId,
           periode: gaji.periode,
           karyawanNama: karyawan.nama,
+          payingCabangId: gaji.payingCabangId,
           cabangKode: cabang.kode,
           ...moneyCols,
         })
         .from(gaji)
         .innerJoin(karyawan, eq(gaji.karyawanId, karyawan.id))
-        .leftJoin(cabang, eq(karyawan.cabangId, cabang.id))
+        .leftJoin(cabang, eq(gaji.payingCabangId, cabang.id))
         .where(where)
         .orderBy(desc(gaji.periode), asc(karyawan.nama))
         .limit(data.pageSize)
@@ -165,6 +183,9 @@ export const createGaji = createServerFn({ method: "POST" })
       const [row] = await db.insert(gaji).values(data).returning()
       return row
     } catch (err) {
+      if (isUniqueViolation(err)) {
+        throw new Error("Slip untuk karyawan, periode, & cabang ini sudah ada")
+      }
       if (isForeignKeyViolation(err)) throw new Error("Karyawan tidak valid")
       throw err
     }
@@ -179,13 +200,20 @@ export const updateGaji = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     await requireRole("admin")
     const { id, ...values } = data
-    const [row] = await db
-      .update(gaji)
-      .set(values)
-      .where(eq(gaji.id, id))
-      .returning()
-    if (!row) throw new Error("Slip gaji tidak ditemukan")
-    return row
+    try {
+      const [row] = await db
+        .update(gaji)
+        .set(values)
+        .where(eq(gaji.id, id))
+        .returning()
+      if (!row) throw new Error("Slip gaji tidak ditemukan")
+      return row
+    } catch (err) {
+      if (isUniqueViolation(err)) {
+        throw new Error("Slip untuk karyawan, periode, & cabang ini sudah ada")
+      }
+      throw err
+    }
   })
 
 /** Hapus satu slip gaji. Akses: admin ke atas. */

@@ -391,8 +391,10 @@ export const previewUpload = createServerFn({ method: "POST" })
   .validator((d: { cabangId: number; mapping: Mapping; records: Rec[] }) => d)
   .handler(async ({ data }): Promise<PreviewResult> => {
     await requireRole("admin")
-    const { cabangId, mapping, records } = data
+    const { mapping, records } = data
 
+    // Cocokkan karyawan GLOBAL by nama (bukan per cabang) — mendukung beban
+    // sharing: 1 orang bisa muncul di beberapa cabang pembayar.
     const existing = await db
       .select({
         nama: karyawan.nama,
@@ -402,7 +404,6 @@ export const previewUpload = createServerFn({ method: "POST" })
         nu: karyawan.nu,
       })
       .from(karyawan)
-      .where(eq(karyawan.cabangId, cabangId))
     const byName = new Map(
       existing.map((k) => [k.nama.trim().toLowerCase(), k])
     )
@@ -458,10 +459,10 @@ export const commitUpload = createServerFn({ method: "POST" })
     const { cabangId, periode, filename, mapping, records } = data
 
     return db.transaction(async (tx) => {
+      // Matching global by nama (beban sharing lintas cabang).
       const existing = await tx
         .select({ id: karyawan.id, nama: karyawan.nama })
         .from(karyawan)
-        .where(eq(karyawan.cabangId, cabangId))
       const byName = new Map(
         existing.map((k) => [k.nama.trim().toLowerCase(), k.id])
       )
@@ -543,9 +544,9 @@ export const commitUpload = createServerFn({ method: "POST" })
 
         await tx
           .insert(gaji)
-          .values({ karyawanId, periode, ...money })
+          .values({ karyawanId, periode, payingCabangId: cabangId, ...money })
           .onConflictDoUpdate({
-            target: [gaji.karyawanId, gaji.periode],
+            target: [gaji.karyawanId, gaji.periode, gaji.payingCabangId],
             set: money,
           })
 

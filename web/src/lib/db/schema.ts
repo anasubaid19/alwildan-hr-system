@@ -57,10 +57,16 @@ export const gaji = pgTable("gaji", {
   punishment: numeric().default("0").notNull(),
   pinjaman: numeric().default("0").notNull(),
   lembur: numeric().default("0").notNull(),
+  // Cabang yang menanggung porsi gaji ini (beban sharing lintas cabang).
+  payingCabangId: integer("paying_cabang_id").references(() => cabang.id),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 }, (t) => [
-  // Satu slip per karyawan per periode → dipakai upsert saat impor Excel.
-  uniqueIndex("gaji_karyawan_periode_uniq").on(t.karyawanId, t.periode),
+  // Satu slip per karyawan per periode PER cabang pembayar → target upsert impor.
+  uniqueIndex("gaji_karyawan_periode_cabang_uniq").on(
+    t.karyawanId,
+    t.periode,
+    t.payingCabangId,
+  ),
 ])
 
 // users — akun HR yang bisa login (id = Clerk user ID)
