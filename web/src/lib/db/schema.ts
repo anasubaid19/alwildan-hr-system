@@ -7,6 +7,7 @@ import {
   serial,
   text,
   timestamp,
+  uniqueIndex,
 } from "drizzle-orm/pg-core"
 
 // cabang — unit/cabang sekolah
@@ -55,8 +56,12 @@ export const gaji = pgTable("gaji", {
   jmlDiterima: numeric("jml_diterima").default("0").notNull(), // take-home
   punishment: numeric().default("0").notNull(),
   pinjaman: numeric().default("0").notNull(),
+  lembur: numeric().default("0").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
-})
+}, (t) => [
+  // Satu slip per karyawan per periode → dipakai upsert saat impor Excel.
+  uniqueIndex("gaji_karyawan_periode_uniq").on(t.karyawanId, t.periode),
+])
 
 // users — akun HR yang bisa login (id = Clerk user ID)
 export const users = pgTable("users", {
