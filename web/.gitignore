@@ -1,0 +1,14 @@
+node_modules
+.env
+.env.local
+.output
+.nitro
+.tanstack
+.vite
+dist
+*.log
+src/routeTree.gen.ts
+.DS_Store
+
+# clerk configuration (can include secrets)
+/.clerk/

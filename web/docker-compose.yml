@@ -1,0 +1,32 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: alwildan_postgres
+    environment:
+      POSTGRES_DB: alwildan_hr
+      POSTGRES_USER: alwildan
+      POSTGRES_PASSWORD: alwildan2026
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  # App service diaktifkan di Phase 5 (butuh Dockerfile).
+  # app:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile
+  #   container_name: alwildan_app
+  #   ports:
+  #     - "3000:3000"
+  #   environment:
+  #     DATABASE_URL: postgresql://alwildan:alwildan2026@postgres:5432/alwildan_hr
+  #     CLERK_SECRET_KEY: ${CLERK_SECRET_KEY}
+  #     VITE_CLERK_PUBLISHABLE_KEY: ${VITE_CLERK_PUBLISHABLE_KEY}
+  #   depends_on:
+  #     - postgres
+  #   restart: unless-stopped
+
+volumes:
+  postgres_data:

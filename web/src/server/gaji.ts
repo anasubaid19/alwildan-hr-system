@@ -1,0 +1,199 @@
+import { createServerFn } from "@tanstack/react-start"
+import { and, asc, count, desc, eq, ilike, type SQL } from "drizzle-orm"
+
+import { requireClerkUserId, requireRole } from "@/lib/auth"
+import { db } from "@/lib/db"
+import { cabang, gaji, karyawan } from "@/lib/db/schema"
+
+// Kolom nominal (numeric → dikembalikan sebagai string oleh driver).
+export const GAJI_MONEY_FIELDS = [
+  "gapok",
+  "tunjanganPenddk",
+  "tunjanganJabatan",
+  "transport",
+  "bpjsKs",
+  "lains",
+  "potThr",
+  "potBpjsTk",
+  "depositItba",
+  "punishment",
+  "pinjaman",
+  "jumlahGaji",
+  "jmlDiterima",
+] as const
+
+export type GajiMoneyField = (typeof GAJI_MONEY_FIELDS)[number]
+
+export type GajiRow = {
+  id: number
+  karyawanId: number
+  periode: string
+  karyawanNama: string | null
+  cabangKode: string | null
+} & Record<GajiMoneyField, string>
+
+export type ListGajiResult = {
+  rows: GajiRow[]
+  total: number
+  page: number
+  pageSize: number
+}
+
+type GajiInput = {
+  karyawanId?: number | string | null
+  periode?: string
+} & Partial<Record<GajiMoneyField, number | string | null>>
+
+function toMoney(v: unknown): string {
+  if (v === null || v === undefined || v === "") return "0"
+  const n =
+    typeof v === "number"
+      ? v
+      : Number.parseFloat(String(v).replace(/[^\d.-]/g, ""))
+  return Number.isFinite(n) ? String(n) : "0"
+}
+
+function toInt(v: unknown): number | null {
+  if (v === null || v === undefined || v === "") return null
+  const n = typeof v === "number" ? v : Number.parseInt(String(v), 10)
+  return Number.isFinite(n) ? n : null
+}
+
+/** Validasi & normalisasi input gaji (create & update). */
+function parseGajiInput(d: GajiInput) {
+  const karyawanId = toInt(d.karyawanId)
+  if (!karyawanId) throw new Error("Karyawan wajib dipilih")
+  const periode = d.periode?.trim() ?? ""
+  if (!/^\d{4}-\d{2}$/.test(periode)) {
+    throw new Error("Periode wajib format YYYY-MM (mis. 2026-07)")
+  }
+  const money = Object.fromEntries(
+    GAJI_MONEY_FIELDS.map((f) => [f, toMoney(d[f])])
+  ) as Record<GajiMoneyField, string>
+  return { karyawanId, periode, ...money }
+}
+
+function isForeignKeyViolation(err: unknown): boolean {
+  return (
+    typeof err === "object" &&
+    err !== null &&
+    "code" in err &&
+    (err as { code: unknown }).code === "23503"
+  )
+}
+
+type ListParams = {
+  search?: string
+  periode?: string
+  cabangId?: number | null
+  page?: number
+  pageSize?: number
+}
+
+/** Daftar slip gaji + nama karyawan & cabang, filter periode/cabang + search. */
+export const listGaji = createServerFn()
+  .validator((p: ListParams = {}) => ({
+    search: typeof p.search === "string" ? p.search.trim() : "",
+    periode: typeof p.periode === "string" ? p.periode.trim() : "",
+    cabangId: toInt(p.cabangId),
+    page: Math.max(1, Number(p.page) || 1),
+    pageSize: Math.min(100, Math.max(1, Number(p.pageSize) || 25)),
+  }))
+  .handler(async ({ data }): Promise<ListGajiResult> => {
+    await requireClerkUserId()
+
+    const conds: SQL[] = []
+    if (data.search) conds.push(ilike(karyawan.nama, `%${data.search}%`))
+    if (data.periode) conds.push(eq(gaji.periode, data.periode))
+    if (data.cabangId) conds.push(eq(karyawan.cabangId, data.cabangId))
+    const where = conds.length ? and(...conds) : undefined
+
+    const moneyCols = Object.fromEntries(
+      GAJI_MONEY_FIELDS.map((f) => [f, gaji[f]])
+    ) as Record<GajiMoneyField, (typeof gaji)[GajiMoneyField]>
+
+    const [rows, totalRes] = await Promise.all([
+      db
+        .select({
+          id: gaji.id,
+          karyawanId: gaji.karyawanId,
+          periode: gaji.periode,
+          karyawanNama: karyawan.nama,
+          cabangKode: cabang.kode,
+          ...moneyCols,
+        })
+        .from(gaji)
+        .innerJoin(karyawan, eq(gaji.karyawanId, karyawan.id))
+        .leftJoin(cabang, eq(karyawan.cabangId, cabang.id))
+        .where(where)
+        .orderBy(desc(gaji.periode), asc(karyawan.nama))
+        .limit(data.pageSize)
+        .offset((data.page - 1) * data.pageSize),
+      db
+        .select({ value: count() })
+        .from(gaji)
+        .innerJoin(karyawan, eq(gaji.karyawanId, karyawan.id))
+        .where(where),
+    ])
+
+    return {
+      rows: rows as GajiRow[],
+      total: totalRes[0]?.value ?? 0,
+      page: data.page,
+      pageSize: data.pageSize,
+    }
+  })
+
+/** Daftar periode (YYYY-MM) yang ada, terbaru dulu — untuk filter. */
+export const listPeriodeGaji = createServerFn().handler(
+  async (): Promise<string[]> => {
+    await requireClerkUserId()
+    const rows = await db
+      .selectDistinct({ periode: gaji.periode })
+      .from(gaji)
+      .orderBy(desc(gaji.periode))
+    return rows.map((r) => r.periode)
+  }
+)
+
+/** Tambah slip gaji. Akses: admin ke atas. */
+export const createGaji = createServerFn({ method: "POST" })
+  .validator((d: GajiInput) => parseGajiInput(d))
+  .handler(async ({ data }) => {
+    await requireRole("admin")
+    try {
+      const [row] = await db.insert(gaji).values(data).returning()
+      return row
+    } catch (err) {
+      if (isForeignKeyViolation(err)) throw new Error("Karyawan tidak valid")
+      throw err
+    }
+  })
+
+/** Ubah slip gaji. Akses: admin ke atas. */
+export const updateGaji = createServerFn({ method: "POST" })
+  .validator((d: GajiInput & { id: number }) => ({
+    id: d.id,
+    ...parseGajiInput(d),
+  }))
+  .handler(async ({ data }) => {
+    await requireRole("admin")
+    const { id, ...values } = data
+    const [row] = await db
+      .update(gaji)
+      .set(values)
+      .where(eq(gaji.id, id))
+      .returning()
+    if (!row) throw new Error("Slip gaji tidak ditemukan")
+    return row
+  })
+
+/** Hapus satu slip gaji. Akses: admin ke atas. */
+export const deleteGaji = createServerFn({ method: "POST" })
+  .validator((d: { id: number }) => ({ id: d.id }))
+  .handler(async ({ data }) => {
+    await requireRole("admin")
+    const [row] = await db.delete(gaji).where(eq(gaji.id, data.id)).returning()
+    if (!row) throw new Error("Slip gaji tidak ditemukan")
+    return row
+  })
