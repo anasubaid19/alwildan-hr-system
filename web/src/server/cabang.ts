@@ -4,6 +4,7 @@ import { asc, count, eq } from "drizzle-orm"
 import { requireClerkUserId, requireRole } from "@/lib/auth"
 import { db } from "@/lib/db"
 import { cabang, karyawan } from "@/lib/db/schema"
+import { createNotification } from "@/server/notifications"
 
 // Bentuk baris yang dikembalikan ke UI (cabang + jumlah karyawan).
 export type CabangRow = {
@@ -117,6 +118,12 @@ export const deleteCabang = createServerFn({ method: "POST" })
         .where(eq(cabang.id, data.id))
         .returning()
       if (!row) throw new Error("Cabang tidak ditemukan")
+      await createNotification({
+        type: "warning",
+        title: "Cabang dihapus",
+        message: `Cabang ${row.nama} (${row.kode}) dihapus.`,
+        linkPage: "/cabang",
+      })
       return row
     } catch (err) {
       if (isForeignKeyViolation(err)) {

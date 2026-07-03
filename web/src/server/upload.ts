@@ -5,6 +5,7 @@ import * as XLSX from "xlsx"
 import { requireRole } from "@/lib/auth"
 import { db } from "@/lib/db"
 import { cabang, gaji, karyawan, uploadLog } from "@/lib/db/schema"
+import { createNotification } from "@/server/notifications"
 import { readAiConfig } from "@/server/settings"
 
 // ── Konstanta & kolom standar HR ──────────────────────────────────────
@@ -458,7 +459,7 @@ export const commitUpload = createServerFn({ method: "POST" })
     await requireRole("admin")
     const { cabangId, periode, filename, mapping, records } = data
 
-    return db.transaction(async (tx) => {
+    const result = await db.transaction(async (tx) => {
       // Matching global by nama (beban sharing lintas cabang).
       const existing = await tx
         .select({ id: karyawan.id, nama: karyawan.nama })
@@ -564,4 +565,12 @@ export const commitUpload = createServerFn({ method: "POST" })
 
       return { inserted, updated, skipped }
     })
+
+    await createNotification({
+      type: "success",
+      title: "Upload data berhasil",
+      message: `${result.inserted} baru, ${result.updated} diperbarui, ${result.skipped} dilewati`,
+      linkPage: "/upload",
+    })
+    return result
   })

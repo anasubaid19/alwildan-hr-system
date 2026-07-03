@@ -4,6 +4,7 @@ import { and, asc, count, eq, ilike, type SQL } from "drizzle-orm"
 import { requireClerkUserId, requireRole } from "@/lib/auth"
 import { db } from "@/lib/db"
 import { cabang, karyawan } from "@/lib/db/schema"
+import { createNotification } from "@/server/notifications"
 
 export type KaryawanRow = {
   id: number
@@ -213,5 +214,11 @@ export const deleteKaryawan = createServerFn({ method: "POST" })
       .where(eq(karyawan.id, data.id))
       .returning()
     if (!row) throw new Error("Karyawan tidak ditemukan")
+    await createNotification({
+      type: "warning",
+      title: "Karyawan dihapus",
+      message: `${row.nama} dihapus beserta data gajinya.`,
+      linkPage: "/karyawan",
+    })
     return row
   })

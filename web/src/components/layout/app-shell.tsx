@@ -20,6 +20,7 @@ import {
 } from "lucide-react"
 import { useTheme } from "next-themes"
 
+import { NotificationBell } from "@/components/layout/notification-bell"
 import { Button } from "@/components/ui/button"
 import { Kbd } from "@/components/ui/kbd"
 import { type AppRole, hasAtLeast } from "@/lib/auth/roles"
@@ -136,6 +137,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             afterCreateOrganizationUrl="/dashboard"
             afterSelectOrganizationUrl="/dashboard"
           />
+          <NotificationBell />
           <ThemeToggle />
           <AuthControl />
         </header>
