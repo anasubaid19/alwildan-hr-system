@@ -17,8 +17,8 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 import { Spinner } from "@/components/ui/spinner"
+import { API_KEY_MASK } from "@/lib/ai-constants"
 import {
-  API_KEY_MASK,
   fetchAiModels,
   getAiSettings,
   saveAiSettings,

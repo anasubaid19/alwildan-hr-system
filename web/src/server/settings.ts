@@ -1,51 +1,15 @@
 import { createServerFn } from "@tanstack/react-start"
-import { eq } from "drizzle-orm"
 
+import { API_KEY_MASK } from "@/lib/ai-constants"
 import { requireRole } from "@/lib/auth"
-import { db } from "@/lib/db"
-import { settings } from "@/lib/db/schema"
+import {
+  AI_KEYS,
+  getSetting,
+  readAiConfig,
+  setSetting,
+} from "@/server/ai-config"
 
-export const API_KEY_MASK = "••••••••"
-
-const KEYS = {
-  baseUrl: "ai_base_url",
-  apiKey: "ai_api_key",
-  model: "ai_model",
-} as const
-
-async function getSetting(key: string): Promise<string> {
-  const [row] = await db
-    .select({ value: settings.value })
-    .from(settings)
-    .where(eq(settings.key, key))
-    .limit(1)
-  return row?.value ?? ""
-}
-
-async function setSetting(key: string, value: string): Promise<void> {
-  await db
-    .insert(settings)
-    .values({ key, value })
-    .onConflictDoUpdate({
-      target: settings.key,
-      set: { value, updatedAt: new Date() },
-    })
-}
-
-/** Config AI efektif (settings DB → fallback env). Server-only. */
-export async function readAiConfig() {
-  const [baseUrl, apiKey, model] = await Promise.all([
-    getSetting(KEYS.baseUrl),
-    getSetting(KEYS.apiKey),
-    getSetting(KEYS.model),
-  ])
-  return {
-    baseUrl:
-      baseUrl || process.env.AI_BASE_URL || "https://api.groq.com/openai/v1",
-    apiKey: apiKey || process.env.AI_API_KEY || "",
-    model: model || process.env.AI_MODEL || "",
-  }
-}
+export { API_KEY_MASK }
 
 export type AiSettings = { baseUrl: string; model: string; hasApiKey: boolean }
 
@@ -54,9 +18,9 @@ export const getAiSettings = createServerFn().handler(
   async (): Promise<AiSettings> => {
     await requireRole("admin")
     const [baseUrl, apiKey, model] = await Promise.all([
-      getSetting(KEYS.baseUrl),
-      getSetting(KEYS.apiKey),
-      getSetting(KEYS.model),
+      getSetting(AI_KEYS.baseUrl),
+      getSetting(AI_KEYS.apiKey),
+      getSetting(AI_KEYS.model),
     ])
     return {
       baseUrl: baseUrl || "https://api.groq.com/openai/v1",
@@ -75,10 +39,10 @@ export const saveAiSettings = createServerFn({ method: "POST" })
   }))
   .handler(async ({ data }) => {
     await requireRole("admin")
-    await setSetting(KEYS.baseUrl, data.baseUrl)
-    await setSetting(KEYS.model, data.model)
+    await setSetting(AI_KEYS.baseUrl, data.baseUrl)
+    await setSetting(AI_KEYS.model, data.model)
     if (data.apiKey && data.apiKey !== API_KEY_MASK) {
-      await setSetting(KEYS.apiKey, data.apiKey.trim())
+      await setSetting(AI_KEYS.apiKey, data.apiKey.trim())
     }
     return { ok: true }
   })

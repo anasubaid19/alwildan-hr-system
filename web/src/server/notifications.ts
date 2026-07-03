@@ -19,25 +19,6 @@ export type NotificationsResult = {
   unread: number
 }
 
-/** Buat notifikasi in-app. Server-only, dipanggil server fn lain saat event. */
-export async function createNotification(n: {
-  type?: string
-  title: string
-  message?: string
-  linkPage?: string
-}): Promise<void> {
-  try {
-    await db.insert(notifications).values({
-      type: n.type ?? "info",
-      title: n.title,
-      message: n.message ?? null,
-      linkPage: n.linkPage ?? null,
-    })
-  } catch (err) {
-    console.error("Gagal membuat notifikasi:", err)
-  }
-}
-
 /** 30 notifikasi terbaru + jumlah belum dibaca. */
 export const listNotifications = createServerFn().handler(
   async (): Promise<NotificationsResult> => {

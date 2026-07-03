@@ -49,12 +49,11 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { GAJI_MONEY_FIELDS, type GajiMoneyField } from "@/lib/gaji-fields"
 import { listCabang } from "@/server/cabang"
 import {
   createGaji,
   deleteGaji,
-  GAJI_MONEY_FIELDS,
-  type GajiMoneyField,
   type GajiRow,
   listGaji,
   listPeriodeGaji,

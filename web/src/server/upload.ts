@@ -5,8 +5,8 @@ import * as XLSX from "xlsx"
 import { requireRole } from "@/lib/auth"
 import { db } from "@/lib/db"
 import { cabang, gaji, karyawan, uploadLog } from "@/lib/db/schema"
-import { createNotification } from "@/server/notifications"
-import { readAiConfig } from "@/server/settings"
+import { readAiConfig } from "@/server/ai-config"
+import { createNotification } from "@/server/notify"
 
 // ── Konstanta & kolom standar HR ──────────────────────────────────────
 const IGNORED_SHEETS = ["SIP GAJI", "SIP GAJI H"]

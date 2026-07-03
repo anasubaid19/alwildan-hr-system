@@ -4,7 +4,7 @@ import { and, asc, count, eq, like, type SQL, sum } from "drizzle-orm"
 import { requireClerkUserId } from "@/lib/auth"
 import { db } from "@/lib/db"
 import { cabang, gaji, karyawan } from "@/lib/db/schema"
-import { GAJI_MONEY_FIELDS, type GajiMoneyField } from "@/server/gaji"
+import { GAJI_MONEY_FIELDS, type GajiMoneyField } from "@/lib/gaji-fields"
 
 export type LaporanRow = {
   nu: string | null

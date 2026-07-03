@@ -4,7 +4,7 @@ import { asc, count, eq } from "drizzle-orm"
 import { requireClerkUserId, requireRole } from "@/lib/auth"
 import { db } from "@/lib/db"
 import { cabang, karyawan } from "@/lib/db/schema"
-import { createNotification } from "@/server/notifications"
+import { createNotification } from "@/server/notify"
 
 // Bentuk baris yang dikembalikan ke UI (cabang + jumlah karyawan).
 export type CabangRow = {

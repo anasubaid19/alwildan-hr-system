@@ -4,26 +4,11 @@ import { and, asc, count, desc, eq, ilike, type SQL } from "drizzle-orm"
 import { requireClerkUserId, requireRole } from "@/lib/auth"
 import { db } from "@/lib/db"
 import { cabang, gaji, karyawan } from "@/lib/db/schema"
+import { GAJI_MONEY_FIELDS, type GajiMoneyField } from "@/lib/gaji-fields"
 
-// Kolom nominal (numeric → dikembalikan sebagai string oleh driver).
-export const GAJI_MONEY_FIELDS = [
-  "gapok",
-  "tunjanganPenddk",
-  "tunjanganJabatan",
-  "transport",
-  "bpjsKs",
-  "lains",
-  "lembur",
-  "potThr",
-  "potBpjsTk",
-  "depositItba",
-  "punishment",
-  "pinjaman",
-  "jumlahGaji",
-  "jmlDiterima",
-] as const
-
-export type GajiMoneyField = (typeof GAJI_MONEY_FIELDS)[number]
+export type { GajiMoneyField }
+// Re-export agar importer lama tetap jalan (definisi client-safe di lib).
+export { GAJI_MONEY_FIELDS }
 
 export type GajiRow = {
   id: number

@@ -4,7 +4,7 @@ import { and, asc, count, eq, ilike, type SQL } from "drizzle-orm"
 import { requireClerkUserId, requireRole } from "@/lib/auth"
 import { db } from "@/lib/db"
 import { cabang, karyawan } from "@/lib/db/schema"
-import { createNotification } from "@/server/notifications"
+import { createNotification } from "@/server/notify"
 
 export type KaryawanRow = {
   id: number
