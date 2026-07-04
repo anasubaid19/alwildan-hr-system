@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { createFileRoute } from "@tanstack/react-router"
-import { Mail, Send, Trash2, UserCog } from "lucide-react"
+import { Send, UserCog } from "lucide-react"
 import { useState } from "react"
 import { toast } from "sonner"
 
@@ -27,13 +27,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { type AppRole, ROLE_LABEL } from "@/lib/auth/roles"
-import {
-  inviteUser,
-  listAppUsers,
-  listPendingInvitations,
-  revokeInvitation,
-  updateUserRole,
-} from "@/server/users"
+import { inviteUser, listAppUsers, updateUserRole } from "@/server/users"
 
 export const Route = createFileRoute("/_app/user-management")({
   component: UserManagementPage,
@@ -48,30 +42,20 @@ function UserManagementPage() {
     queryKey: ["app-users"],
     queryFn: () => listAppUsers(),
   })
-  const invitesQuery = useQuery({
-    queryKey: ["pending-invitations"],
-    queryFn: () => listPendingInvitations(),
-  })
 
   const [email, setEmail] = useState("")
+  const [name, setName] = useState("")
   const [inviteRole, setInviteRole] = useState<AppRole>("admin")
 
   const inviteMut = useMutation({
-    mutationFn: () => inviteUser({ data: { email, role: inviteRole } }),
+    mutationFn: () => inviteUser({ data: { email, name, role: inviteRole } }),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["pending-invitations"] })
+      qc.invalidateQueries({ queryKey: ["app-users"] })
       setEmail("")
-      toast.success("Undangan dikirim")
-    },
-    onError: (err: Error) => toast.error(err.message),
-  })
-
-  const revokeMut = useMutation({
-    mutationFn: (invitationId: string) =>
-      revokeInvitation({ data: { invitationId } }),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["pending-invitations"] })
-      toast.success("Undangan dibatalkan")
+      setName("")
+      toast.success(
+        "User dibuat — tautan set-password ada di log server (mode dev)"
+      )
     },
     onError: (err: Error) => toast.error(err.message),
   })
@@ -87,13 +71,12 @@ function UserManagementPage() {
   })
 
   const users = usersQuery.data ?? []
-  const invites = invitesQuery.data ?? []
 
   return (
     <>
       <PageHeader
         title="User Management"
-        description="Kelola akun HR Pusat dan undangan admin baru."
+        description="Kelola akun HR Pusat dan undang admin baru."
       />
 
       <div className="flex flex-col gap-6">
@@ -102,11 +85,11 @@ function UserManagementPage() {
           <CardHeader>
             <CardTitle className="text-base">Undang Admin</CardTitle>
             <CardDescription>
-              Kirim undangan via email. Role tersimpan otomatis saat mereka
-              mendaftar.
+              Buat akun baru. Mereka menerima tautan untuk mengatur password
+              sendiri.
             </CardDescription>
           </CardHeader>
-          <CardContent className="flex flex-col gap-4">
+          <CardContent>
             <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
               <div className="flex flex-1 flex-col gap-2">
                 <Label htmlFor="email">Email</Label>
@@ -118,7 +101,16 @@ function UserManagementPage() {
                   placeholder="admin@alwildan.sch.id"
                 />
               </div>
-              <div className="flex flex-col gap-2 sm:w-44">
+              <div className="flex flex-1 flex-col gap-2">
+                <Label htmlFor="name">Nama</Label>
+                <Input
+                  id="name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Nama admin"
+                />
+              </div>
+              <div className="flex flex-col gap-2 sm:w-40">
                 <Label htmlFor="invite-role">Role</Label>
                 <NativeSelect
                   id="invite-role"
@@ -137,49 +129,9 @@ function UserManagementPage() {
                 onClick={() => inviteMut.mutate()}
                 disabled={inviteMut.isPending || !email}
               >
-                <Send /> Kirim
+                <Send /> Undang
               </Button>
             </div>
-
-            {invites.length > 0 && (
-              <div className="rounded-lg border">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Undangan Pending</TableHead>
-                      <TableHead className="w-28">Role</TableHead>
-                      <TableHead className="w-12" />
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {invites.map((inv) => (
-                      <TableRow key={inv.id}>
-                        <TableCell className="flex items-center gap-2">
-                          <Mail className="size-4 text-muted-foreground" />
-                          {inv.email}
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant="secondary">
-                            {ROLE_LABEL[inv.role as AppRole] ?? inv.role}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            aria-label={`Batalkan undangan ${inv.email}`}
-                            disabled={revokeMut.isPending}
-                            onClick={() => revokeMut.mutate(inv.id)}
-                          >
-                            <Trash2 />
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            )}
           </CardContent>
         </Card>
 
@@ -187,10 +139,7 @@ function UserManagementPage() {
         <Card>
           <CardHeader>
             <CardTitle className="text-base">Pengguna</CardTitle>
-            <CardDescription>
-              User muncul di sini setelah mereka mendaftar (tersinkron dari
-              Clerk).
-            </CardDescription>
+            <CardDescription>Semua akun HR dan rolenya.</CardDescription>
           </CardHeader>
           <CardContent>
             {usersQuery.isLoading ? (
@@ -202,9 +151,7 @@ function UserManagementPage() {
             ) : users.length === 0 ? (
               <div className="flex flex-col items-center gap-2 py-10 text-center">
                 <UserCog className="size-8 text-muted-foreground" />
-                <p className="text-muted-foreground text-sm">
-                  Belum ada user tersinkron.
-                </p>
+                <p className="text-muted-foreground text-sm">Belum ada user.</p>
               </div>
             ) : (
               <div className="rounded-lg border">

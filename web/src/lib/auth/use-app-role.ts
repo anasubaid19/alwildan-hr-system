@@ -1,13 +1,8 @@
-import { useUser } from "@clerk/tanstack-react-start"
-
+import { authClient } from "@/lib/auth/client"
 import { type AppRole, normalizeRole } from "./roles"
 
-/**
- * Role aplikasi user aktif dari Clerk publicMetadata.role.
- * Di dev, paksa 'super_admin' agar semua menu bisa diuji sebelum role di-set.
- */
+/** Role aplikasi user aktif dari sesi Better Auth. */
 export function useAppRole(): AppRole {
-  const { user } = useUser()
-  const role = normalizeRole(user?.publicMetadata?.role)
-  return import.meta.env.DEV ? "super_admin" : role
+  const { data } = authClient.useSession()
+  return normalizeRole((data?.user as { role?: unknown } | undefined)?.role)
 }

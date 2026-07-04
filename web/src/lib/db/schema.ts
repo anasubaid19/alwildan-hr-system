@@ -10,6 +10,9 @@ import {
   uniqueIndex,
 } from "drizzle-orm/pg-core"
 
+// Tabel auth Better Auth: user, session, account, verification.
+export * from "./auth-schema"
+
 // cabang — unit/cabang sekolah
 export const cabang = pgTable("cabang", {
   id: serial().primaryKey(),
@@ -37,49 +40,41 @@ export const karyawan = pgTable("karyawan", {
 })
 
 // gaji — slip gaji bulanan per karyawan
-export const gaji = pgTable("gaji", {
-  id: serial().primaryKey(),
-  karyawanId: integer("karyawan_id")
-    .notNull()
-    .references(() => karyawan.id, { onDelete: "cascade" }),
-  periode: text().notNull(), // YYYY-MM
-  jumlahGaji: numeric("jumlah_gaji").default("0").notNull(),
-  gapok: numeric().default("0").notNull(),
-  tunjanganPenddk: numeric("tunjangan_penddk").default("0").notNull(),
-  tunjanganJabatan: numeric("tunjangan_jabatan").default("0").notNull(),
-  transport: numeric().default("0").notNull(),
-  bpjsKs: numeric("bpjs_ks").default("0").notNull(),
-  lains: numeric().default("0").notNull(),
-  potThr: numeric("pot_thr").default("0").notNull(),
-  potBpjsTk: numeric("pot_bpjs_tk").default("0").notNull(),
-  depositItba: numeric("deposit_itba").default("0").notNull(),
-  jmlDiterima: numeric("jml_diterima").default("0").notNull(), // take-home
-  punishment: numeric().default("0").notNull(),
-  pinjaman: numeric().default("0").notNull(),
-  lembur: numeric().default("0").notNull(),
-  // Cabang yang menanggung porsi gaji ini (beban sharing lintas cabang).
-  payingCabangId: integer("paying_cabang_id").references(() => cabang.id),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-}, (t) => [
-  // Satu slip per karyawan per periode PER cabang pembayar → target upsert impor.
-  uniqueIndex("gaji_karyawan_periode_cabang_uniq").on(
-    t.karyawanId,
-    t.periode,
-    t.payingCabangId,
-  ),
-])
-
-// users — akun HR yang bisa login (id = Clerk user ID)
-export const users = pgTable("users", {
-  id: text().primaryKey(),
-  nama: text().notNull(),
-  email: text().unique().notNull(),
-  inisial: text(),
-  avatar: text(),
-  role: text().default("staff").notNull(), // super_admin / admin / staff
-  cabangId: integer("cabang_id").references(() => cabang.id), // null = semua cabang
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-})
+export const gaji = pgTable(
+  "gaji",
+  {
+    id: serial().primaryKey(),
+    karyawanId: integer("karyawan_id")
+      .notNull()
+      .references(() => karyawan.id, { onDelete: "cascade" }),
+    periode: text().notNull(), // YYYY-MM
+    jumlahGaji: numeric("jumlah_gaji").default("0").notNull(),
+    gapok: numeric().default("0").notNull(),
+    tunjanganPenddk: numeric("tunjangan_penddk").default("0").notNull(),
+    tunjanganJabatan: numeric("tunjangan_jabatan").default("0").notNull(),
+    transport: numeric().default("0").notNull(),
+    bpjsKs: numeric("bpjs_ks").default("0").notNull(),
+    lains: numeric().default("0").notNull(),
+    potThr: numeric("pot_thr").default("0").notNull(),
+    potBpjsTk: numeric("pot_bpjs_tk").default("0").notNull(),
+    depositItba: numeric("deposit_itba").default("0").notNull(),
+    jmlDiterima: numeric("jml_diterima").default("0").notNull(), // take-home
+    punishment: numeric().default("0").notNull(),
+    pinjaman: numeric().default("0").notNull(),
+    lembur: numeric().default("0").notNull(),
+    // Cabang yang menanggung porsi gaji ini (beban sharing lintas cabang).
+    payingCabangId: integer("paying_cabang_id").references(() => cabang.id),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (t) => [
+    // Satu slip per karyawan per periode PER cabang pembayar → target upsert impor.
+    uniqueIndex("gaji_karyawan_periode_cabang_uniq").on(
+      t.karyawanId,
+      t.periode,
+      t.payingCabangId
+    ),
+  ]
+)
 
 // settings — konfigurasi sistem (AI provider, dll)
 export const settings = pgTable("settings", {
@@ -118,15 +113,5 @@ export const uploadLog = pgTable("upload_log", {
   periode: text(), // YYYY-MM
   status: text(), // success / failed / pending
   errorMessage: text("error_message"),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-})
-
-// invite_keys — kode undangan registrasi HR baru
-export const inviteKeys = pgTable("invite_keys", {
-  id: serial().primaryKey(),
-  key: text().unique().notNull(),
-  usedBy: text("used_by").references(() => users.id),
-  usedAt: timestamp("used_at"),
-  createdBy: text("created_by").references(() => users.id),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 })

@@ -1,14 +1,9 @@
-import {
-  OrganizationSwitcher,
-  SignInButton,
-  UserButton,
-  useUser,
-} from "@clerk/tanstack-react-start"
-import { Link } from "@tanstack/react-router"
+import { Link, useNavigate } from "@tanstack/react-router"
 import {
   Building2,
   FileText,
   LayoutDashboard,
+  LogOut,
   Moon,
   Search,
   Settings,
@@ -24,8 +19,17 @@ import { useEffect, useState } from "react"
 import { NotificationBell } from "@/components/layout/notification-bell"
 import { SearchCommand } from "@/components/layout/search-command"
 import { Button } from "@/components/ui/button"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { Kbd } from "@/components/ui/kbd"
-import { type AppRole, hasAtLeast } from "@/lib/auth/roles"
+import { authClient } from "@/lib/auth/client"
+import { type AppRole, hasAtLeast, ROLE_LABEL } from "@/lib/auth/roles"
 import { useAppRole } from "@/lib/auth/use-app-role"
 
 type NavItem = {
@@ -62,14 +66,50 @@ function useVisibleNav() {
 }
 
 function AuthControl() {
-  const { isSignedIn } = useUser()
-  if (isSignedIn) {
-    return <UserButton />
+  const navigate = useNavigate()
+  const { data } = authClient.useSession()
+  const user = data?.user
+  const role = useAppRole()
+
+  const initials = (user?.name ?? user?.email ?? "?")
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((w) => w[0]?.toUpperCase() ?? "")
+    .join("")
+
+  async function signOut() {
+    await authClient.signOut()
+    navigate({ to: "/sign-in" })
   }
+
+  if (!user) return null
+
   return (
-    <SignInButton mode="modal">
-      <Button size="sm">Masuk</Button>
-    </SignInButton>
+    <DropdownMenu>
+      <DropdownMenuTrigger
+        render={<Button variant="ghost" size="icon" aria-label="Menu akun" />}
+      >
+        <span className="flex size-7 items-center justify-center rounded-full bg-primary font-medium text-primary-foreground text-xs">
+          {initials || "?"}
+        </span>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-56">
+        <DropdownMenuLabel>
+          <p className="font-medium text-sm">{user.name}</p>
+          <p className="font-normal text-muted-foreground text-xs">
+            {user.email}
+          </p>
+          <p className="mt-1 font-normal text-primary text-xs">
+            {ROLE_LABEL[role]}
+          </p>
+        </DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem variant="destructive" onClick={signOut}>
+          <LogOut /> Keluar
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   )
 }
 
@@ -147,11 +187,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <span>Cari…</span>
             <Kbd className="ml-auto">⌘K</Kbd>
           </button>
-          <OrganizationSwitcher
-            hidePersonal
-            afterCreateOrganizationUrl="/dashboard"
-            afterSelectOrganizationUrl="/dashboard"
-          />
           <NotificationBell />
           <ThemeToggle />
           <AuthControl />

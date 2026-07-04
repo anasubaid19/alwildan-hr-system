@@ -1,4 +1,3 @@
-import { ClerkProvider } from "@clerk/tanstack-react-start"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { createRootRoute, HeadContent, Scripts } from "@tanstack/react-router"
 import { TanStackRouterDevtools } from "@tanstack/react-router-devtools"
@@ -43,15 +42,15 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         <HeadContent />
       </head>
       <body>
-        <ClerkProvider>
-          <QueryClientProvider client={queryClient}>
-            <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
-              {children}
-              <Toaster />
-            </ThemeProvider>
-          </QueryClientProvider>
-        </ClerkProvider>
-        {import.meta.env.DEV && <TanStackRouterDevtools position="bottom-left" />}
+        <QueryClientProvider client={queryClient}>
+          <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
+            {children}
+            <Toaster />
+          </ThemeProvider>
+        </QueryClientProvider>
+        {import.meta.env.DEV && (
+          <TanStackRouterDevtools position="bottom-left" />
+        )}
         <Scripts />
       </body>
     </html>

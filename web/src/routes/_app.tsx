@@ -1,17 +1,17 @@
-import { RedirectToSignIn, useAuth } from "@clerk/tanstack-react-start"
-import { createFileRoute, Outlet } from "@tanstack/react-router"
+import { createFileRoute, Navigate, Outlet } from "@tanstack/react-router"
 
 import { AppShell } from "@/components/layout/app-shell"
 import { Spinner } from "@/components/ui/spinner"
+import { authClient } from "@/lib/auth/client"
 
 export const Route = createFileRoute("/_app")({
   component: AppLayout,
 })
 
 function AppLayout() {
-  const { isLoaded, isSignedIn } = useAuth()
+  const { data, isPending } = authClient.useSession()
 
-  if (!isLoaded) {
+  if (isPending) {
     return (
       <div className="flex min-h-svh items-center justify-center">
         <Spinner />
@@ -19,8 +19,8 @@ function AppLayout() {
     )
   }
 
-  if (!isSignedIn) {
-    return <RedirectToSignIn />
+  if (!data) {
+    return <Navigate to="/sign-in" />
   }
 
   return (
