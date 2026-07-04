@@ -84,6 +84,28 @@ bun run db:push     # sinkronkan skema Drizzle ke DB
 bun run db:studio   # Drizzle Studio
 ```
 
+## Deploy dengan Docker
+
+Aplikasi + database bisa dijalankan penuh via Docker (dari folder `web/`):
+
+```bash
+cd web
+
+# Sediakan secret untuk compose (dibaca dari file .env di samping compose)
+echo "BETTER_AUTH_SECRET=$(openssl rand -base64 32)" > .env
+# (opsional) domain publik:  echo "BETTER_AUTH_URL=https://hr.example.sch.id" >> .env
+
+# Build + jalankan (Postgres + app)
+docker compose up --build -d
+```
+
+- App: **http://localhost:3000** — Postgres di service `postgres` (jaringan internal compose).
+- Saat start, container app menjalankan `db:push` (membuat tabel) lalu server produksi.
+- Data Postgres persist di volume `postgres_data`.
+
+> Untuk produksi di balik domain, set `BETTER_AUTH_URL` ke URL publik dan
+> jalankan di belakang reverse proxy (HTTPS).
+
 ## Arsip
 
 Versi lama (Node.js + Express + SQLite backend, React + Vite frontend) tetap

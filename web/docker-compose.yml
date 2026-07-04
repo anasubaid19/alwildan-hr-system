@@ -10,23 +10,30 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U alwildan -d alwildan_hr"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
     restart: unless-stopped
 
-  # App service diaktifkan di Phase 5 (butuh Dockerfile).
-  # app:
-  #   build:
-  #     context: .
-  #     dockerfile: Dockerfile
-  #   container_name: alwildan_app
-  #   ports:
-  #     - "3000:3000"
-  #   environment:
-  #     DATABASE_URL: postgresql://alwildan:alwildan2026@postgres:5432/alwildan_hr
-  #     CLERK_SECRET_KEY: ${CLERK_SECRET_KEY}
-  #     VITE_CLERK_PUBLISHABLE_KEY: ${VITE_CLERK_PUBLISHABLE_KEY}
-  #   depends_on:
-  #     - postgres
-  #   restart: unless-stopped
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: alwildan_app
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_URL: postgresql://alwildan:alwildan2026@postgres:5432/alwildan_hr
+      # WAJIB diisi (mis. via file .env di samping compose): openssl rand -base64 32
+      BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET}
+      BETTER_AUTH_URL: ${BETTER_AUTH_URL:-http://localhost:3000}
+      PORT: "3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
 
 volumes:
   postgres_data:
