@@ -33,6 +33,9 @@ Thumbs.db
 # Graphify output
 graphify-out/
 
+# UI kit — referensi desain lokal untuk AI, bukan bagian aplikasi
+uikit/
+
 # Seed utils (jangan ikut production)
 backend/src/utils/seedMockData.js
 backend/src/utils/seedUsers.js
