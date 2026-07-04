@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { createFileRoute } from "@tanstack/react-router"
-import { Send, UserCog } from "lucide-react"
+import { Check, CheckCircle, Copy, KeyRound, UserCog } from "lucide-react"
 import { useState } from "react"
 import { toast } from "sonner"
 import { PageHeader } from "@/components/layout/page-header"
@@ -27,7 +27,26 @@ import {
 } from "@/components/ui/table"
 import { type AppRole, ROLE_LABEL } from "@/lib/auth/roles"
 import { QK } from "@/lib/query-keys"
-import { inviteUser, listAppUsers, updateUserRole } from "@/server/users"
+import { generateInvitePin } from "@/server/invite"
+import { listAppUsers, updateUserRole } from "@/server/users"
+
+/** Salin teks ke clipboard; fallback execCommand utk konteks non-HTTPS. */
+async function copyText(text: string): Promise<boolean> {
+  try {
+    await navigator.clipboard.writeText(text)
+    return true
+  } catch {
+    const el = document.createElement("textarea")
+    el.value = text
+    el.style.position = "fixed"
+    el.style.opacity = "0"
+    document.body.appendChild(el)
+    el.select()
+    const ok = document.execCommand("copy")
+    el.remove()
+    return ok
+  }
+}
 
 export const Route = createFileRoute("/_app/user-management")({
   component: UserManagementPage,
@@ -46,16 +65,19 @@ function UserManagementPage() {
   const [email, setEmail] = useState("")
   const [name, setName] = useState("")
   const [inviteRole, setInviteRole] = useState<AppRole>("admin")
+  const [generatedPin, setGeneratedPin] = useState<{
+    pin: string
+    name: string
+    email: string
+  } | null>(null)
+  const [copied, setCopied] = useState(false)
 
-  const inviteMut = useMutation({
-    mutationFn: () => inviteUser({ data: { email, name, role: inviteRole } }),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: QK.appUsers })
-      setEmail("")
-      setName("")
-      toast.success(
-        "User dibuat — tautan set-password ada di log server (mode dev)"
-      )
+  const generatePinMut = useMutation({
+    mutationFn: () =>
+      generateInvitePin({ data: { email, name, role: inviteRole } }),
+    onSuccess: (data) => {
+      setGeneratedPin({ pin: data.pin, name: data.name, email: data.email })
+      setCopied(false)
     },
     onError: (err: Error) => toast.error(err.message),
   })
@@ -85,8 +107,8 @@ function UserManagementPage() {
           <CardHeader>
             <CardTitle className="text-base">Undang Admin</CardTitle>
             <CardDescription>
-              Buat akun baru. Mereka menerima tautan untuk mengatur password
-              sendiri.
+              Buat PIN undangan. Calon admin menerima PIN via WhatsApp untuk
+              mendaftar.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -126,14 +148,75 @@ function UserManagementPage() {
                 </NativeSelect>
               </div>
               <Button
-                onClick={() => inviteMut.mutate()}
-                disabled={inviteMut.isPending || !email}
+                onClick={() => generatePinMut.mutate()}
+                disabled={generatePinMut.isPending || !email || !name.trim()}
               >
-                <Send /> Undang
+                <KeyRound /> Generate PIN
               </Button>
             </div>
           </CardContent>
         </Card>
+
+        {/* Hasil PIN — tampil sekali, disampaikan manual via WhatsApp */}
+        {generatedPin && (
+          <Card className="border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-950">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-base text-green-800 dark:text-green-200">
+                <CheckCircle className="size-5" />
+                PIN Berhasil Dibuat
+              </CardTitle>
+              <CardDescription className="text-green-700 dark:text-green-300">
+                Kirim PIN ini ke {generatedPin.name} via WhatsApp.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="flex flex-col items-center gap-4">
+              <div className="flex items-center gap-3">
+                <span className="font-bold font-mono text-4xl text-green-800 tracking-[0.3em] dark:text-green-200">
+                  {generatedPin.pin.match(/\d{3}/g)?.join(" ") ??
+                    generatedPin.pin}
+                </span>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  aria-label="Salin PIN"
+                  onClick={async () => {
+                    const ok = await copyText(generatedPin.pin)
+                    if (!ok) {
+                      toast.error("Gagal menyalin — salin manual")
+                      return
+                    }
+                    setCopied(true)
+                    setTimeout(() => setCopied(false), 2000)
+                  }}
+                >
+                  {copied ? (
+                    <Check className="size-4 text-green-600" />
+                  ) : (
+                    <Copy className="size-4" />
+                  )}
+                </Button>
+              </div>
+              <div className="text-center text-muted-foreground text-sm">
+                <p>Email: {generatedPin.email}</p>
+                <p>Role: {ROLE_LABEL[inviteRole]}</p>
+                <p className="mt-1 text-xs">
+                  Berlaku 48 jam. PIN hanya bisa dipakai sekali.
+                </p>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setGeneratedPin(null)
+                  setEmail("")
+                  setName("")
+                }}
+              >
+                Undang lagi
+              </Button>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Daftar user */}
         <Card>

@@ -15,6 +15,20 @@ export * from "./auth-schema"
 
 import { user } from "./auth-schema"
 
+// invite — undangan admin via PIN 6 digit (disampaikan manual, mis. WhatsApp).
+// Tanpa FK ke user: user baru dibuat saat PIN diterima (acceptInvite).
+export const invite = pgTable("invite", {
+  id: serial().primaryKey(),
+  email: text().notNull(),
+  name: text().notNull(),
+  role: text().default("admin").notNull(),
+  pin: text().notNull(),
+  attempts: integer().default(0).notNull(), // percobaan verifikasi gagal; ≥3 → expired
+  expiresAt: timestamp("expires_at").notNull(),
+  status: text().default("pending").notNull(), // pending | used | expired
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+})
+
 // cabang — unit/cabang sekolah
 export const cabang = pgTable("cabang", {
   id: serial().primaryKey(),

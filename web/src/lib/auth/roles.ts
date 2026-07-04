@@ -27,3 +27,11 @@ export function hasAtLeast(role: AppRole | undefined, min: AppRole): boolean {
   if (!role) return false
   return ROLE_RANK[role] >= ROLE_RANK[min]
 }
+
+/** Validasi role dari input; lempar bila tak dikenal. */
+export function assertRole(role: string): AppRole {
+  if (role !== "super_admin" && role !== "admin" && role !== "staff") {
+    throw new Error("Role tidak valid")
+  }
+  return role
+}

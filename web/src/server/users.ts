@@ -1,20 +1,10 @@
 import { createServerFn } from "@tanstack/react-start"
-import { getRequest } from "@tanstack/react-start/server"
 import { desc, eq } from "drizzle-orm"
 
-import { type AppRole, requireRole, requireUserId } from "@/lib/auth"
-import { auth } from "@/lib/auth/server"
+import { requireRole, requireUserId } from "@/lib/auth"
+import { assertRole } from "@/lib/auth/roles"
 import { db } from "@/lib/db"
 import { user as userTable } from "@/lib/db/schema"
-
-const VALID_ROLES: AppRole[] = ["super_admin", "admin", "staff"]
-
-function assertRole(role: string): AppRole {
-  if (!VALID_ROLES.includes(role as AppRole)) {
-    throw new Error("Role tidak valid")
-  }
-  return role as AppRole
-}
 
 export type AppUserRow = {
   id: string
@@ -64,35 +54,5 @@ export const updateUserRole = createServerFn({ method: "POST" })
       .update(userTable)
       .set({ role: data.role })
       .where(eq(userTable.id, data.userId))
-    return { ok: true }
-  })
-
-/** Undang user baru: buat akun + kirim tautan set-password (DEV: log).
- * Akses: super_admin. */
-export const inviteUser = createServerFn({ method: "POST" })
-  .validator((d: { email: string; name?: string; role: string }) => {
-    const email = (d.email ?? "").trim().toLowerCase()
-    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
-      throw new Error("Email tidak valid")
-    }
-    const name = (d.name ?? "").trim() || (email.split("@")[0] ?? email)
-    return { email, name, role: assertRole(d.role) }
-  })
-  .handler(async ({ data }) => {
-    await requireRole("super_admin")
-    const { headers } = getRequest()
-    await auth.api.createUser({
-      body: {
-        email: data.email,
-        name: data.name,
-        password: crypto.randomUUID(),
-        role: data.role,
-      },
-      headers,
-    })
-    // Tautan set-password via alur reset (DEV: link tampil di log server).
-    await auth.api.requestPasswordReset({
-      body: { email: data.email, redirectTo: "/reset-password" },
-    })
     return { ok: true }
   })

@@ -80,6 +80,12 @@ function SignInPage() {
               Daftar
             </Link>
           </p>
+          <p className="text-muted-foreground text-sm">
+            Punya PIN undangan?{" "}
+            <Link to="/verify-invite" className="text-primary hover:underline">
+              Verifikasi di sini
+            </Link>
+          </p>
         </CardFooter>
       </form>
     </AuthCard>

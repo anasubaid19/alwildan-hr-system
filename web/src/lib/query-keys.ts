@@ -13,5 +13,6 @@ export const QK = {
   aiSettings: ["ai-settings"] as const,
   notifications: ["notifications"] as const,
   appUsers: ["app-users"] as const,
+  invites: ["invites"] as const,
   search: ["search"] as const,
 } as const
