@@ -92,13 +92,20 @@ export function detectPeriode(text: string): string | null {
 
 type CabangLite = { id: number; kode: string; nama: string }
 
+function escapeRegExp(s: string): string {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+}
+
 export function detectCabang(
   text: string,
   cabangList: CabangLite[]
 ): CabangLite | null {
   const t = text.toLowerCase()
+  // Kode dicocokkan per batas kata: "AW1" tak akan cocok di dalam "AW10".
   for (const c of cabangList) {
-    if (c.kode && t.includes(c.kode.toLowerCase())) return c
+    if (c.kode && new RegExp(`\\b${escapeRegExp(c.kode)}\\b`, "i").test(text)) {
+      return c
+    }
   }
   for (const c of cabangList) {
     const words = c.nama
