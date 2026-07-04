@@ -25,7 +25,15 @@ const config = defineConfig({
       "@tanstack/router-core/ssr/client",
     ],
   },
-  plugins: [devtools(), tailwindcss(), tanstackStart(), viteReact()],
+  plugins: [
+    // consolePiping off: relay console server↔browser bisa saling memantul
+    // (pesan server → console browser → terminal → relay lagi) sampai log
+    // membengkak & tab browser beku.
+    devtools({ consolePiping: { enabled: false } }),
+    tailwindcss(),
+    tanstackStart(),
+    viteReact(),
+  ],
 })
 
 export default config

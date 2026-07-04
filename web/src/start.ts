@@ -1,5 +1,11 @@
-import { createStart } from "@tanstack/react-start"
+import { createCsrfMiddleware, createStart } from "@tanstack/react-start"
 
-export const startInstance = createStart(() => {
-  return {}
+// Server function = endpoint RPC same-origin; tolak request cross-site.
+// (Tanpa ini TanStack Start mencetak warning CSRF di setiap start dev.)
+const csrfMiddleware = createCsrfMiddleware({
+  filter: (ctx) => ctx.handlerType === "serverFn",
 })
+
+export const startInstance = createStart(() => ({
+  requestMiddleware: [csrfMiddleware],
+}))
