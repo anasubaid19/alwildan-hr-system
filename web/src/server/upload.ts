@@ -4,9 +4,14 @@ import * as XLSX from "xlsx"
 
 import { requireRole } from "@/lib/auth"
 import { db } from "@/lib/db"
-import { cabang, gaji, karyawan, uploadLog } from "@/lib/db/schema"
+import {
+  cabang,
+  gaji,
+  karyawan,
+  notifications,
+  uploadLog,
+} from "@/lib/db/schema"
 import { readAiConfig } from "@/server/ai-config"
-import { createNotification } from "@/server/notify"
 
 // ── Konstanta & kolom standar HR ──────────────────────────────────────
 const IGNORED_SHEETS = ["SIP GAJI", "SIP GAJI H"]
@@ -555,22 +560,23 @@ export const commitUpload = createServerFn({ method: "POST" })
         else inserted++
       }
 
+      const ringkas = `${inserted} baru, ${updated} diperbarui, ${skipped} dilewati`
       await tx.insert(uploadLog).values({
         cabangId,
         filename: filename || "upload.xlsx",
         periode,
         status: "success",
-        errorMessage: `${inserted} baru, ${updated} diperbarui, ${skipped} dilewati`,
+        errorMessage: ringkas,
+      })
+      // Notifikasi di dalam transaksi (atomic dgn data).
+      await tx.insert(notifications).values({
+        type: "success",
+        title: "Upload data berhasil",
+        message: ringkas,
+        linkPage: "/upload",
       })
 
       return { inserted, updated, skipped }
-    })
-
-    await createNotification({
-      type: "success",
-      title: "Upload data berhasil",
-      message: `${result.inserted} baru, ${result.updated} diperbarui, ${result.skipped} dilewati`,
-      linkPage: "/upload",
     })
     return result
   })

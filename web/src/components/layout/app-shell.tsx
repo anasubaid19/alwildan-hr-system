@@ -23,7 +23,6 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
@@ -95,15 +94,11 @@ function AuthControl() {
         </span>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56">
-        <DropdownMenuLabel>
+        <div className="px-2 py-1.5">
           <p className="font-medium text-sm">{user.name}</p>
-          <p className="font-normal text-muted-foreground text-xs">
-            {user.email}
-          </p>
-          <p className="mt-1 font-normal text-primary text-xs">
-            {ROLE_LABEL[role]}
-          </p>
-        </DropdownMenuLabel>
+          <p className="text-muted-foreground text-xs">{user.email}</p>
+          <p className="mt-1 text-primary text-xs">{ROLE_LABEL[role]}</p>
+        </div>
         <DropdownMenuSeparator />
         <DropdownMenuItem variant="destructive" onClick={signOut}>
           <LogOut /> Keluar
