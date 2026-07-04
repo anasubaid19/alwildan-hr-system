@@ -1,14 +1,8 @@
 # Dependencies
 node_modules/
 
-# Database
-backend/data/*.db
-backend/data/*.db-shm
-backend/data/*.db-wal
+# Database (SQLite sistem lama — arsip lokal)
 data/*.db
-
-# Uploads
-backend/uploads/
 
 # Environment
 .env
@@ -16,7 +10,6 @@ backend/uploads/
 
 # Build
 dist/
-frontend/dist/
 dev-dist/
 
 # Logs
@@ -35,16 +28,6 @@ graphify-out/
 
 # UI kit — referensi desain lokal untuk AI, bukan bagian aplikasi
 uikit/
-
-# Seed utils (jangan ikut production)
-backend/src/utils/seedMockData.js
-backend/src/utils/seedUsers.js
-
-# Assets tidak perlu
-frontend/src/assets/react.svg
-frontend/src/assets/vite.svg
-frontend/src/App.css
-frontend/src/assets/hero.png
 
 # Backup files
 *.bak

@@ -108,5 +108,6 @@ docker compose up --build -d
 
 ## Arsip
 
-Versi lama (Node.js + Express + SQLite backend, React + Vite frontend) tetap
-tersimpan di `backend/` dan `frontend/` sebagai referensi, tidak lagi digunakan.
+Versi lama (Node.js + Express + SQLite backend, React + Vite frontend) sudah
+dihapus dari working tree; bila diperlukan, lihat riwayat git sebelum Jul 2026
+(mis. commit `ee917a8` ke belakang, direktori `backend/` dan `frontend/`).
