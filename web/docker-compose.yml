@@ -29,6 +29,9 @@ services:
       # WAJIB diisi (mis. via file .env di samping compose): openssl rand -base64 32
       BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET}
       BETTER_AUTH_URL: ${BETTER_AUTH_URL:-http://localhost:3000}
+      # Email reset password (opsional di dev — tanpa key, link dicetak ke log)
+      RESEND_API_KEY: ${RESEND_API_KEY:-}
+      EMAIL_FROM: ${EMAIL_FROM:-}
       PORT: "3000"
     depends_on:
       postgres:

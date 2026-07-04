@@ -3,13 +3,13 @@ import { useRouter } from "@tanstack/react-router"
 import { formatDistanceToNow } from "date-fns"
 import { id as idLocale } from "date-fns/locale"
 import { Bell, CheckCheck, Trash2 } from "lucide-react"
-
 import { Button } from "@/components/ui/button"
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
+import { QK } from "@/lib/query-keys"
 import { cn } from "@/lib/utils"
 import {
   clearReadNotifications,
@@ -24,11 +24,11 @@ export function NotificationBell() {
   const router = useRouter()
 
   const { data } = useQuery({
-    queryKey: ["notifications"],
+    queryKey: QK.notifications,
     queryFn: () => listNotifications(),
     refetchInterval: 15_000,
   })
-  const invalidate = () => qc.invalidateQueries({ queryKey: ["notifications"] })
+  const invalidate = () => qc.invalidateQueries({ queryKey: QK.notifications })
 
   const markRead = useMutation({
     mutationFn: (id: number) => markNotificationRead({ data: { id } }),

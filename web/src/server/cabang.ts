@@ -1,8 +1,9 @@
 import { createServerFn } from "@tanstack/react-start"
 import { asc, count, eq } from "drizzle-orm"
 
-import { requireClerkUserId, requireRole } from "@/lib/auth"
+import { requireRole, requireUserId } from "@/lib/auth"
 import { db } from "@/lib/db"
+import { isForeignKeyViolation, isUniqueViolation } from "@/lib/db/errors"
 import { cabang, karyawan, notifications } from "@/lib/db/schema"
 
 // Bentuk baris yang dikembalikan ke UI (cabang + jumlah karyawan).
@@ -26,28 +27,10 @@ function parseCabangInput(d: CabangInput) {
   return { kode, nama, alamat: d.alamat?.trim() || null }
 }
 
-function isUniqueViolation(err: unknown): boolean {
-  return (
-    typeof err === "object" &&
-    err !== null &&
-    "code" in err &&
-    (err as { code: unknown }).code === "23505"
-  )
-}
-
-function isForeignKeyViolation(err: unknown): boolean {
-  return (
-    typeof err === "object" &&
-    err !== null &&
-    "code" in err &&
-    (err as { code: unknown }).code === "23503"
-  )
-}
-
 /** Daftar cabang + jumlah karyawan. Akses: semua user login. */
 export const listCabang = createServerFn().handler(
   async (): Promise<CabangRow[]> => {
-    await requireClerkUserId()
+    await requireUserId()
     return db
       .select({
         id: cabang.id,
@@ -110,7 +93,7 @@ export const updateCabang = createServerFn({ method: "POST" })
 export const deleteCabang = createServerFn({ method: "POST" })
   .validator((d: { id: number }) => ({ id: d.id }))
   .handler(async ({ data }) => {
-    await requireRole("admin")
+    const { user } = await requireRole("admin")
     try {
       return await db.transaction(async (tx) => {
         const [row] = await tx
@@ -119,6 +102,7 @@ export const deleteCabang = createServerFn({ method: "POST" })
           .returning()
         if (!row) throw new Error("Cabang tidak ditemukan")
         await tx.insert(notifications).values({
+          userId: user.id,
           type: "warning",
           title: "Cabang dihapus",
           message: `Cabang ${row.nama} (${row.kode}) dihapus.`,

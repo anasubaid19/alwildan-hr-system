@@ -3,7 +3,6 @@ import { createFileRoute } from "@tanstack/react-router"
 import { Building2, MoreHorizontal, Pencil, Plus, Trash2 } from "lucide-react"
 import { type FormEvent, useState } from "react"
 import { toast } from "sonner"
-
 import { PageHeader } from "@/components/layout/page-header"
 import {
   AlertDialog,
@@ -48,6 +47,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { QK } from "@/lib/query-keys"
 import {
   type CabangRow,
   createCabang,
@@ -60,12 +60,10 @@ export const Route = createFileRoute("/_app/cabang")({
   component: CabangPage,
 })
 
-const CABANG_KEY = ["cabang"] as const
-
 function CabangPage() {
   const qc = useQueryClient()
   const { data, isLoading } = useQuery({
-    queryKey: CABANG_KEY,
+    queryKey: QK.cabang,
     queryFn: () => listCabang(),
   })
 
@@ -103,7 +101,7 @@ function CabangPage() {
             data: { kode: input.kode, nama: input.nama, alamat: input.alamat },
           }),
     onSuccess: (_row, input) => {
-      qc.invalidateQueries({ queryKey: CABANG_KEY })
+      qc.invalidateQueries({ queryKey: QK.cabang })
       setFormOpen(false)
       toast.success(input.id ? "Cabang diperbarui" : "Cabang ditambahkan")
     },
@@ -113,7 +111,7 @@ function CabangPage() {
   const deleteMutation = useMutation({
     mutationFn: (id: number) => deleteCabang({ data: { id } }),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: CABANG_KEY })
+      qc.invalidateQueries({ queryKey: QK.cabang })
       setDeleteTarget(null)
       toast.success("Cabang dihapus")
     },

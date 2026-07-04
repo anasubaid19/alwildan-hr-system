@@ -468,7 +468,7 @@ export const commitUpload = createServerFn({ method: "POST" })
     }
   )
   .handler(async ({ data }) => {
-    await requireRole("admin")
+    const { user } = await requireRole("admin")
     const { cabangId, periode, filename, mapping, records } = data
 
     const result = await db.transaction(async (tx) => {
@@ -536,7 +536,8 @@ export const commitUpload = createServerFn({ method: "POST" })
           excelJumlah > 0
             ? excelJumlah
             : gapok + penddk + jabatanTunj + transport + bpjsKs + lains + lembur
-        const jmlDiterima = jumlahGaji - potThr - potBpjsTk - depositItba
+        const jmlDiterima =
+          jumlahGaji - potThr - potBpjsTk - depositItba - punishment - pinjaman
 
         const money = {
           gapok: String(gapok),
@@ -577,6 +578,7 @@ export const commitUpload = createServerFn({ method: "POST" })
       })
       // Notifikasi di dalam transaksi (atomic dgn data).
       await tx.insert(notifications).values({
+        userId: user.id,
         type: "success",
         title: "Upload data berhasil",
         message: ringkas,

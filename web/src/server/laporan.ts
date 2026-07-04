@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start"
 import { and, asc, count, eq, like, type SQL, sum } from "drizzle-orm"
 
-import { requireClerkUserId } from "@/lib/auth"
+import { requireUserId } from "@/lib/auth"
 import { db } from "@/lib/db"
 import { cabang, gaji, karyawan } from "@/lib/db/schema"
 import { GAJI_MONEY_FIELDS, type GajiMoneyField } from "@/lib/gaji-fields"
@@ -77,7 +77,7 @@ const laporanColumns = {
 export const listLaporan = createServerFn()
   .validator((p: Filters = {}) => normFilters(p))
   .handler(async ({ data }): Promise<ListLaporanResult> => {
-    await requireClerkUserId()
+    await requireUserId()
     const where = buildConds(data)
     const cond = where.length ? and(...where) : undefined
 
@@ -110,7 +110,7 @@ export const listLaporan = createServerFn()
 export const getLaporanAll = createServerFn()
   .validator((p: Filters = {}) => normFilters(p))
   .handler(async ({ data }): Promise<LaporanRow[]> => {
-    await requireClerkUserId()
+    await requireUserId()
     const where = buildConds(data)
     const rows = await db
       .select(laporanColumns)
@@ -134,7 +134,7 @@ export type RekapResult = { data: RekapRow[]; cabangCols: string[] }
 export const getRekap = createServerFn()
   .validator((p: Filters = {}) => normFilters(p))
   .handler(async ({ data }): Promise<RekapResult> => {
-    await requireClerkUserId()
+    await requireUserId()
     const where = buildConds(data)
 
     const rows = await db

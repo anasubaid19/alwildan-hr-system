@@ -17,8 +17,8 @@ export async function getCurrentUser() {
   return session?.user ?? null
 }
 
-/** User id aktif; lempar bila belum login. (Nama dipertahankan utk kompat.) */
-export async function requireClerkUserId(): Promise<string> {
+/** User id aktif; lempar bila belum login. */
+export async function requireUserId(): Promise<string> {
   const session = await getSession()
   if (!session?.user) throw new Error("Unauthorized")
   return session.user.id

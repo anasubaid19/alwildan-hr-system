@@ -5,6 +5,7 @@ import {
   LayoutDashboard,
   LogOut,
   Moon,
+  MoreHorizontal,
   Search,
   Settings,
   Sun,
@@ -19,6 +20,12 @@ import { useEffect, useState } from "react"
 import { NotificationBell } from "@/components/layout/notification-bell"
 import { SearchCommand } from "@/components/layout/search-command"
 import { Button } from "@/components/ui/button"
+import {
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+} from "@/components/ui/drawer"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -192,22 +199,69 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </main>
       </div>
 
-      {/* Bottom nav (mobile) */}
-      <nav className="fixed inset-x-0 bottom-0 z-20 flex items-stretch border-t bg-background md:hidden">
-        {nav.slice(0, 5).map(({ to, label, icon: Icon }) => (
-          <Link
-            key={to}
-            to={to}
-            className="flex flex-1 flex-col items-center gap-1 py-2 text-muted-foreground text-xs transition-colors"
-            activeProps={{ className: "text-primary" }}
-          >
-            <Icon className="size-5" />
-            <span className="truncate">{label}</span>
-          </Link>
-        ))}
-      </nav>
+      <MobileNav nav={nav} />
 
       <SearchCommand open={searchOpen} onOpenChange={setSearchOpen} />
     </div>
+  )
+}
+
+// Maks item langsung di bottom nav; sisanya masuk drawer "Lainnya".
+const MOBILE_PRIMARY_COUNT = 4
+
+function MobileNav({ nav }: { nav: NavItem[] }) {
+  const [moreOpen, setMoreOpen] = useState(false)
+  // Muat semua bila cukup; bila tidak, sisakan slot ke-5 untuk "Lainnya".
+  const needsMore = nav.length > MOBILE_PRIMARY_COUNT + 1
+  const primary = needsMore ? nav.slice(0, MOBILE_PRIMARY_COUNT) : nav
+  const rest = needsMore ? nav.slice(MOBILE_PRIMARY_COUNT) : []
+
+  return (
+    <nav className="fixed inset-x-0 bottom-0 z-20 flex items-stretch border-t bg-background md:hidden">
+      {primary.map(({ to, label, icon: Icon }) => (
+        <Link
+          key={to}
+          to={to}
+          className="flex flex-1 flex-col items-center gap-1 py-2 text-muted-foreground text-xs transition-colors"
+          activeProps={{ className: "text-primary" }}
+        >
+          <Icon className="size-5" />
+          <span className="truncate">{label}</span>
+        </Link>
+      ))}
+      {needsMore && (
+        <>
+          <button
+            type="button"
+            onClick={() => setMoreOpen(true)}
+            className="flex flex-1 flex-col items-center gap-1 py-2 text-muted-foreground text-xs transition-colors"
+          >
+            <MoreHorizontal className="size-5" />
+            <span className="truncate">Lainnya</span>
+          </button>
+          <Drawer open={moreOpen} onOpenChange={setMoreOpen}>
+            <DrawerContent>
+              <DrawerHeader>
+                <DrawerTitle>Menu lainnya</DrawerTitle>
+              </DrawerHeader>
+              <div className="flex flex-col gap-1 px-4 pb-6">
+                {rest.map(({ to, label, icon: Icon }) => (
+                  <Link
+                    key={to}
+                    to={to}
+                    onClick={() => setMoreOpen(false)}
+                    className="flex items-center gap-3 rounded-lg px-3 py-2.5 font-medium text-muted-foreground text-sm transition-colors hover:bg-accent hover:text-foreground"
+                    activeProps={{ className: "bg-primary/10 text-primary" }}
+                  >
+                    <Icon className="size-4.5" />
+                    {label}
+                  </Link>
+                ))}
+              </div>
+            </DrawerContent>
+          </Drawer>
+        </>
+      )}
+    </nav>
   )
 }

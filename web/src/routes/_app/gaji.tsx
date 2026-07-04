@@ -1,9 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { createFileRoute } from "@tanstack/react-router"
 import { MoreHorizontal, Pencil, Plus, Trash2, Wallet } from "lucide-react"
-import { type FormEvent, useEffect, useState } from "react"
+import { type FormEvent, useState } from "react"
 import { toast } from "sonner"
-
 import { PageHeader } from "@/components/layout/page-header"
 import {
   AlertDialog,
@@ -49,7 +48,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { useDebounced } from "@/hooks/use-debounced"
 import { GAJI_MONEY_FIELDS, type GajiMoneyField } from "@/lib/gaji-fields"
+import { QK } from "@/lib/query-keys"
 import { listCabang } from "@/server/cabang"
 import {
   createGaji,
@@ -96,15 +97,6 @@ const TOTAL: [GajiMoneyField, string][] = [
   ["jmlDiterima", "Diterima (net)"],
 ]
 
-function useDebounced<T>(value: T, delay = 300): T {
-  const [debounced, setDebounced] = useState(value)
-  useEffect(() => {
-    const t = setTimeout(() => setDebounced(value), delay)
-    return () => clearTimeout(t)
-  }, [value, delay])
-  return debounced
-}
-
 type GajiFormValues = {
   karyawanId: string
   periode: string
@@ -121,20 +113,20 @@ function GajiPage() {
   const [page, setPage] = useState(1)
 
   const cabangQuery = useQuery({
-    queryKey: ["cabang"],
+    queryKey: QK.cabang,
     queryFn: () => listCabang(),
   })
   const periodeQuery = useQuery({
-    queryKey: ["gaji-periode"],
+    queryKey: QK.gajiPeriode,
     queryFn: () => listPeriodeGaji(),
   })
   const karyawanQuery = useQuery({
-    queryKey: ["karyawan-options"],
+    queryKey: QK.karyawanOptions,
     queryFn: () => listKaryawanOptions(),
   })
 
   const { data, isLoading } = useQuery({
-    queryKey: ["gaji", { search, periode, cabangId, page }],
+    queryKey: [...QK.gaji, { search, periode, cabangId, page }],
     queryFn: () =>
       listGaji({
         data: {
@@ -167,8 +159,8 @@ function GajiPage() {
         : createGaji({ data: payload })
     },
     onSuccess: (_row, input) => {
-      qc.invalidateQueries({ queryKey: ["gaji"] })
-      qc.invalidateQueries({ queryKey: ["gaji-periode"] })
+      qc.invalidateQueries({ queryKey: QK.gaji })
+      qc.invalidateQueries({ queryKey: QK.gajiPeriode })
       setFormOpen(false)
       toast.success(input.id ? "Slip gaji diperbarui" : "Slip gaji ditambahkan")
     },
@@ -178,7 +170,7 @@ function GajiPage() {
   const deleteMutation = useMutation({
     mutationFn: (id: number) => deleteGaji({ data: { id } }),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["gaji"] })
+      qc.invalidateQueries({ queryKey: QK.gaji })
       setDeleteTarget(null)
       toast.success("Slip gaji dihapus")
     },
@@ -501,7 +493,9 @@ function GajiFormDialog({
                 value={form.payingCabangId}
                 onChange={(e) => set("payingCabangId", e.target.value)}
               >
-                <NativeSelectOption value="">Tanpa cabang</NativeSelectOption>
+                <NativeSelectOption value="">
+                  Ikut cabang karyawan (otomatis)
+                </NativeSelectOption>
                 {cabangList.map((c) => (
                   <NativeSelectOption key={c.id} value={String(c.id)}>
                     {c.kode} — {c.nama}

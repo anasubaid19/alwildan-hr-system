@@ -3,7 +3,6 @@ import { createFileRoute } from "@tanstack/react-router"
 import { FileSpreadsheet, RotateCcw, Sparkles, UploadCloud } from "lucide-react"
 import { type ChangeEvent, useState } from "react"
 import { toast } from "sonner"
-
 import { PageHeader } from "@/components/layout/page-header"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -26,6 +25,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { QK } from "@/lib/query-keys"
 import { listCabang } from "@/server/cabang"
 import {
   type AnalyzeResult,
@@ -45,7 +45,7 @@ type Mapping = Record<string, string | null>
 function UploadPage() {
   const qc = useQueryClient()
   const cabangQuery = useQuery({
-    queryKey: ["cabang"],
+    queryKey: QK.cabang,
     queryFn: () => listCabang(),
   })
   const cabangList = cabangQuery.data ?? []
@@ -121,10 +121,10 @@ function UploadPage() {
         },
       }),
     onSuccess: (res) => {
-      qc.invalidateQueries({ queryKey: ["karyawan"] })
-      qc.invalidateQueries({ queryKey: ["gaji"] })
-      qc.invalidateQueries({ queryKey: ["dashboard"] })
-      qc.invalidateQueries({ queryKey: ["gaji-periode"] })
+      qc.invalidateQueries({ queryKey: QK.karyawan })
+      qc.invalidateQueries({ queryKey: QK.gaji })
+      qc.invalidateQueries({ queryKey: QK.dashboard })
+      qc.invalidateQueries({ queryKey: QK.gajiPeriode })
       toast.success(
         `${res.inserted} baru, ${res.updated} diperbarui, ${res.skipped} dilewati`
       )

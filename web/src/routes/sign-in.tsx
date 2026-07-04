@@ -23,7 +23,10 @@ function SignInPage() {
   async function onSubmit(e: FormEvent) {
     e.preventDefault()
     setLoading(true)
-    const { error } = await authClient.signIn.email({ email, password })
+    const { error } = await authClient.signIn.email({
+      email: email.trim(),
+      password,
+    })
     setLoading(false)
     if (error) {
       toast.error(error.message ?? "Email atau password salah")

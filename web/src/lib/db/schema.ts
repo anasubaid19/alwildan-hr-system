@@ -7,11 +7,13 @@ import {
   serial,
   text,
   timestamp,
-  uniqueIndex,
+  unique,
 } from "drizzle-orm/pg-core"
 
 // Tabel auth Better Auth: user, session, account, verification.
 export * from "./auth-schema"
+
+import { user } from "./auth-schema"
 
 // cabang — unit/cabang sekolah
 export const cabang = pgTable("cabang", {
@@ -63,12 +65,16 @@ export const gaji = pgTable(
     pinjaman: numeric().default("0").notNull(),
     lembur: numeric().default("0").notNull(),
     // Cabang yang menanggung porsi gaji ini (beban sharing lintas cabang).
-    payingCabangId: integer("paying_cabang_id").references(() => cabang.id),
+    // NOT NULL: kolom ini bagian unique constraint di bawah — bila nullable,
+    // Postgres menganggap NULL unik sehingga slip tanpa cabang bisa duplikat.
+    payingCabangId: integer("paying_cabang_id")
+      .notNull()
+      .references(() => cabang.id),
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },
   (t) => [
     // Satu slip per karyawan per periode PER cabang pembayar → target upsert impor.
-    uniqueIndex("gaji_karyawan_periode_cabang_uniq").on(
+    unique("gaji_karyawan_periode_cabang_uniq").on(
       t.karyawanId,
       t.periode,
       t.payingCabangId
@@ -94,9 +100,12 @@ export const masterData = pgTable("master_data", {
   uploadedAt: timestamp("uploaded_at").defaultNow().notNull(),
 })
 
-// notifications — notifikasi in-app
+// notifications — notifikasi in-app, per user (pemilik satu-satunya yang boleh baca/hapus)
 export const notifications = pgTable("notifications", {
   id: serial().primaryKey(),
+  userId: text("user_id")
+    .notNull()
+    .references(() => user.id, { onDelete: "cascade" }),
   type: text(), // info / success / warning / error
   title: text().notNull(),
   message: text(),

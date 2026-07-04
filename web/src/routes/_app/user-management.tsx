@@ -3,7 +3,6 @@ import { createFileRoute } from "@tanstack/react-router"
 import { Send, UserCog } from "lucide-react"
 import { useState } from "react"
 import { toast } from "sonner"
-
 import { PageHeader } from "@/components/layout/page-header"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -27,6 +26,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { type AppRole, ROLE_LABEL } from "@/lib/auth/roles"
+import { QK } from "@/lib/query-keys"
 import { inviteUser, listAppUsers, updateUserRole } from "@/server/users"
 
 export const Route = createFileRoute("/_app/user-management")({
@@ -39,7 +39,7 @@ function UserManagementPage() {
   const qc = useQueryClient()
 
   const usersQuery = useQuery({
-    queryKey: ["app-users"],
+    queryKey: QK.appUsers,
     queryFn: () => listAppUsers(),
   })
 
@@ -50,7 +50,7 @@ function UserManagementPage() {
   const inviteMut = useMutation({
     mutationFn: () => inviteUser({ data: { email, name, role: inviteRole } }),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["app-users"] })
+      qc.invalidateQueries({ queryKey: QK.appUsers })
       setEmail("")
       setName("")
       toast.success(
@@ -64,7 +64,7 @@ function UserManagementPage() {
     mutationFn: (v: { userId: string; role: string }) =>
       updateUserRole({ data: v }),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["app-users"] })
+      qc.invalidateQueries({ queryKey: QK.appUsers })
       toast.success("Role diperbarui")
     },
     onError: (err: Error) => toast.error(err.message),

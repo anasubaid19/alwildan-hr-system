@@ -2,7 +2,7 @@ import { createServerFn } from "@tanstack/react-start"
 import { getRequest } from "@tanstack/react-start/server"
 import { desc, eq } from "drizzle-orm"
 
-import { type AppRole, requireClerkUserId, requireRole } from "@/lib/auth"
+import { type AppRole, requireRole, requireUserId } from "@/lib/auth"
 import { auth } from "@/lib/auth/server"
 import { db } from "@/lib/db"
 import { user as userTable } from "@/lib/db/schema"
@@ -29,7 +29,7 @@ export type AppUserRow = {
 export const listAppUsers = createServerFn().handler(
   async (): Promise<AppUserRow[]> => {
     await requireRole("super_admin")
-    const me = await requireClerkUserId()
+    const me = await requireUserId()
     const rows = await db
       .select({
         id: userTable.id,
@@ -56,7 +56,7 @@ export const updateUserRole = createServerFn({ method: "POST" })
   })
   .handler(async ({ data }) => {
     await requireRole("super_admin")
-    const me = await requireClerkUserId()
+    const me = await requireUserId()
     if (data.userId === me) {
       throw new Error("Tidak bisa mengubah role sendiri")
     }

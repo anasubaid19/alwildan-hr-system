@@ -23,7 +23,7 @@ function ForgotPasswordPage() {
     e.preventDefault()
     setLoading(true)
     const { error } = await authClient.requestPasswordReset({
-      email,
+      email: email.trim(),
       redirectTo: "/reset-password",
     })
     setLoading(false)

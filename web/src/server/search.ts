@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start"
 import { asc, eq, ilike, or } from "drizzle-orm"
 
-import { requireClerkUserId } from "@/lib/auth"
+import { requireUserId } from "@/lib/auth"
 import { db } from "@/lib/db"
 import { cabang, karyawan } from "@/lib/db/schema"
 
@@ -19,7 +19,7 @@ export type SearchResult = {
 export const searchAll = createServerFn()
   .validator((d: { q: string }) => ({ q: (d.q ?? "").trim() }))
   .handler(async ({ data }): Promise<SearchResult> => {
-    await requireClerkUserId()
+    await requireUserId()
     if (data.q.length < 2) return { karyawan: [], cabang: [] }
     const like = `%${data.q}%`
 

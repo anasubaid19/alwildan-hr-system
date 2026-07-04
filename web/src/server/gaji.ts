@@ -1,8 +1,9 @@
 import { createServerFn } from "@tanstack/react-start"
 import { and, asc, count, desc, eq, ilike, type SQL } from "drizzle-orm"
 
-import { requireClerkUserId, requireRole } from "@/lib/auth"
+import { requireRole, requireUserId } from "@/lib/auth"
 import { db } from "@/lib/db"
+import { isForeignKeyViolation, isUniqueViolation } from "@/lib/db/errors"
 import { cabang, gaji, karyawan } from "@/lib/db/schema"
 import { GAJI_MONEY_FIELDS, type GajiMoneyField } from "@/lib/gaji-fields"
 
@@ -15,7 +16,7 @@ export type GajiRow = {
   karyawanId: number
   periode: string
   karyawanNama: string | null
-  payingCabangId: number | null
+  payingCabangId: number
   cabangKode: string | null
 } & Record<GajiMoneyField, string>
 
@@ -66,22 +67,26 @@ function parseGajiInput(d: GajiInput) {
   }
 }
 
-function isForeignKeyViolation(err: unknown): boolean {
-  return (
-    typeof err === "object" &&
-    err !== null &&
-    "code" in err &&
-    (err as { code: unknown }).code === "23503"
-  )
-}
-
-function isUniqueViolation(err: unknown): boolean {
-  return (
-    typeof err === "object" &&
-    err !== null &&
-    "code" in err &&
-    (err as { code: unknown }).code === "23505"
-  )
+/**
+ * payingCabangId wajib terisi (bagian unique constraint slip gaji).
+ * Fallback: bila tidak dipilih di form, ikut cabang karyawan.
+ */
+async function resolvePayingCabangId(
+  karyawanId: number,
+  payingCabangId: number | null
+): Promise<number> {
+  if (payingCabangId) return payingCabangId
+  const [k] = await db
+    .select({ cabangId: karyawan.cabangId })
+    .from(karyawan)
+    .where(eq(karyawan.id, karyawanId))
+    .limit(1)
+  if (!k?.cabangId) {
+    throw new Error(
+      "Cabang pembayar wajib dipilih (karyawan belum punya cabang)"
+    )
+  }
+  return k.cabangId
 }
 
 type ListParams = {
@@ -102,7 +107,7 @@ export const listGaji = createServerFn()
     pageSize: Math.min(100, Math.max(1, Number(p.pageSize) || 25)),
   }))
   .handler(async ({ data }): Promise<ListGajiResult> => {
-    await requireClerkUserId()
+    await requireUserId()
 
     const conds: SQL[] = []
     if (data.search) conds.push(ilike(karyawan.nama, `%${data.search}%`))
@@ -150,7 +155,7 @@ export const listGaji = createServerFn()
 /** Daftar periode (YYYY-MM) yang ada, terbaru dulu — untuk filter. */
 export const listPeriodeGaji = createServerFn().handler(
   async (): Promise<string[]> => {
-    await requireClerkUserId()
+    await requireUserId()
     const rows = await db
       .selectDistinct({ periode: gaji.periode })
       .from(gaji)
@@ -165,7 +170,14 @@ export const createGaji = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     await requireRole("admin")
     try {
-      const [row] = await db.insert(gaji).values(data).returning()
+      const payingCabangId = await resolvePayingCabangId(
+        data.karyawanId,
+        data.payingCabangId
+      )
+      const [row] = await db
+        .insert(gaji)
+        .values({ ...data, payingCabangId })
+        .returning()
       return row
     } catch (err) {
       if (isUniqueViolation(err)) {
@@ -184,8 +196,15 @@ export const updateGaji = createServerFn({ method: "POST" })
   }))
   .handler(async ({ data }) => {
     await requireRole("admin")
-    const { id, ...values } = data
+    const { id, ...input } = data
     try {
+      const values = {
+        ...input,
+        payingCabangId: await resolvePayingCabangId(
+          input.karyawanId,
+          input.payingCabangId
+        ),
+      }
       const [row] = await db
         .update(gaji)
         .set(values)

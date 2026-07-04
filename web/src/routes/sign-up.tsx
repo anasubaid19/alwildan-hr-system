@@ -24,7 +24,11 @@ function SignUpPage() {
   async function onSubmit(e: FormEvent) {
     e.preventDefault()
     setLoading(true)
-    const { error } = await authClient.signUp.email({ name, email, password })
+    const { error } = await authClient.signUp.email({
+      name: name.trim(),
+      email: email.trim(),
+      password,
+    })
     setLoading(false)
     if (error) {
       toast.error(error.message ?? "Gagal mendaftar")

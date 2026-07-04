@@ -6,15 +6,25 @@ import { count } from "drizzle-orm"
 
 import { db } from "../db"
 import { user as userTable } from "../db/schema"
+import { sendEmail } from "../email"
 
 export const auth = betterAuth({
   database: drizzleAdapter(db, { provider: "pg" }),
   emailAndPassword: {
     enabled: true,
     sendResetPassword: async ({ user, url }) => {
-      // DEV: log link reset ke console (seperti sistem lama). PROD: kirim email.
-      console.log(`[BETTER-AUTH] Reset password ${user.email}: ${url}`)
+      await sendEmail({
+        to: user.email,
+        subject: "Reset password akun Al Wildan HR",
+        text:
+          `Halo ${user.name || user.email},\n\n` +
+          `Klik tautan berikut untuk mengatur ulang password Anda ` +
+          `(berlaku 1 jam):\n${url}\n\n` +
+          `Abaikan email ini jika Anda tidak meminta reset password.`,
+      })
     },
+    // Amankan sesi lama begitu password diganti.
+    revokeSessionsOnPasswordReset: true,
   },
   plugins: [
     admin({

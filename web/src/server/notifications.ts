@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start"
-import { count, desc, eq } from "drizzle-orm"
+import { and, count, desc, eq } from "drizzle-orm"
 
-import { requireClerkUserId } from "@/lib/auth"
+import { requireUserId } from "@/lib/auth"
 import { db } from "@/lib/db"
 import { notifications } from "@/lib/db/schema"
 
@@ -19,63 +19,86 @@ export type NotificationsResult = {
   unread: number
 }
 
-/** 30 notifikasi terbaru + jumlah belum dibaca. */
+/** 30 notifikasi terbaru milik user aktif + jumlah belum dibaca. */
 export const listNotifications = createServerFn().handler(
   async (): Promise<NotificationsResult> => {
-    await requireClerkUserId()
+    const userId = await requireUserId()
     const [items, unreadRes] = await Promise.all([
       db
-        .select()
+        .select({
+          id: notifications.id,
+          type: notifications.type,
+          title: notifications.title,
+          message: notifications.message,
+          linkPage: notifications.linkPage,
+          isRead: notifications.isRead,
+          createdAt: notifications.createdAt,
+        })
         .from(notifications)
+        .where(eq(notifications.userId, userId))
         .orderBy(desc(notifications.createdAt))
         .limit(30),
       db
         .select({ value: count() })
         .from(notifications)
-        .where(eq(notifications.isRead, false)),
+        .where(
+          and(eq(notifications.userId, userId), eq(notifications.isRead, false))
+        ),
     ])
     return { items, unread: unreadRes[0]?.value ?? 0 }
   }
 )
 
-/** Tandai satu notifikasi terbaca. */
+/** Tandai satu notifikasi milik user aktif terbaca. */
 export const markNotificationRead = createServerFn({ method: "POST" })
   .validator((d: { id: number }) => ({ id: d.id }))
   .handler(async ({ data }) => {
-    await requireClerkUserId()
+    const userId = await requireUserId()
     await db
       .update(notifications)
       .set({ isRead: true })
-      .where(eq(notifications.id, data.id))
+      .where(
+        and(eq(notifications.id, data.id), eq(notifications.userId, userId))
+      )
     return { ok: true }
   })
 
-/** Tandai semua terbaca. */
+/** Tandai semua notifikasi user aktif terbaca. */
 export const markAllNotificationsRead = createServerFn({
   method: "POST",
 }).handler(async () => {
-  await requireClerkUserId()
+  const userId = await requireUserId()
   await db
     .update(notifications)
     .set({ isRead: true })
-    .where(eq(notifications.isRead, false))
+    .where(
+      and(eq(notifications.userId, userId), eq(notifications.isRead, false))
+    )
   return { ok: true }
 })
 
-/** Hapus satu notifikasi. */
+/** Hapus satu notifikasi milik user aktif. */
 export const deleteNotification = createServerFn({ method: "POST" })
   .validator((d: { id: number }) => ({ id: d.id }))
   .handler(async ({ data }) => {
-    await requireClerkUserId()
-    await db.delete(notifications).where(eq(notifications.id, data.id))
+    const userId = await requireUserId()
+    await db
+      .delete(notifications)
+      .where(
+        and(eq(notifications.id, data.id), eq(notifications.userId, userId))
+      )
     return { ok: true }
   })
 
-/** Hapus semua notifikasi yang sudah dibaca. */
+/** Hapus semua notifikasi user aktif yang sudah dibaca. */
 export const clearReadNotifications = createServerFn({
   method: "POST",
 }).handler(async () => {
-  await requireClerkUserId()
-  await db.delete(notifications).where(eq(notifications.isRead, true))
+  const userId = await requireUserId()
+  await db
+    .delete(notifications)
+    .where(
+      and(eq(notifications.userId, userId), eq(notifications.isRead, true))
+    )
   return { ok: true }
 })

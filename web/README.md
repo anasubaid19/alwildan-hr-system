@@ -1,14 +1,33 @@
 # AL-WILDAN HR — Web (rebuild)
 
-Frontend HR system baru sesuai `../PRD-REBUILD.md`. Stack: **Bun · TanStack Start · React 19 · Tailwind v4 · shadcn/ui (base-luma) · Drizzle ORM · Neon (Postgres) · Clerk · Biome**. Komponen & design token (aksen biru OKLCH) diadaptasi dari `../uikit` (referensi).
+Frontend HR system baru sesuai `../PRD-REBUILD.md`. Stack: **Bun · TanStack Start · React 19 · Tailwind v4 · shadcn/ui (base-luma) · Drizzle ORM · PostgreSQL (self-hosted) · Better Auth · Biome**. Komponen & design token (aksen biru OKLCH) diadaptasi dari `../uikit` (referensi).
 
 ## Setup
 
 ```bash
-cp .env.example .env   # isi DATABASE_URL (Neon) + kunci Clerk
+cp .env.example .env   # isi DATABASE_URL + BETTER_AUTH_SECRET (openssl rand -base64 32)
 bun install
-bun run db:push        # buat tabel di Neon dari src/lib/schema.ts
+bun run db:push        # buat tabel dari src/lib/db/schema.ts
 bun run dev            # http://localhost:3000
+```
+
+Env variable (lihat `.env.example`):
+
+| Variabel | Fungsi |
+|---|---|
+| `DATABASE_URL` | koneksi PostgreSQL |
+| `BETTER_AUTH_SECRET` | secret sesi Better Auth (wajib) |
+| `BETTER_AUTH_URL` | origin app (default `http://localhost:3000`) |
+| `RESEND_API_KEY` / `EMAIL_FROM` | email reset password via Resend (opsional di dev — tanpa key, link dicetak ke console) |
+| `AI_BASE_URL` / `AI_API_KEY` / `AI_MODEL` | fallback config AI (utama dari Settings di app) |
+
+Auth: email + password (Better Auth, plugin admin). User pertama yang mendaftar otomatis menjadi `super_admin`; user berikutnya `staff` (role diatur via User Management).
+
+## Docker
+
+```bash
+cp .env.example .env   # minimal isi BETTER_AUTH_SECRET
+docker compose up -d --build   # app :3000 + postgres :5432
 ```
 
 ## Struktur
@@ -16,19 +35,20 @@ bun run dev            # http://localhost:3000
 ```
 src/
 ├── routes/
-│   ├── __root.tsx        # ClerkProvider + QueryClient + ThemeProvider
+│   ├── __root.tsx        # QueryClient + ThemeProvider + errorComponent
 │   ├── index.tsx         # redirect → /dashboard
-│   ├── _app.tsx          # layout route (AppShell + Outlet)
-│   └── _app/             # dashboard, karyawan, cabang, gaji, upload, laporan, settings
+│   ├── sign-in.tsx …     # halaman auth (sign-up, forgot/reset-password)
+│   ├── _app.tsx          # layout route (guard beforeLoad + AppShell)
+│   └── _app/             # dashboard, karyawan, cabang, gaji, upload, laporan, settings, user-management
 ├── components/
 │   ├── ui/               # shadcn/ui (disalin dari uikit)
-│   └── layout/           # app-shell, page-header
+│   └── layout/           # app-shell, page-header, notification-bell, …
 ├── lib/
-│   ├── db.ts             # Drizzle + Neon (neon-http)
-│   ├── schema.ts         # 9 tabel (users, cabang, karyawan, gaji, …)
-│   ├── auth.ts           # helper Clerk (requireRole, getCurrentUser)
+│   ├── db/               # Drizzle + pg (schema.ts, errors.ts)
+│   ├── auth/             # Better Auth server/client + role helpers
+│   ├── email.ts          # kirim email (Resend)
 │   └── utils.ts          # cn()
-├── start.ts              # clerkMiddleware
+├── server/               # server functions per domain (karyawan, gaji, upload, …)
 └── styles.css            # design token + palet biru OKLCH
 ```
 

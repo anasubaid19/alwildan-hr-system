@@ -2,7 +2,6 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { createFileRoute } from "@tanstack/react-router"
 import { useEffect, useState } from "react"
 import { toast } from "sonner"
-
 import { PageHeader } from "@/components/layout/page-header"
 import { Button } from "@/components/ui/button"
 import {
@@ -18,6 +17,7 @@ import { Label } from "@/components/ui/label"
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 import { Spinner } from "@/components/ui/spinner"
 import { API_KEY_MASK } from "@/lib/ai-constants"
+import { QK } from "@/lib/query-keys"
 import {
   fetchAiModels,
   getAiSettings,
@@ -32,7 +32,7 @@ export const Route = createFileRoute("/_app/settings")({
 function SettingsPage() {
   const qc = useQueryClient()
   const { data, isLoading } = useQuery({
-    queryKey: ["ai-settings"],
+    queryKey: QK.aiSettings,
     queryFn: () => getAiSettings(),
   })
 
@@ -52,7 +52,7 @@ function SettingsPage() {
   const saveMut = useMutation({
     mutationFn: () => saveAiSettings({ data: { baseUrl, apiKey, model } }),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["ai-settings"] })
+      qc.invalidateQueries({ queryKey: QK.aiSettings })
       setApiKey("")
       toast.success("Setting AI disimpan")
     },

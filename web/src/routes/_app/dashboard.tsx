@@ -3,7 +3,6 @@ import { createFileRoute } from "@tanstack/react-router"
 import { Building2, TrendingUp, Users, Wallet } from "lucide-react"
 import { useState } from "react"
 import { Bar, BarChart, CartesianGrid, XAxis } from "recharts"
-
 import { PageHeader } from "@/components/layout/page-header"
 import {
   Card,
@@ -20,6 +19,7 @@ import {
 } from "@/components/ui/chart"
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 import { Skeleton } from "@/components/ui/skeleton"
+import { QK } from "@/lib/query-keys"
 import { getDashboardSummary } from "@/server/dashboard"
 
 export const Route = createFileRoute("/_app/dashboard")({
@@ -44,7 +44,7 @@ function DashboardPage() {
   const [periode, setPeriode] = useState("")
 
   const { data, isLoading } = useQuery({
-    queryKey: ["dashboard", { periode }],
+    queryKey: [...QK.dashboard, { periode }],
     queryFn: () => getDashboardSummary({ data: { periode } }),
   })
 

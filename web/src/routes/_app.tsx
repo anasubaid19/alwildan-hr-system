@@ -1,28 +1,26 @@
-import { createFileRoute, Navigate, Outlet } from "@tanstack/react-router"
+import { createFileRoute, Outlet, redirect } from "@tanstack/react-router"
 
 import { AppShell } from "@/components/layout/app-shell"
-import { Spinner } from "@/components/ui/spinner"
-import { authClient } from "@/lib/auth/client"
+import { ErrorFallback } from "@/components/layout/error-fallback"
+import { getSessionUser } from "@/server/session"
 
 export const Route = createFileRoute("/_app")({
+  // Guard server-side: user belum login tidak pernah melihat layout app.
+  beforeLoad: async () => {
+    const user = await getSessionUser()
+    if (!user) throw redirect({ to: "/sign-in" })
+    return { user }
+  },
   component: AppLayout,
+  // Error halaman dalam app tetap menampilkan shell (nav tetap bisa dipakai).
+  errorComponent: (props) => (
+    <AppShell>
+      <ErrorFallback {...props} />
+    </AppShell>
+  ),
 })
 
 function AppLayout() {
-  const { data, isPending } = authClient.useSession()
-
-  if (isPending) {
-    return (
-      <div className="flex min-h-svh items-center justify-center">
-        <Spinner />
-      </div>
-    )
-  }
-
-  if (!data) {
-    return <Navigate to="/sign-in" />
-  }
-
   return (
     <AppShell>
       <Outlet />

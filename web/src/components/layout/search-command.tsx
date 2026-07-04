@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query"
 import { useRouter } from "@tanstack/react-router"
 import { Building2, Users } from "lucide-react"
-import { useEffect, useState } from "react"
+import { useState } from "react"
 
 import {
   Command,
@@ -11,16 +11,9 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command"
+import { useDebounced } from "@/hooks/use-debounced"
+import { QK } from "@/lib/query-keys"
 import { searchAll } from "@/server/search"
-
-function useDebounced<T>(value: T, delay = 250): T {
-  const [debounced, setDebounced] = useState(value)
-  useEffect(() => {
-    const t = setTimeout(() => setDebounced(value), delay)
-    return () => clearTimeout(t)
-  }, [value, delay])
-  return debounced
-}
 
 export function SearchCommand({
   open,
@@ -31,11 +24,11 @@ export function SearchCommand({
 }) {
   const router = useRouter()
   const [q, setQ] = useState("")
-  const debounced = useDebounced(q)
+  const debounced = useDebounced(q, 250)
   const ready = debounced.trim().length >= 2
 
   const { data } = useQuery({
-    queryKey: ["search", debounced],
+    queryKey: [...QK.search, debounced],
     queryFn: () => searchAll({ data: { q: debounced } }),
     enabled: open && ready,
   })

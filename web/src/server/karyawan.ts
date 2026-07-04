@@ -1,8 +1,9 @@
 import { createServerFn } from "@tanstack/react-start"
 import { and, asc, count, eq, ilike, type SQL } from "drizzle-orm"
 
-import { requireClerkUserId, requireRole } from "@/lib/auth"
+import { requireRole, requireUserId } from "@/lib/auth"
 import { db } from "@/lib/db"
+import { isForeignKeyViolation } from "@/lib/db/errors"
 import { cabang, karyawan, notifications } from "@/lib/db/schema"
 
 export type KaryawanRow = {
@@ -73,15 +74,6 @@ function parseKaryawanInput(d: KaryawanInput) {
   }
 }
 
-function isForeignKeyViolation(err: unknown): boolean {
-  return (
-    typeof err === "object" &&
-    err !== null &&
-    "code" in err &&
-    (err as { code: unknown }).code === "23503"
-  )
-}
-
 type ListParams = {
   search?: string
   cabangId?: number | null
@@ -100,7 +92,7 @@ export const listKaryawan = createServerFn()
     pageSize: Math.min(100, Math.max(1, Number(p.pageSize) || 25)),
   }))
   .handler(async ({ data }): Promise<ListKaryawanResult> => {
-    await requireClerkUserId()
+    await requireUserId()
 
     const conds: SQL[] = []
     if (data.search) conds.push(ilike(karyawan.nama, `%${data.search}%`))
@@ -152,7 +144,7 @@ export type KaryawanOption = {
 /** Opsi karyawan ringkas (semua, tanpa pagination) untuk dropdown/select. */
 export const listKaryawanOptions = createServerFn().handler(
   async (): Promise<KaryawanOption[]> => {
-    await requireClerkUserId()
+    await requireUserId()
     return db
       .select({
         id: karyawan.id,
@@ -207,7 +199,7 @@ export const updateKaryawan = createServerFn({ method: "POST" })
 export const deleteKaryawan = createServerFn({ method: "POST" })
   .validator((d: { id: number }) => ({ id: d.id }))
   .handler(async ({ data }) => {
-    await requireRole("admin")
+    const { user } = await requireRole("admin")
     return db.transaction(async (tx) => {
       const [row] = await tx
         .delete(karyawan)
@@ -215,6 +207,7 @@ export const deleteKaryawan = createServerFn({ method: "POST" })
         .returning()
       if (!row) throw new Error("Karyawan tidak ditemukan")
       await tx.insert(notifications).values({
+        userId: user.id,
         type: "warning",
         title: "Karyawan dihapus",
         message: `${row.nama} dihapus beserta data gajinya.`,

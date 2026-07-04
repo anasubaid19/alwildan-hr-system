@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start"
 import { count, desc, eq, sum } from "drizzle-orm"
 
-import { requireClerkUserId } from "@/lib/auth"
+import { requireUserId } from "@/lib/auth"
 import { db } from "@/lib/db"
 import { cabang, gaji, karyawan } from "@/lib/db/schema"
 
@@ -26,7 +26,7 @@ export const getDashboardSummary = createServerFn()
     periode: typeof p.periode === "string" ? p.periode.trim() : "",
   }))
   .handler(async ({ data }): Promise<DashboardSummary> => {
-    await requireClerkUserId()
+    await requireUserId()
 
     const periodesRes = await db
       .selectDistinct({ periode: gaji.periode })

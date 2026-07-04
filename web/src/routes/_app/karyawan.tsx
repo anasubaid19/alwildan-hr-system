@@ -1,9 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { createFileRoute } from "@tanstack/react-router"
 import { MoreHorizontal, Pencil, Plus, Trash2, Users } from "lucide-react"
-import { type FormEvent, useEffect, useState } from "react"
+import { type FormEvent, useState } from "react"
 import { toast } from "sonner"
-
 import { PageHeader } from "@/components/layout/page-header"
 import {
   AlertDialog,
@@ -50,6 +49,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { useDebounced } from "@/hooks/use-debounced"
+import { QK } from "@/lib/query-keys"
 import { listCabang } from "@/server/cabang"
 import {
   createKaryawan,
@@ -62,15 +63,6 @@ import {
 export const Route = createFileRoute("/_app/karyawan")({
   component: KaryawanPage,
 })
-
-function useDebounced<T>(value: T, delay = 300): T {
-  const [debounced, setDebounced] = useState(value)
-  useEffect(() => {
-    const t = setTimeout(() => setDebounced(value), delay)
-    return () => clearTimeout(t)
-  }, [value, delay])
-  return debounced
-}
 
 type FormValues = {
   nama: string
@@ -95,12 +87,12 @@ function KaryawanPage() {
   const [page, setPage] = useState(1)
 
   const cabangQuery = useQuery({
-    queryKey: ["cabang"],
+    queryKey: QK.cabang,
     queryFn: () => listCabang(),
   })
 
   const { data, isLoading } = useQuery({
-    queryKey: ["karyawan", { search, cabangId, status, page }],
+    queryKey: [...QK.karyawan, { search, cabangId, status, page }],
     queryFn: () =>
       listKaryawan({
         data: {
@@ -144,7 +136,7 @@ function KaryawanPage() {
         : createKaryawan({ data: payload })
     },
     onSuccess: (_row, input) => {
-      qc.invalidateQueries({ queryKey: ["karyawan"] })
+      qc.invalidateQueries({ queryKey: QK.karyawan })
       setFormOpen(false)
       toast.success(input.id ? "Karyawan diperbarui" : "Karyawan ditambahkan")
     },
@@ -154,7 +146,7 @@ function KaryawanPage() {
   const deleteMutation = useMutation({
     mutationFn: (id: number) => deleteKaryawan({ data: { id } }),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["karyawan"] })
+      qc.invalidateQueries({ queryKey: QK.karyawan })
       setDeleteTarget(null)
       toast.success("Karyawan dihapus")
     },

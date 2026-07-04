@@ -3,6 +3,7 @@ import { createRootRoute, HeadContent, Scripts } from "@tanstack/react-router"
 import { TanStackRouterDevtools } from "@tanstack/react-router-devtools"
 import { ThemeProvider } from "next-themes"
 
+import { ErrorFallback } from "@/components/layout/error-fallback"
 import { Toaster } from "@/components/ui/sonner"
 import appCss from "../styles.css?url"
 
@@ -26,6 +27,7 @@ export const Route = createRootRoute({
     ],
     links: [{ rel: "stylesheet", href: appCss }],
   }),
+  errorComponent: ErrorFallback,
   notFoundComponent: () => (
     <main className="container mx-auto p-4 pt-16">
       <h1 className="text-title">404</h1>

@@ -6,7 +6,6 @@ import { Download, FileDown, FileSpreadsheet, FileText } from "lucide-react"
 import { useState } from "react"
 import { toast } from "sonner"
 import * as XLSX from "xlsx"
-
 import { PageHeader } from "@/components/layout/page-header"
 import { Button } from "@/components/ui/button"
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
@@ -19,6 +18,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { QK } from "@/lib/query-keys"
 import { listCabang } from "@/server/cabang"
 import { listPeriodeGaji } from "@/server/gaji"
 import {
@@ -108,20 +108,20 @@ function LaporanPage() {
   }
 
   const cabangQuery = useQuery({
-    queryKey: ["cabang"],
+    queryKey: QK.cabang,
     queryFn: () => listCabang(),
   })
   const periodeQuery = useQuery({
-    queryKey: ["gaji-periode"],
+    queryKey: QK.gajiPeriode,
     queryFn: () => listPeriodeGaji(),
   })
   const detailQuery = useQuery({
-    queryKey: ["laporan", { periode, cabangId, page }],
+    queryKey: [...QK.laporan, { periode, cabangId, page }],
     queryFn: () => listLaporan({ data: { ...filters, page } }),
     enabled: view === "detail",
   })
   const rekapQuery = useQuery({
-    queryKey: ["laporan-rekap", { periode, cabangId }],
+    queryKey: [...QK.laporanRekap, { periode, cabangId }],
     queryFn: () => getRekap({ data: filters }),
     enabled: view === "rekap",
   })

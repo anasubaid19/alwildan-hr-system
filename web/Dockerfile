@@ -23,5 +23,7 @@ COPY --from=build /app ./
 EXPOSE 3000
 
 # Selaraskan skema DB lalu jalankan server produksi.
+# --force wajib: tanpa TTY drizzle-kit gagal di prompt konfirmasi TAPI exit 0,
+# sehingga server tetap start dengan DB kosong.
 # (Bun otomatis serve default export ber-`fetch` di server.js.)
-CMD ["sh", "-c", "bun run db:push && bun dist/server/server.js"]
+CMD ["sh", "-c", "bun run db:push --force && bun dist/server/server.js"]
