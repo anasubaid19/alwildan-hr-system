@@ -10,6 +10,14 @@ import { sendEmail } from "../email"
 
 export const auth = betterAuth({
   database: drizzleAdapter(db, { provider: "pg" }),
+  // Origin baseURL (BETTER_AUTH_URL) otomatis dipercaya. Tambahan di bawah:
+  // varian loopback yang setara — browser (mis. Firefox) yang membuka app
+  // via 127.0.0.1/[::1] mengirim Origin itu dan ditolak "INVALID_ORIGIN".
+  trustedOrigins: [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "http://[::1]:3000",
+  ],
   emailAndPassword: {
     enabled: true,
     sendResetPassword: async ({ user, url }) => {
