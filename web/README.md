@@ -37,7 +37,7 @@ src/
 ├── routes/
 │   ├── __root.tsx        # QueryClient + ThemeProvider + errorComponent
 │   ├── index.tsx         # redirect → /dashboard
-│   ├── sign-in.tsx …     # halaman auth (sign-up, forgot/reset-password)
+│   ├── sign-in.tsx …     # halaman auth (sign-up, forgot/reset-password, verify-invite)
 │   ├── _app.tsx          # layout route (guard beforeLoad + AppShell)
 │   └── _app/             # dashboard, karyawan, cabang, gaji, upload, laporan, settings, user-management
 ├── components/

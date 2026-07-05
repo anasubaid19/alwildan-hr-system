@@ -17,7 +17,7 @@ Aplikasi aktif ada di folder [`web/`](./web) (rebuild modern, full-stack, self-h
 
 - Manajemen **Cabang**, **Karyawan**, dan **Gaji** (dengan beban sharing lintas cabang)
 - **Dashboard** ringkasan (KPI + grafik gaji per cabang, per periode)
-- **Upload Excel** gaji: deteksi periode/cabang otomatis + pemetaan kolom (heuristik & AI)
+- **Upload Excel/CSV** gaji: deteksi periode/cabang & baris header otomatis + pemetaan kolom (heuristik & AI)
 - **Laporan**: preview, rekap per karyawan, export **XLSX / CSV / PDF**
 - **User Management** (RBAC: super_admin / admin / staff) + undang admin
 - **Notifikasi** in-app & **Search ⌘K**
@@ -35,16 +35,18 @@ git clone <repo-url>
 cd alwildan-hr-system/web
 
 # 2. Nyalakan PostgreSQL
-#    Opsi A — Docker (pakai docker-compose.yml yang sudah ada):
-docker compose up -d
+#    Opsi A — Docker, HANYA service postgres (tanpa `postgres` di akhir,
+#    container app ikut naik dan menempati port 3000 → `bun run dev`
+#    terlempar ke 3001 dan login ditolak "invalid origin"):
+docker compose up -d postgres
 #    Opsi B — Postgres lokal: buat role `alwildan` (password alwildan2026)
 #             dan database `alwildan_hr` sesuai DATABASE_URL di bawah.
 
 # 3. Install dependency
 bun install
 
-# 4. Environment
-cp .env.example .env.local
+# 4. Environment — pakai .env (bukan .env.local: drizzle-kit tidak membacanya)
+cp .env.example .env
 #    Isi minimal:
 #      DATABASE_URL=postgresql://alwildan:alwildan2026@localhost:5432/alwildan_hr
 #      BETTER_AUTH_SECRET=<hasil `openssl rand -base64 32`>
@@ -62,7 +64,9 @@ Buka **http://localhost:3000**.
 ## First Setup
 
 Klik **Daftar**, buat akun pertama. **User pertama otomatis menjadi Super Admin.**
-Selanjutnya Super Admin bisa mengundang admin lain lewat menu **User Management**.
+Selanjutnya Super Admin mengundang admin lain lewat **User Management**:
+generate **PIN 6 digit** di layar, kirim manual (mis. WhatsApp), lalu calon
+admin mendaftar di halaman **/verify-invite** — tanpa email.
 
 ## Konfigurasi AI (opsional)
 
@@ -70,8 +74,9 @@ Fitur "Petakan dengan AI" pada Upload butuh provider kompatibel OpenAI
 (mis. Groq/OpenAI). Isi Base URL, API Key, dan Model di menu **Settings**.
 Tanpa AI, pemetaan kolom heuristik tetap berjalan.
 
-> Email invite & reset password saat ini di-log ke konsol server (dev).
-> Untuk produksi, hubungkan SMTP/Resend di konfigurasi Better Auth.
+> Email reset password terkirim via **Resend** bila `RESEND_API_KEY` +
+> `EMAIL_FROM` di-set (lihat `.env.example`); tanpa key, tautan reset
+> dicetak ke konsol server (mode dev).
 
 ## Skrip berguna (di `web/`)
 
