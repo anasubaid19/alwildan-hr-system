@@ -224,6 +224,22 @@ export function detectHeaderRowIndex(aoa: unknown[][]): number {
   return best
 }
 
+/**
+ * Susun header dari baris terpilih; header dua-baris (baris utama + sub-baris,
+ * mis. "NO NAMA JABATAN GAJI" lalu "… THR BPJS TK THP") digabung dengan mengisi
+ * sel kosong dari baris di atasnya — hanya bila baris atas juga tampak seperti
+ * header (≥2 sel cocok kolom standar).
+ */
+export function buildHeaders(aoa: unknown[][], headerIdx: number): string[] {
+  const row = (aoa[headerIdx] ?? []).map((h) => String(h ?? "").trim())
+  if (headerIdx === 0) return row
+  const above = (aoa[headerIdx - 1] ?? []).map((h) => String(h ?? "").trim())
+  const aboveKnown = above.filter((c) => c && NORM_TO_STD.has(norm(c))).length
+  if (aboveKnown < 2) return row
+  const width = Math.max(row.length, above.length)
+  return Array.from({ length: width }, (_, i) => row[i] || above[i] || "")
+}
+
 // ── Pemetaan kolom via AI (OpenAI-compatible), fallback heuristik ──────
 function buildMappingPrompt(headers: string[], sample: Rec[]): string {
   return `Kamu asisten HR yang memetakan kolom data gaji karyawan.
@@ -377,9 +393,7 @@ export const analyzeUpload = createServerFn({ method: "POST" })
     if (aoa.length < 2) throw new Error("File kosong atau tidak valid")
 
     const headerIdx = detectHeaderRowIndex(aoa as unknown[][])
-    const headers = (aoa[headerIdx] as unknown[]).map((h) =>
-      String(h ?? "").trim()
-    )
+    const headers = buildHeaders(aoa as unknown[][], headerIdx)
     const dataRows = aoa
       .slice(headerIdx + 1)
       .filter((r) => (r as unknown[]).some((c) => c !== undefined && c !== ""))
