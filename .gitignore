@@ -29,5 +29,8 @@ graphify-out/
 # UI kit — referensi desain lokal untuk AI, bukan bagian aplikasi
 uikit/
 
+# Contoh data gaji nyata (nama, nominal, rekening) — JANGAN pernah di-commit
+Contoh Data/
+
 # Backup files
 *.bak
