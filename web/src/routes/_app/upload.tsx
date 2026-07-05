@@ -135,7 +135,13 @@ function UploadPage() {
 
   function onFile(e: ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
-    if (file) analyzeMut.mutate(file)
+    if (file) {
+      if (file.size > 10 * 1024 * 1024) {
+        toast.error("File terlalu besar (maks 10MB)")
+      } else {
+        analyzeMut.mutate(file)
+      }
+    }
     e.target.value = ""
   }
 
@@ -147,7 +153,7 @@ function UploadPage() {
     <>
       <PageHeader
         title="Upload"
-        description="Impor file Excel gaji cabang dengan pemetaan kolom otomatis."
+        description="Impor file Excel/CSV gaji cabang dengan pemetaan kolom otomatis."
         action={
           analysis ? (
             <Button variant="outline" onClick={reset}>
@@ -175,16 +181,16 @@ function UploadPage() {
                 <p className="font-medium text-sm">
                   {analyzeMut.isPending
                     ? "Menganalisis file…"
-                    : "Klik untuk memilih file Excel"}
+                    : "Klik untuk memilih file Excel/CSV"}
                 </p>
                 <p className="text-muted-foreground text-sm">
-                  .xlsx / .xls (maks 10MB) — sheet "SIP GAJI" diabaikan
+                  .xlsx / .xls / .csv (maks 10MB) — sheet "SIP GAJI" diabaikan
                 </p>
               </div>
               <Input
                 id="file"
                 type="file"
-                accept=".xlsx,.xls"
+                accept=".xlsx,.xls,.csv"
                 className="hidden"
                 onChange={onFile}
                 disabled={analyzeMut.isPending}

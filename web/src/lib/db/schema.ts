@@ -26,7 +26,9 @@ export const invite = pgTable("invite", {
   attempts: integer().default(0).notNull(), // percobaan verifikasi gagal; ≥3 → expired
   expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
   status: text().default("pending").notNull(), // pending | used | expired
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
 })
 
 // cabang — unit/cabang sekolah
@@ -35,7 +37,9 @@ export const cabang = pgTable("cabang", {
   nama: text().notNull(),
   kode: text().unique().notNull(), // AW01, AW02, …
   alamat: text(),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
 })
 
 // karyawan — data pegawai per cabang
@@ -52,7 +56,9 @@ export const karyawan = pgTable("karyawan", {
   cabangId: integer("cabang_id").references(() => cabang.id),
   status: text().default("aktif").notNull(), // aktif / nonaktif
   thnKeluar: integer("thn_keluar"),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
 })
 
 // gaji — slip gaji bulanan per karyawan
@@ -84,7 +90,9 @@ export const gaji = pgTable(
     payingCabangId: integer("paying_cabang_id")
       .notNull()
       .references(() => cabang.id),
-    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
   },
   (t) => [
     // Satu slip per karyawan per periode PER cabang pembayar → target upsert impor.
@@ -101,7 +109,9 @@ export const settings = pgTable("settings", {
   id: serial().primaryKey(),
   key: text().unique().notNull(),
   value: text(),
-  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
 })
 
 // master_data — file Excel referensi HR Pusat
@@ -111,7 +121,9 @@ export const masterData = pgTable("master_data", {
   columns: jsonb(),
   sampleData: jsonb("sample_data"),
   employeeList: jsonb("employee_list"),
-  uploadedAt: timestamp("uploaded_at", { withTimezone: true }).defaultNow().notNull(),
+  uploadedAt: timestamp("uploaded_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
 })
 
 // notifications — notifikasi in-app, per user (pemilik satu-satunya yang boleh baca/hapus)
@@ -125,7 +137,9 @@ export const notifications = pgTable("notifications", {
   message: text(),
   linkPage: text("link_page"),
   isRead: boolean("is_read").default(false).notNull(),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
 })
 
 // upload_log — riwayat upload Excel cabang
@@ -136,5 +150,7 @@ export const uploadLog = pgTable("upload_log", {
   periode: text(), // YYYY-MM
   status: text(), // success / failed / pending
   errorMessage: text("error_message"),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
 })
