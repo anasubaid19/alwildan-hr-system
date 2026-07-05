@@ -197,6 +197,33 @@ export function heuristicMapping(headers: string[]): Mapping {
   return mapping
 }
 
+/**
+ * Cari indeks baris header sesungguhnya. File cabang sering diawali baris
+ * judul laporan ("DATA GAJI CABANG …") dan baris kosong — bila baris pertama
+ * dipakai mentah sebagai header, seluruh pemetaan (heuristik maupun AI) rusak.
+ * Skor per baris: sel yang cocok kolom standar/sinonim (sinyal kuat) +
+ * sel teks non-numerik (sinyal lemah, membedakan header dari baris data).
+ */
+export function detectHeaderRowIndex(aoa: unknown[][]): number {
+  const limit = Math.min(aoa.length, 10)
+  let best = 0
+  let bestScore = 0
+  for (let i = 0; i < limit; i++) {
+    const filled = (aoa[i] ?? [])
+      .map((c) => String(c ?? "").trim())
+      .filter(Boolean)
+    if (filled.length < 2) continue // judul satu sel / baris kosong
+    const known = filled.filter((c) => NORM_TO_STD.has(norm(c))).length
+    const nonNumeric = filled.filter((c) => Number.isNaN(Number(c))).length
+    const score = known * 10 + nonNumeric
+    if (score > bestScore) {
+      bestScore = score
+      best = i
+    }
+  }
+  return best
+}
+
 // ── Pemetaan kolom via AI (OpenAI-compatible), fallback heuristik ──────
 function buildMappingPrompt(headers: string[], sample: Rec[]): string {
   return `Kamu asisten HR yang memetakan kolom data gaji karyawan.
@@ -349,9 +376,12 @@ export const analyzeUpload = createServerFn({ method: "POST" })
     })
     if (aoa.length < 2) throw new Error("File kosong atau tidak valid")
 
-    const headers = (aoa[0] as unknown[]).map((h) => String(h ?? "").trim())
+    const headerIdx = detectHeaderRowIndex(aoa as unknown[][])
+    const headers = (aoa[headerIdx] as unknown[]).map((h) =>
+      String(h ?? "").trim()
+    )
     const dataRows = aoa
-      .slice(1)
+      .slice(headerIdx + 1)
       .filter((r) => (r as unknown[]).some((c) => c !== undefined && c !== ""))
     const records: Rec[] = dataRows.map((r) => {
       const o: Rec = {}
