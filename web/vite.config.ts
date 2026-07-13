@@ -6,6 +6,9 @@ import { defineConfig } from "vite"
 
 const config = defineConfig({
   resolve: { tsconfigPaths: true },
+  // strictPort: bila 3000 terpakai, GAGAL dengan jelas — jangan diam-diam
+  // pindah ke 3001 (origin :3001 ditolak Better Auth → "invalid origin").
+  server: { strictPort: true },
   // Prebundle deps auth di startup agar Vite tak re-optimize di tengah sesi
   // (re-optimasi memicu reload yang meng-invalidasi server function dev).
   optimizeDeps: {
