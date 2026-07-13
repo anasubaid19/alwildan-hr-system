@@ -96,17 +96,28 @@ Aplikasi + database bisa dijalankan penuh via Docker (dari folder `web/`):
 ```bash
 cd web
 
-# Sediakan secret untuk compose (dibaca dari file .env di samping compose)
+# Sediakan konfigurasi compose (dibaca dari file .env di samping compose)
 echo "BETTER_AUTH_SECRET=$(openssl rand -base64 32)" > .env
-# (opsional) domain publik:  echo "BETTER_AUTH_URL=https://hr.example.sch.id" >> .env
+
+# Deploy di server: isi URL yang dipakai pengguna mengakses app.
+# Port host configurable via APP_PORT (default 3000) — WAJIB sama dengan
+# port di BETTER_AUTH_URL, kalau tidak login ditolak "invalid origin".
+echo "APP_PORT=3100" >> .env
+echo "BETTER_AUTH_URL=http://IP_SERVER:3100" >> .env   # atau https://domain
 
 # Build + jalankan (Postgres + app)
 docker compose up --build -d
+
+# Cek status & log
+docker compose ps
+docker compose logs app -f
 ```
 
-- App: **http://localhost:3000** — Postgres di service `postgres` (jaringan internal compose).
+- App: **http://IP_SERVER:APP_PORT** (lokal: http://localhost:3000) — Postgres di
+  service `postgres`, hanya terikat loopback (tidak terjangkau dari LAN).
 - Saat start, container app menjalankan `db:push` (membuat tabel) lalu server produksi.
 - Data Postgres persist di volume `postgres_data`.
+- First setup: klik **Daftar** — user pertama otomatis Super Admin.
 
 > Untuk produksi di balik domain, set `BETTER_AUTH_URL` ke URL publik dan
 > jalankan di belakang reverse proxy (HTTPS).
