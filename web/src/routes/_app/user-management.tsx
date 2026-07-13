@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { createFileRoute } from "@tanstack/react-router"
+import { createFileRoute, redirect } from "@tanstack/react-router"
 import { Check, CheckCircle, Copy, KeyRound, UserCog } from "lucide-react"
 import { useState } from "react"
 import { toast } from "sonner"
@@ -25,7 +25,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { type AppRole, ROLE_LABEL } from "@/lib/auth/roles"
+import {
+  type AppRole,
+  hasAtLeast,
+  normalizeRole,
+  ROLE_LABEL,
+} from "@/lib/auth/roles"
 import { QK } from "@/lib/query-keys"
 import { generateInvitePin } from "@/server/invite"
 import { listAppUsers, updateUserRole } from "@/server/users"
@@ -49,6 +54,13 @@ async function copyText(text: string): Promise<boolean> {
 }
 
 export const Route = createFileRoute("/_app/user-management")({
+  // Guard role dari context user milik _app (client-safe — JANGAN import
+  // requireRole/db di file route: bocor pg ke bundle client). Server
+  // functions tetap menegakkan requireRole sendiri.
+  beforeLoad: ({ context }) => {
+    const role = normalizeRole((context.user as { role?: unknown }).role)
+    if (!hasAtLeast(role, "super_admin")) throw redirect({ to: "/dashboard" })
+  },
   component: UserManagementPage,
 })
 

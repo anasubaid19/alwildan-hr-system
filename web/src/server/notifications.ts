@@ -77,19 +77,6 @@ export const markAllNotificationsRead = createServerFn({
   return { ok: true }
 })
 
-/** Hapus satu notifikasi milik user aktif. */
-export const deleteNotification = createServerFn({ method: "POST" })
-  .validator((d: { id: number }) => ({ id: d.id }))
-  .handler(async ({ data }) => {
-    const userId = await requireUserId()
-    await db
-      .delete(notifications)
-      .where(
-        and(eq(notifications.id, data.id), eq(notifications.userId, userId))
-      )
-    return { ok: true }
-  })
-
 /** Hapus semua notifikasi user aktif yang sudah dibaca. */
 export const clearReadNotifications = createServerFn({
   method: "POST",

@@ -149,7 +149,9 @@ export const uploadLog = pgTable("upload_log", {
   cabangId: integer("cabang_id").references(() => cabang.id),
   periode: text(), // YYYY-MM
   status: text(), // success / failed / pending
-  errorMessage: text("error_message"),
+  detail: text(), // ringkasan hasil (dulu bernama error_message)
+  // Audit: siapa yang mengupload; user dihapus → log tetap (set null).
+  userId: text("user_id").references(() => user.id, { onDelete: "set null" }),
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()
     .notNull(),

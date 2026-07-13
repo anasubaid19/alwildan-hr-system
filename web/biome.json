@@ -41,7 +41,7 @@
         "useValidAnchor": "off"
       },
       "security": {
-        "noDangerouslySetInnerHtml": "off"
+        "noDangerouslySetInnerHtml": "warn"
       },
       "style": {
         "useConsistentArrayType": "off"
@@ -49,7 +49,7 @@
       "suspicious": {
         "useAwait": "off",
         "noArrayIndexKey": "off",
-        "noDocumentCookie": "off"
+        "noDocumentCookie": "warn"
       },
       "correctness": {
         "useExhaustiveDependencies": "warn"

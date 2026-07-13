@@ -1,6 +1,8 @@
 node_modules
 .env
 .env.local
+# semua varian env (.env.production dst.) — kecuali .env.example (tracked)
+.env*
 .output
 .nitro
 .tanstack

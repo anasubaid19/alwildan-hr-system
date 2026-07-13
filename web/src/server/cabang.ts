@@ -112,8 +112,20 @@ export const deleteCabang = createServerFn({ method: "POST" })
       })
     } catch (err) {
       if (isForeignKeyViolation(err)) {
+        // detail pg menyebut tabel pemblokir, mis. `... referenced from table "gaji"`.
+        const detail = String((err as { detail?: string }).detail ?? "")
+        if (detail.includes("karyawan")) {
+          throw new Error(
+            "Cabang masih memiliki karyawan — pindahkan atau hapus karyawannya dulu"
+          )
+        }
+        if (detail.includes("gaji")) {
+          throw new Error(
+            "Cabang masih memiliki data gaji — hapus data gaji cabang ini dulu"
+          )
+        }
         throw new Error(
-          "Cabang masih memiliki karyawan — pindahkan atau hapus karyawannya dulu"
+          "Cabang masih memiliki data terkait — hapus semua data cabang ini dulu"
         )
       }
       throw err

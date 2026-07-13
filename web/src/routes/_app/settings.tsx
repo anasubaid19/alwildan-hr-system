@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { createFileRoute } from "@tanstack/react-router"
+import { createFileRoute, redirect } from "@tanstack/react-router"
 import { useEffect, useState } from "react"
 import { toast } from "sonner"
 import { PageHeader } from "@/components/layout/page-header"
@@ -17,6 +17,7 @@ import { Label } from "@/components/ui/label"
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 import { Spinner } from "@/components/ui/spinner"
 import { API_KEY_MASK } from "@/lib/ai-constants"
+import { hasAtLeast, normalizeRole } from "@/lib/auth/roles"
 import { QK } from "@/lib/query-keys"
 import {
   fetchAiModels,
@@ -26,6 +27,13 @@ import {
 } from "@/server/settings"
 
 export const Route = createFileRoute("/_app/settings")({
+  // Guard role dari context user milik _app (client-safe — JANGAN import
+  // requireRole/db di file route: bocor pg ke bundle client). Server
+  // functions tetap menegakkan requireRole sendiri.
+  beforeLoad: ({ context }) => {
+    const role = normalizeRole((context.user as { role?: unknown }).role)
+    if (!hasAtLeast(role, "admin")) throw redirect({ to: "/dashboard" })
+  },
   component: SettingsPage,
 })
 

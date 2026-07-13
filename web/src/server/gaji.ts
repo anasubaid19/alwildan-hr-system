@@ -213,6 +213,9 @@ export const updateGaji = createServerFn({ method: "POST" })
       if (!row) throw new Error("Slip gaji tidak ditemukan")
       return row
     } catch (err) {
+      if (isForeignKeyViolation(err)) {
+        throw new Error("Karyawan atau cabang tidak valid")
+      }
       if (isUniqueViolation(err)) {
         throw new Error("Slip untuk karyawan, periode, & cabang ini sudah ada")
       }

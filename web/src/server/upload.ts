@@ -618,7 +618,8 @@ export const commitUpload = createServerFn({ method: "POST" })
         filename: filename || "upload.xlsx",
         periode,
         status: "success",
-        errorMessage: ringkas,
+        detail: ringkas,
+        userId: user.id,
       })
       // Notifikasi di dalam transaksi (atomic dgn data).
       await tx.insert(notifications).values({
