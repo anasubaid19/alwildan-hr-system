@@ -17,13 +17,20 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV PORT=3000
 
-# Salin app hasil build (termasuk node_modules utk runtime & drizzle-kit utk db:push)
-COPY --from=build /app ./
+# Hanya yang dibutuhkan runtime: build output, migrasi SQL + config drizzle
+# (drizzle-kit migrate butuh drizzle.config.ts), dan node_modules.
+COPY --from=build /app/package.json ./
+COPY --from=build /app/drizzle.config.ts ./
+COPY --from=build /app/drizzle ./drizzle
+COPY --from=build /app/dist ./dist
+COPY --from=build /app/node_modules ./node_modules
 
 EXPOSE 3000
 
-# Selaraskan skema DB lalu jalankan server produksi.
-# --force wajib: tanpa TTY drizzle-kit gagal di prompt konfirmasi TAPI exit 0,
-# sehingga server tetap start dengan DB kosong.
-# (Bun otomatis serve default export ber-`fetch` di server.js.)
-CMD ["sh", "-c", "bun run db:push --force && bun dist/server/server.js"]
+# Non-root: user `bun` (uid 1000) bawaan image oven/bun.
+USER bun
+
+# Terapkan migrasi SQL (drizzle/) lalu jalankan server produksi.
+# db:migrate hanya menjalankan migrasi yang belum diterapkan — aman diulang,
+# tanpa prompt TTY (pengganti db:push --force yang rawan; lihat riwayat repo).
+CMD ["sh", "-c", "bun run db:migrate && bun dist/server/server.js"]

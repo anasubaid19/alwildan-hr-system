@@ -35,9 +35,7 @@ git clone <repo-url>
 cd alwildan-hr-system/web
 
 # 2. Nyalakan PostgreSQL
-#    Opsi A — Docker, HANYA service postgres (tanpa `postgres` di akhir,
-#    container app ikut naik dan menempati port 3000 → `bun run dev`
-#    terlempar ke 3001 dan login ditolak "invalid origin"):
+#    Opsi A — Docker, cukup service postgres saja untuk dev:
 docker compose up -d postgres
 #    Opsi B — Postgres lokal: buat role `alwildan` (password alwildan2026)
 #             dan database `alwildan_hr` sesuai DATABASE_URL di bawah.
@@ -100,10 +98,10 @@ cd web
 echo "BETTER_AUTH_SECRET=$(openssl rand -base64 32)" > .env
 
 # Deploy di server: isi URL yang dipakai pengguna mengakses app.
-# Port host configurable via APP_PORT (default 3000) — WAJIB sama dengan
+# Port host default 3100 (configurable via APP_PORT) — WAJIB sama dengan
 # port di BETTER_AUTH_URL, kalau tidak login ditolak "invalid origin".
-echo "APP_PORT=3100" >> .env
 echo "BETTER_AUTH_URL=http://IP_SERVER:3100" >> .env   # atau https://domain
+# (opsional) echo "POSTGRES_PASSWORD=<password-kuat>" >> .env
 
 # Build + jalankan (Postgres + app)
 docker compose up --build -d
@@ -113,9 +111,9 @@ docker compose ps
 docker compose logs app -f
 ```
 
-- App: **http://IP_SERVER:APP_PORT** (lokal: http://localhost:3000) — Postgres di
+- App: **http://IP_SERVER:3100** (lokal: http://localhost:3100) — Postgres di
   service `postgres`, hanya terikat loopback (tidak terjangkau dari LAN).
-- Saat start, container app menjalankan `db:push` (membuat tabel) lalu server produksi.
+- Saat start, container app menerapkan **migrasi SQL** (`db:migrate`, folder `web/drizzle/`) lalu server produksi.
 - Data Postgres persist di volume `postgres_data`.
 - First setup: klik **Daftar** — user pertama otomatis Super Admin.
 

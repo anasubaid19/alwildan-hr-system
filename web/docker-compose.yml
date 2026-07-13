@@ -5,7 +5,7 @@ services:
     environment:
       POSTGRES_DB: alwildan_hr
       POSTGRES_USER: alwildan
-      POSTGRES_PASSWORD: alwildan2026
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-alwildan2026}
     ports:
       # Loopback saja: DB gaji tidak boleh terjangkau dari LAN/internet.
       # App mengakses postgres via jaringan internal compose, bukan port host.
@@ -18,6 +18,10 @@ services:
       timeout: 5s
       retries: 10
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 512M
 
   app:
     build:
@@ -25,14 +29,15 @@ services:
       dockerfile: Dockerfile
     container_name: alwildan_app
     ports:
-      # Port host configurable via .env (APP_PORT=3100 dst.) — container tetap 3000.
-      # Ingat: BETTER_AUTH_URL harus memakai port yang sama dengan APP_PORT.
-      - "${APP_PORT:-3000}:3000"
+      # Port host configurable via .env — default 3100 agar tak bentrok
+      # dev vite (3000). BETTER_AUTH_URL harus memakai port yang sama.
+      - "${APP_PORT:-3100}:3000"
     environment:
-      DATABASE_URL: postgresql://alwildan:alwildan2026@postgres:5432/alwildan_hr
-      # WAJIB diisi (mis. via file .env di samping compose): openssl rand -base64 32
+      # Password ikut POSTGRES_PASSWORD (atau override DATABASE_URL penuh).
+      DATABASE_URL: ${DATABASE_URL:-postgresql://alwildan:${POSTGRES_PASSWORD:-alwildan2026}@postgres:5432/alwildan_hr}
+      # WAJIB diisi (via file .env di samping compose): openssl rand -base64 32
       BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET}
-      BETTER_AUTH_URL: ${BETTER_AUTH_URL:-http://localhost:3000}
+      BETTER_AUTH_URL: ${BETTER_AUTH_URL:-http://localhost:3100}
       # Email reset password (opsional di dev — tanpa key, link dicetak ke log)
       RESEND_API_KEY: ${RESEND_API_KEY:-}
       EMAIL_FROM: ${EMAIL_FROM:-}
@@ -41,6 +46,10 @@ services:
       postgres:
         condition: service_healthy
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 512M
 
 volumes:
   postgres_data:
