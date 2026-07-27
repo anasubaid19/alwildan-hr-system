@@ -2,7 +2,7 @@ import { betterAuth } from "better-auth"
 import { drizzleAdapter } from "better-auth/adapters/drizzle"
 import { admin } from "better-auth/plugins/admin"
 import { adminAc, userAc } from "better-auth/plugins/admin/access"
-import { count } from "drizzle-orm"
+import { count, sql } from "drizzle-orm"
 
 import { db } from "../db"
 import { user as userTable } from "../db/schema"
@@ -45,8 +45,9 @@ export const auth = betterAuth({
   databaseHooks: {
     user: {
       create: {
-        // Bootstrap: user pertama yang mendaftar menjadi super_admin.
+        // Serialize concurrent registrasi agar tak ada 2 super_admin sekaligus.
         before: async (u) => {
+          await db.execute(sql`SELECT pg_advisory_xact_lock(1)`)
           const [row] = await db.select({ c: count() }).from(userTable)
           const isFirst = (row?.c ?? 0) === 0
           return { data: { ...u, role: isFirst ? "super_admin" : "staff" } }

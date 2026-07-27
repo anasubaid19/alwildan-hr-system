@@ -4,9 +4,12 @@ import { API_KEY_MASK } from "@/lib/ai-constants"
 import { requireRole } from "@/lib/auth"
 import {
   AI_KEYS,
+  decryptKey,
+  encryptKey,
   getSetting,
   readAiConfig,
   setSetting,
+  validateBaseUrl,
 } from "@/server/ai-config"
 
 export { API_KEY_MASK }
@@ -25,7 +28,7 @@ export const getAiSettings = createServerFn().handler(
     return {
       baseUrl: baseUrl || "https://api.groq.com/openai/v1",
       model,
-      hasApiKey: Boolean(apiKey),
+      hasApiKey: Boolean(decryptKey(apiKey)),
     }
   }
 )
@@ -39,10 +42,11 @@ export const saveAiSettings = createServerFn({ method: "POST" })
   }))
   .handler(async ({ data }) => {
     await requireRole("admin")
+    if (data.baseUrl) validateBaseUrl(data.baseUrl)
     await setSetting(AI_KEYS.baseUrl, data.baseUrl)
     await setSetting(AI_KEYS.model, data.model)
     if (data.apiKey && data.apiKey !== API_KEY_MASK) {
-      await setSetting(AI_KEYS.apiKey, data.apiKey.trim())
+      await setSetting(AI_KEYS.apiKey, encryptKey(data.apiKey.trim()))
     }
     return { ok: true }
   })
@@ -54,7 +58,7 @@ async function resolveConfig(input: {
   model?: string
 }) {
   const stored = await readAiConfig()
-  const baseUrl = (input.baseUrl || stored.baseUrl).trim()
+  const baseUrl = validateBaseUrl((input.baseUrl || stored.baseUrl).trim())
   const apiKey =
     input.apiKey && input.apiKey !== API_KEY_MASK
       ? input.apiKey.trim()

@@ -62,7 +62,8 @@ async function consumePendingInvite(email: string, pin: string) {
     throw new Error(PIN_INVALID_MSG)
   }
 
-  if (row.pin !== pin) {
+  const pinMatch = await Bun.password.verify(pin, row.pin)
+  if (!pinMatch) {
     const attempts = row.attempts + 1
     await db
       .update(inviteTable)
@@ -118,12 +119,13 @@ export const generateInvitePin = createServerFn({ method: "POST" })
     // randomInt = CSPRNG; rentang 100000-999999 menjamin 6 digit tanpa nol depan.
     const pin = String(randomInt(100000, 1000000))
     const expiresAt = new Date(Date.now() + INVITE_TTL_MS)
+    const hashedPin = await Bun.password.hash(pin, { algorithm: "bcrypt" })
 
     await db.insert(inviteTable).values({
       email: data.email,
       name: data.name,
       role: data.role,
-      pin,
+      pin: hashedPin,
       expiresAt,
     })
 
