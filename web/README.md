@@ -8,7 +8,7 @@ Frontend HR system baru sesuai `../PRD-REBUILD.md`. Stack: **Bun · TanStack Sta
 cp .env.example .env   # isi DATABASE_URL + BETTER_AUTH_SECRET (openssl rand -base64 32)
 bun install
 bun run db:push        # buat tabel dari src/lib/db/schema.ts
-bun run dev            # http://localhost:3000
+bun run dev            # http://localhost:3100
 ```
 
 Env variable (lihat `.env.example`):
@@ -17,7 +17,7 @@ Env variable (lihat `.env.example`):
 |---|---|
 | `DATABASE_URL` | koneksi PostgreSQL |
 | `BETTER_AUTH_SECRET` | secret sesi Better Auth (wajib) |
-| `BETTER_AUTH_URL` | origin app (default `http://localhost:3000`) |
+| `BETTER_AUTH_URL` | origin app (default `http://localhost:3100`) |
 | `RESEND_API_KEY` / `EMAIL_FROM` | email reset password via Resend (opsional di dev — tanpa key, link dicetak ke console) |
 | `AI_BASE_URL` / `AI_API_KEY` / `AI_MODEL` | fallback config AI (utama dari Settings di app) |
 
@@ -27,7 +27,7 @@ Auth: email + password (Better Auth, plugin admin). User pertama yang mendaftar 
 
 ```bash
 cp .env.example .env   # minimal isi BETTER_AUTH_SECRET
-docker compose up -d --build   # app :3000 + postgres :5432
+docker compose up -d --build   # app :3100 + postgres :5432
 ```
 
 ## Struktur

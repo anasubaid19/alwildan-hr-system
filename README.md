@@ -48,7 +48,7 @@ cp .env.example .env
 #    Isi minimal:
 #      DATABASE_URL=postgresql://alwildan:alwildan2026@localhost:5432/alwildan_hr
 #      BETTER_AUTH_SECRET=<hasil `openssl rand -base64 32`>
-#      BETTER_AUTH_URL=http://localhost:3000
+#      BETTER_AUTH_URL=http://localhost:3100
 
 # 5. Buat tabel database
 bun run db:push
@@ -57,7 +57,7 @@ bun run db:push
 bun run dev
 ```
 
-Buka **http://localhost:3000**.
+Buka **http://localhost:3100**.
 
 ## First Setup
 
@@ -79,7 +79,7 @@ Tanpa AI, pemetaan kolom heuristik tetap berjalan.
 ## Skrip berguna (di `web/`)
 
 ```bash
-bun run dev         # dev server (port 3000)
+bun run dev         # dev server (port 3100)
 bun run build       # build produksi
 bun run typecheck   # cek TypeScript
 bun run check       # lint + format (Biome)

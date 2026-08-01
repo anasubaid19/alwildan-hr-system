@@ -52,7 +52,7 @@ users) **hampir tak berubah** — mereka cuma memanggil helper itu.
 
 **Fase 0 — Prep**
 1. `bun add better-auth`; hapus `@clerk/tanstack-react-start` nanti di Fase 6.
-2. Set `BETTER_AUTH_SECRET` (`openssl rand -base64 32`) + `BETTER_AUTH_URL=http://localhost:3000` di `.env.local`.
+2. Set `BETTER_AUTH_SECRET` (`openssl rand -base64 32`) + `BETTER_AUTH_URL=http://localhost:3100` di `.env.local`.
 
 **Fase 1 — Server auth**
 3. `src/lib/auth/server.ts`: `betterAuth({ database: drizzleAdapter(db,{provider:"pg"}), emailAndPassword:{ enabled:true, sendResetPassword }, plugins:[ admin({ defaultRole:"staff", adminRoles:["super_admin"] }) ] })`.

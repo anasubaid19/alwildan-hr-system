@@ -14,9 +14,9 @@ export const auth = betterAuth({
   // varian loopback yang setara — browser (mis. Firefox) yang membuka app
   // via 127.0.0.1/[::1] mengirim Origin itu dan ditolak "INVALID_ORIGIN".
   trustedOrigins: [
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
-    "http://[::1]:3000",
+    "http://localhost:3100",
+    "http://127.0.0.1:3100",
+    "http://[::1]:3100",
   ],
   emailAndPassword: {
     enabled: true,

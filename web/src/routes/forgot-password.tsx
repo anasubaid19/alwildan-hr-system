@@ -22,16 +22,23 @@ function ForgotPasswordPage() {
   async function onSubmit(e: FormEvent) {
     e.preventDefault()
     setLoading(true)
-    const { error } = await authClient.requestPasswordReset({
-      email: email.trim(),
-      redirectTo: "/reset-password",
-    })
-    setLoading(false)
-    if (error) {
-      toast.error(error.message ?? "Gagal mengirim tautan reset")
-      return
+    try {
+      const { error } = await authClient.requestPasswordReset(
+        { email: email.trim(), redirectTo: "/reset-password" },
+        { signal: AbortSignal.timeout(30_000) }
+      )
+      if (error) {
+        toast.error(error.message ?? "Gagal mengirim tautan reset")
+        return
+      }
+      setSent(true)
+    } catch {
+      toast.error(
+        "Server tidak merespons — pastikan server & Postgres berjalan, lalu coba lagi."
+      )
+    } finally {
+      setLoading(false)
     }
-    setSent(true)
   }
 
   return (

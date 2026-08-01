@@ -30,17 +30,24 @@ function ResetPasswordPage() {
       return
     }
     setLoading(true)
-    const { error } = await authClient.resetPassword({
-      newPassword: password,
-      token,
-    })
-    setLoading(false)
-    if (error) {
-      toast.error(error.message ?? "Gagal reset password")
-      return
+    try {
+      const { error } = await authClient.resetPassword(
+        { newPassword: password, token },
+        { signal: AbortSignal.timeout(30_000) }
+      )
+      if (error) {
+        toast.error(error.message ?? "Gagal reset password")
+        return
+      }
+      toast.success("Password diperbarui, silakan masuk")
+      navigate({ to: "/sign-in" })
+    } catch {
+      toast.error(
+        "Server tidak merespons — pastikan server & Postgres berjalan, lalu coba lagi."
+      )
+    } finally {
+      setLoading(false)
     }
-    toast.success("Password diperbarui, silakan masuk")
-    navigate({ to: "/sign-in" })
   }
 
   return (

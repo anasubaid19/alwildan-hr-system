@@ -29,8 +29,8 @@ services:
       dockerfile: Dockerfile
     container_name: alwildan_app
     ports:
-      # Port host configurable via .env — default 3100 agar tak bentrok
-      # dev vite (3000). BETTER_AUTH_URL harus memakai port yang sama.
+      # Port host configurable via .env — default 3100 (port dedicated web,
+      # sama dgn dev vite). BETTER_AUTH_URL harus memakai port yang sama.
       - "${APP_PORT:-3100}:3000"
     environment:
       # Password ikut POSTGRES_PASSWORD (atau override DATABASE_URL penuh).
