@@ -18,14 +18,25 @@ const Toaster = ({ ...props }: ToasterProps) => {
       theme={theme as ToasterProps["theme"]}
       className="toaster group"
       icons={{
-        success: <CircleCheck strokeWidth={2} className="size-4" />,
-        info: <Info strokeWidth={2} className="size-4" />,
-        warning: <TriangleAlert strokeWidth={2} className="size-4" />,
-        error: <CircleX strokeWidth={2} className="size-4" />,
+        success: (
+          <CircleCheck strokeWidth={2} className="size-4" aria-hidden="true" />
+        ),
+        info: <Info strokeWidth={2} className="size-4" aria-hidden="true" />,
+        warning: (
+          <TriangleAlert
+            strokeWidth={2}
+            className="size-4"
+            aria-hidden="true"
+          />
+        ),
+        error: (
+          <CircleX strokeWidth={2} className="size-4" aria-hidden="true" />
+        ),
         loading: (
           <LoaderCircle
             strokeWidth={2}
             className="size-4 animate-spin motion-reduce:animate-pulse"
+            aria-hidden="true"
           />
         ),
       }}
@@ -39,7 +50,8 @@ const Toaster = ({ ...props }: ToasterProps) => {
       }
       toastOptions={{
         classNames: {
-          toast: "cn-toast",
+          toast:
+            "cn-toast animate-in fade-in-0 slide-in-from-right-4 duration-fast ease-out animate-out fade-out-0 slide-out-to-right-4 duration-fast ease-out motion-reduce:animate-none",
         },
       }}
       {...props}

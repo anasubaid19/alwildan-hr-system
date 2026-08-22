@@ -154,6 +154,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex min-h-svh bg-background">
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:rounded-lg focus:bg-primary focus:px-3 focus:py-2 focus:text-primary-foreground focus:text-sm"
+      >
+        Skip ke konten utama
+      </a>
       {/* Sidebar (desktop) */}
       <aside className="hidden w-60 shrink-0 flex-col border-r bg-sidebar px-3 py-4 md:flex">
         <div className="flex items-center gap-2 px-2 pb-4">
@@ -201,7 +207,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <AuthControl />
         </header>
 
-        <main className="flex-1 overflow-auto p-4 pb-20 md:p-6 md:pb-6">
+        <main
+          id="main-content"
+          className="flex-1 overflow-auto p-4 pb-20 md:p-6 md:pb-6"
+        >
           {children}
         </main>
       </div>

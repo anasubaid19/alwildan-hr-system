@@ -151,77 +151,85 @@ function SystemPage() {
         </Card>
 
         {showDialog && code && (
-          <Card className="border-primary/20 bg-primary/5">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-primary">
-                <ShieldAlert className="size-5" /> Masukkan Kode Konfirmasi
-              </CardTitle>
-              <CardDescription>
-                Kode ini hanya ditampilkan sekali. Ketik persis 8 karakter di
-                bawah.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center gap-4 p-4 bg-background rounded-lg border">
-                <code className="font-mono text-2xl tracking-widest text-primary font-bold select-all">
-                  {code}
-                </code>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => navigator.clipboard.writeText(code)}
-                  aria-label="Salin kode"
-                >
-                  <Check className="size-4" />
-                </Button>
-              </div>
+          <div
+            data-state="open"
+            className="animate-in fade-in-0 slide-in-from-bottom-2 duration-fast ease-out motion-reduce:animate-none"
+          >
+            <Card className="border-primary/20 bg-primary/5">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-primary">
+                  <ShieldAlert className="size-5" /> Masukkan Kode Konfirmasi
+                </CardTitle>
+                <CardDescription>
+                  Kode ini hanya ditampilkan sekali. Ketik persis 8 karakter di
+                  bawah.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center gap-4 p-4 bg-background rounded-lg border">
+                  <code className="font-mono text-2xl tracking-widest text-primary font-bold select-all">
+                    {code}
+                  </code>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => navigator.clipboard.writeText(code)}
+                    aria-label="Salin kode"
+                  >
+                    <Check className="size-4" />
+                  </Button>
+                </div>
 
-              <div className="space-y-2">
-                <label
-                  htmlFor="confirm-code"
-                  className="block text-sm font-medium"
-                >
-                  Ketik kode di atas:
-                </label>
-                <input
-                  id="confirm-code"
-                  type="text"
-                  value={typed}
-                  onChange={(e) => setTyped(e.target.value.toUpperCase())}
-                  className="w-full font-mono text-lg tracking-wider rounded-lg border border-input bg-background px-3 py-2 placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-                  placeholder="ABC123XY"
-                  maxLength={8}
-                  autoComplete="off"
-                />
-                <p className="text-sm text-muted-foreground">
-                  {typed.length === 8
-                    ? "✓ Panjang benar"
-                    : `${typed.length}/8 karakter`}
-                </p>
-              </div>
+                <div className="space-y-2">
+                  <label
+                    htmlFor="confirm-code"
+                    className="block text-sm font-medium"
+                  >
+                    Ketik kode di atas:
+                  </label>
+                  <input
+                    id="confirm-code"
+                    type="text"
+                    value={typed}
+                    onChange={(e) => setTyped(e.target.value.toUpperCase())}
+                    className="w-full font-mono text-lg tracking-wider rounded-lg border border-input bg-background px-3 py-2 placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                    placeholder="ABC123XY"
+                    maxLength={8}
+                    autoComplete="off"
+                  />
+                  <p className="text-sm text-muted-foreground">
+                    {typed.length === 8
+                      ? "✓ Panjang benar"
+                      : `${typed.length}/8 karakter`}
+                  </p>
+                </div>
 
-              <div className="flex justify-end gap-2 pt-2">
-                <Button variant="outline" onClick={() => setShowDialog(false)}>
-                  <X className="size-4" /> Batal
-                </Button>
-                <Button
-                  variant="destructive"
-                  onClick={() => confirmMut.mutate()}
-                  disabled={confirmMut.isPending || typed !== code}
-                >
-                  {confirmMut.isPending ? (
-                    <>
-                      <Loader2 className="size-4 animate-spin" /> Menghapus...
-                    </>
-                  ) : (
-                    <>
-                      <X className="size-4" /> Hapus Permanen
-                    </>
-                  )}
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+                <div className="flex justify-end gap-2 pt-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowDialog(false)}
+                  >
+                    <X className="size-4" /> Batal
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    onClick={() => confirmMut.mutate()}
+                    disabled={confirmMut.isPending || typed !== code}
+                  >
+                    {confirmMut.isPending ? (
+                      <>
+                        <Loader2 className="size-4 animate-spin" /> Menghapus...
+                      </>
+                    ) : (
+                      <>
+                        <X className="size-4" /> Hapus Permanen
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         )}
       </div>
     </>

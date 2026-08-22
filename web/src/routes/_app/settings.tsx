@@ -16,7 +16,6 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 import { Spinner } from "@/components/ui/spinner"
-import { API_KEY_MASK } from "@/lib/ai-constants"
 import { hasAtLeast, normalizeRole } from "@/lib/auth/roles"
 import { QK } from "@/lib/query-keys"
 import {
@@ -116,10 +115,11 @@ function SettingsPage() {
               type="password"
               value={apiKey}
               onChange={(e) => setApiKey(e.target.value)}
-              placeholder={data?.hasApiKey ? API_KEY_MASK : "sk-… / gsk_…"}
+              placeholder="sk-… / gsk_…"
               disabled={isLoading}
+              aria-describedby="api-key-help"
             />
-            <p className="text-muted-foreground text-xs">
+            <p id="api-key-help" className="text-muted-foreground text-xs">
               {data?.hasApiKey
                 ? "Sudah tersimpan. Kosongkan untuk membiarkannya."
                 : "Belum ada API key tersimpan."}
