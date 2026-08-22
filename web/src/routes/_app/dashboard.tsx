@@ -15,7 +15,6 @@ import {
   Wallet,
 } from "lucide-react"
 import { useState } from "react"
-import { Bar, BarChart, CartesianGrid, XAxis } from "recharts"
 import { PageHeader } from "@/components/layout/page-header"
 import { Badge } from "@/components/ui/badge"
 import { buttonVariants } from "@/components/ui/button"
@@ -27,12 +26,6 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import {
-  type ChartConfig,
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-} from "@/components/ui/chart"
-import {
   Empty,
   EmptyContent,
   EmptyDescription,
@@ -40,6 +33,7 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from "@/components/ui/empty"
+import { MonoRoundedLineChart } from "@/components/ui/mono-rounded-line"
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 import { Skeleton } from "@/components/ui/skeleton"
 import { authClient } from "@/lib/auth/client"
@@ -99,10 +93,6 @@ function timeAgo(d: Date | null): string {
     year: "numeric",
   }).format(new Date(d))
 }
-
-const chartConfig = {
-  total: { label: "Diterima", color: "var(--primary)" },
-} satisfies ChartConfig
 
 type QuickAction = {
   to: string
@@ -448,48 +438,27 @@ function ActivityCard({ data }: { data: DashboardSummary }) {
 function ChartCard({ data }: { data: DashboardSummary }) {
   const perCabang = data.perCabang
   return (
-    <Card className="mt-6">
-      <CardHeader>
-        <CardTitle>Statistik Gaji per Cabang</CardTitle>
-        <CardDescription>
-          Total diterima per cabang
-          {data.periode ? ` — periode ${formatPeriode(data.periode)}` : ""}.
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        {perCabang.length === 0 ? (
-          <div className="flex h-64 items-center justify-center rounded-lg border border-dashed text-sm text-muted-foreground">
-            Belum ada data gaji untuk periode ini
-          </div>
-        ) : (
-          <>
-            <ChartContainer config={chartConfig} className="h-64 w-full">
-              <BarChart accessibilityLayer data={perCabang}>
-                <CartesianGrid vertical={false} />
-                <XAxis
-                  dataKey="kode"
-                  tickLine={false}
-                  axisLine={false}
-                  tickMargin={8}
-                />
-                <ChartTooltip
-                  content={
-                    <ChartTooltipContent
-                      formatter={(value) => rupiah.format(Number(value))}
-                    />
-                  }
-                />
-                <Bar dataKey="total" fill="var(--color-total)" radius={6} />
-              </BarChart>
-            </ChartContainer>
-            <p className="mt-3 text-xs text-muted-foreground">
-              Sumbu Y dalam Rupiah · nilai tertinggi:{" "}
-              {compact.format(perCabang[0]?.total ?? 0)}
-            </p>
-          </>
-        )}
-      </CardContent>
-    </Card>
+    <div className="mt-6">
+      {perCabang.length === 0 ? (
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex h-64 items-center justify-center rounded-lg border border-dashed text-sm text-muted-foreground">
+              Belum ada data gaji untuk periode ini
+            </div>
+          </CardContent>
+        </Card>
+      ) : (
+        <MonoRoundedLineChart
+          title="Statistik Gaji per Cabang"
+          unit="rupiah"
+          formatValue={(v) => compact.format(v)}
+          data={perCabang.map((c) => ({
+            label: c.kode,
+            value: Number(c.total ?? 0),
+          }))}
+        />
+      )}
+    </div>
   )
 }
 
