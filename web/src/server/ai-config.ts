@@ -25,7 +25,16 @@ const ALLOWED_AI_HOSTS = new Set([
   "api.deepseek.com",
   "openrouter.ai",
   "generativelanguage.googleapis.com",
+  "opencode.ai",
+  "localhost",
+  "127.0.0.1",
+  "[::1]",
 ])
+
+for (const h of (process.env.AI_ALLOWED_EXTRA_HOSTS ?? "").split(",")) {
+  const host = h.trim().toLowerCase()
+  if (host) ALLOWED_AI_HOSTS.add(host)
+}
 
 export function validateBaseUrl(raw: string): string {
   const url = raw.trim()

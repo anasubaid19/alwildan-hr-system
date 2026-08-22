@@ -137,6 +137,7 @@ function KaryawanPage() {
     },
     onSuccess: (_row, input) => {
       qc.invalidateQueries({ queryKey: QK.karyawan })
+      qc.invalidateQueries({ queryKey: QK.dashboard })
       setFormOpen(false)
       toast.success(input.id ? "Karyawan diperbarui" : "Karyawan ditambahkan")
     },
@@ -147,6 +148,7 @@ function KaryawanPage() {
     mutationFn: (id: number) => deleteKaryawan({ data: { id } }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: QK.karyawan })
+      qc.invalidateQueries({ queryKey: QK.dashboard })
       setDeleteTarget(null)
       toast.success("Karyawan dihapus")
     },

@@ -23,7 +23,10 @@ const Toaster = ({ ...props }: ToasterProps) => {
         warning: <TriangleAlert strokeWidth={2} className="size-4" />,
         error: <CircleX strokeWidth={2} className="size-4" />,
         loading: (
-          <LoaderCircle strokeWidth={2} className="size-4 animate-spin" />
+          <LoaderCircle
+            strokeWidth={2}
+            className="size-4 animate-spin motion-reduce:animate-pulse"
+          />
         ),
       }}
       style={

@@ -102,6 +102,7 @@ function CabangPage() {
           }),
     onSuccess: (_row, input) => {
       qc.invalidateQueries({ queryKey: QK.cabang })
+      qc.invalidateQueries({ queryKey: QK.dashboard })
       setFormOpen(false)
       toast.success(input.id ? "Cabang diperbarui" : "Cabang ditambahkan")
     },
@@ -112,6 +113,7 @@ function CabangPage() {
     mutationFn: (id: number) => deleteCabang({ data: { id } }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: QK.cabang })
+      qc.invalidateQueries({ queryKey: QK.dashboard })
       setDeleteTarget(null)
       toast.success("Cabang dihapus")
     },

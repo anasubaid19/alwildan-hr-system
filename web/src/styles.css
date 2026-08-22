@@ -62,6 +62,7 @@
   --duration-slow: var(--motion-duration-slow);
   --ease-entrance: var(--motion-ease-entrance);
   --ease-default: var(--motion-ease-default);
+  --ease-out: var(--motion-ease-out);
 }
 
 :root {
@@ -115,7 +116,7 @@
   --motion-duration-normal: 200ms;
   --motion-duration-slow: 500ms;
   --motion-ease-default: cubic-bezier(0.4, 0, 0.2, 1);
-  --motion-ease-out: cubic-bezier(0, 0, 0.2, 1);
+  --motion-ease-out: cubic-bezier(0.23, 1, 0.32, 1);
   --motion-ease-entrance: cubic-bezier(0, 0.55, 0.45, 1);
 
   /* Shadow aliases (elevation) */

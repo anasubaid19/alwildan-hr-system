@@ -8,6 +8,7 @@ import {
   MoreHorizontal,
   Search,
   Settings,
+  ShieldAlert,
   Sun,
   Upload,
   UserCog,
@@ -62,6 +63,12 @@ const NAV: NavItem[] = [
     to: "/user-management",
     label: "User Management",
     icon: UserCog,
+    minRole: "super_admin",
+  },
+  {
+    to: "/system",
+    label: "System",
+    icon: ShieldAlert,
     minRole: "super_admin",
   },
 ]
@@ -183,7 +190,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <button
             type="button"
             onClick={() => setSearchOpen(true)}
-            className="flex h-9 flex-1 items-center gap-2 rounded-lg border bg-popover px-3 text-muted-foreground text-sm transition-colors hover:bg-accent/50 sm:max-w-xs"
+            className="flex h-9 flex-1 items-center gap-2 rounded-lg border bg-popover px-3 text-muted-foreground text-sm transition-colors hover:bg-accent/50 sm:max-w-40"
           >
             <Search className="size-4" />
             <span>Cari…</span>

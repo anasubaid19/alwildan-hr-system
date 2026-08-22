@@ -45,7 +45,7 @@ function SignInPage() {
     <AuthCard
       title="AL-WILDAN HR System"
       description="Islamic School Management System"
-      className="max-w-[27rem] shadow-[var(--shadow-overlay)] [--card-spacing:--spacing(7)] animate-in fade-in-0 zoom-in-95 duration-normal ease-entrance"
+      className="max-w-[27rem] shadow-[var(--shadow-overlay)] [--card-spacing:--spacing(7)] animate-in fade-in-0 zoom-in-95 duration-normal ease-entrance motion-reduce:zoom-in-100"
     >
       <form onSubmit={onSubmit}>
         <CardContent className="flex flex-col gap-5">
@@ -78,7 +78,7 @@ function SignInPage() {
           <Button
             type="submit"
             size="lg"
-            className="h-13 w-full text-base font-semibold shadow-md transition-[box-shadow,transform,background-color] duration-fast hover:shadow-lg active:scale-[0.98]"
+            className="h-13 w-full text-base font-semibold shadow-md hover:shadow-lg"
             isLoading={loading}
             loadingText="Masuk"
           >
