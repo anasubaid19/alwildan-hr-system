@@ -27,20 +27,8 @@ export function AuthCard({
       />
       <Card className={cn("relative w-full max-w-sm", className)}>
         <CardHeader className="text-center">
-          <div
-            className="mx-auto mb-3 flex size-12 items-center justify-center rounded-full border"
-            style={{
-              background:
-                "linear-gradient(160deg, var(--logo-surface-gradient-start), var(--logo-surface-gradient-end))",
-              borderColor:
-                "color-mix(in oklch, var(--logo-border) calc(var(--logo-stroke-opacity) * 100%), transparent)",
-            }}
-          >
-            <img
-              src="/hr2.svg"
-              alt="AL-WILDAN"
-              className="size-10 rounded-full"
-            />
+          <div className="mx-auto mb-3 flex size-12 items-center justify-center">
+            <img src="/hr2.svg" alt="AL-WILDAN" className="size-12" />
           </div>
           <CardTitle className="font-heading text-lg font-semibold tracking-tight">
             {title}
