@@ -43,8 +43,8 @@ function SignInPage() {
 
   return (
     <AuthCard
-      title="AL-WILDAN HR System"
-      description="Islamic School Management System"
+      title="AL-WILDAN HR SYSTEM"
+      description={"AL-WILDAN ISLAMIC SCHOOL\nManagement System"}
       className="max-w-[27rem] shadow-[var(--shadow-overlay)] [--card-spacing:--spacing(7)] animate-in fade-in-0 zoom-in-95 duration-normal ease-entrance motion-reduce:zoom-in-100"
     >
       <form onSubmit={onSubmit}>

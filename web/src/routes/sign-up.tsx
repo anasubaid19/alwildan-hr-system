@@ -92,8 +92,8 @@ function SignUpPage() {
 
   return (
     <AuthCard
-      title="Daftar"
-      description="Buat akun baru untuk mengakses HR System AL-WILDAN."
+      title="Daftar Akun"
+      description={"Buat akun untuk mengakses\nAL-WILDAN HR SYSTEM"}
       className="max-w-[29rem] shadow-[var(--shadow-overlay)] [--card-spacing:--spacing(7)] animate-in fade-in-0 zoom-in-95 duration-normal ease-entrance motion-reduce:zoom-in-100"
     >
       <form onSubmit={onSubmit}>

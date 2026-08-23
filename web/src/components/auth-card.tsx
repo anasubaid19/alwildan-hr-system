@@ -28,23 +28,25 @@ export function AuthCard({
       <Card className={cn("relative w-full max-w-sm", className)}>
         <CardHeader className="text-center">
           <div
-            className="mx-auto mb-3 flex size-12 items-center justify-center rounded-full border font-heading text-lg font-semibold shadow-md"
+            className="mx-auto mb-3 flex size-12 items-center justify-center rounded-full border"
             style={{
               background:
                 "linear-gradient(160deg, var(--logo-surface-gradient-start), var(--logo-surface-gradient-end))",
               borderColor:
                 "color-mix(in oklch, var(--logo-border) calc(var(--logo-stroke-opacity) * 100%), transparent)",
-              color: "var(--logo-mark-primary)",
             }}
           >
-            {/* TODO: swap for <img src="/logo.svg" alt="AL-WILDAN" className="size-8 rounded-full" /> once a real logo asset exists */}
-            AW
+            <img
+              src="/hr2.svg"
+              alt="AL-WILDAN"
+              className="size-10 rounded-full"
+            />
           </div>
           <CardTitle className="font-heading text-lg font-semibold tracking-tight">
             {title}
           </CardTitle>
           {description && (
-            <CardDescription className="text-sm text-muted-foreground">
+            <CardDescription className="text-sm text-muted-foreground whitespace-pre-line">
               {description}
             </CardDescription>
           )}
