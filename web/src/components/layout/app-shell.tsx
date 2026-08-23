@@ -129,9 +129,16 @@ function AuthControl() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
-        render={<Button variant="ghost" size="icon" aria-label="Menu akun" />}
+        render={
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label="Menu akun"
+            className="size-9 rounded-lg p-0 has-[>span]:p-0 sm:size-9"
+          />
+        }
       >
-        <span className="flex size-7 items-center justify-center rounded-full bg-primary font-medium text-primary-foreground text-xs">
+        <span className="flex size-9 items-center justify-center rounded-lg bg-primary font-medium text-primary-foreground text-sm sm:size-9">
           {initials || "?"}
         </span>
       </DropdownMenuTrigger>
@@ -161,14 +168,14 @@ function ThemeToggle() {
       type="button"
       aria-label="Ganti tema"
       onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
-      className="flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-lg border border-amber-200 bg-amber-50/80 outline-none transition-[scale,background-color,border-color] duration-fast ease-out focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background active:scale-90 motion-reduce:transition-none motion-reduce:active:scale-100 dark:border-white/15 dark:bg-[#181818]"
+      className="flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-lg border border-neutral-200 bg-white outline-none transition-[scale,background-color,border-color] duration-fast ease-out focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background active:scale-90 motion-reduce:transition-none motion-reduce:active:scale-100 dark:border-white/10 dark:bg-popover"
     >
       <span
         aria-hidden="true"
         className="sunmoon-morph relative flex size-4.5 items-center justify-center"
       >
-        <Sun className="absolute size-4.5 text-amber-500 drop-shadow-[0_0_8px_rgba(245,158,11,0.5)] transition-opacity duration-fast ease-out motion-reduce:transition-none dark:opacity-0" />
-        <Moon className="absolute size-4.5 text-indigo-300 opacity-0 drop-shadow-[0_0_8px_rgba(165,180,252,0.5)] transition-opacity duration-fast ease-out motion-reduce:transition-none dark:opacity-100" />
+        <Sun className="absolute size-4.5 text-muted-foreground transition-opacity duration-fast ease-out motion-reduce:transition-none dark:opacity-0" />
+        <Moon className="absolute size-4.5 text-muted-foreground opacity-0 transition-opacity duration-fast ease-out motion-reduce:transition-none dark:opacity-100" />
       </span>
     </button>
   )
@@ -253,9 +260,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <span className="min-w-0 truncate">Cari karyawan, cabang…</span>
             <Kbd className="ml-auto">⌘K</Kbd>
           </button>
-          <NotificationBell />
-          <ThemeToggle />
-          <AuthControl />
+          <div className="ml-auto flex items-center gap-3">
+            <NotificationBell />
+            <ThemeToggle />
+            <AuthControl />
+          </div>
         </header>
 
         <main

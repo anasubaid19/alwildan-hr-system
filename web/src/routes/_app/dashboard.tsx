@@ -232,7 +232,7 @@ function DashboardContent({
       icon: Users,
     },
     {
-      label: "Total Gaji Bulan Ini",
+      label: "Total Gaji Bruto",
       value: rupiah.format(data.totalGaji),
       context: kpiPeriode,
       icon: Wallet,
@@ -314,8 +314,7 @@ function UploadStatusCard({ data }: { data: DashboardSummary }) {
   // Urutan berbasis atensi: gagal dulu, lalu belum upload, terakhir berhasil.
   const order = { error: 0, none: 1, ok: 2 } as const
   const sorted = [...statuses].sort((a, b) => order[a.status] - order[b.status])
-  // ponytail: batas 5 baris tanpa pagination — cukup untuk skala cabang saat ini.
-  const visible = sorted.slice(0, 5)
+  const visible = sorted.slice(0, 3)
 
   return (
     <Card>
@@ -379,7 +378,7 @@ function UploadStatusCard({ data }: { data: DashboardSummary }) {
                   <Badge
                     variant={
                       s.status === "ok"
-                        ? "default"
+                        ? "success"
                         : s.status === "error"
                           ? "destructive"
                           : "secondary"
@@ -403,7 +402,7 @@ function UploadStatusCard({ data }: { data: DashboardSummary }) {
               to="/cabang"
               className="mt-2 inline-flex items-center gap-1 text-primary text-sm hover:underline"
             >
-              Lihat semua cabang
+              Lihat detail
               <ChevronRight className="size-3.5" />
             </Link>
           )}
@@ -440,8 +439,7 @@ function UploadStatusCard({ data }: { data: DashboardSummary }) {
 }
 
 function ActivityCard({ data }: { data: DashboardSummary }) {
-  // ponytail: tanpa link "lihat semua" — belum ada halaman aktivitas terpisah.
-  const activity = data.activity.slice(0, 5)
+  const activity = data.activity.slice(0, 3)
   return (
     <Card>
       <CardHeader>
@@ -454,30 +452,43 @@ function ActivityCard({ data }: { data: DashboardSummary }) {
             Belum ada aktivitas upload untuk periode ini.
           </p>
         ) : (
-          <ol className="relative flex flex-col gap-4 border-l border-border pl-4">
-            {activity.map((a) => (
-              <li key={a.id} className="relative">
-                <span className="absolute top-1.5 -left-[21px] size-2.5 rounded-full border-2 border-background bg-primary" />
-                <p className="text-sm">
-                  <span className="font-medium">
-                    {a.cabangNama ?? a.cabangKode ?? "Cabang"}
-                  </span>{" "}
-                  mengupload data {a.periode ? formatPeriode(a.periode) : ""}
-                </p>
-                <div className="mt-0.5 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                  {a.status === "success" ? (
-                    <Badge variant="default">Berhasil</Badge>
-                  ) : a.status === "failed" ? (
-                    <Badge variant="destructive">Gagal</Badge>
-                  ) : (
-                    <Badge variant="secondary">Pending</Badge>
-                  )}
-                  {a.detail && <span>{a.detail}</span>}
-                  <span className="tabular-nums">{timeAgo(a.createdAt)}</span>
-                </div>
-              </li>
-            ))}
-          </ol>
+          <>
+            <ol className="relative flex flex-col gap-4 border-l border-border pl-4">
+              {activity.map((a) => (
+                <li key={a.id} className="relative">
+                  <span
+                    className={`absolute top-1.5 -left-[21px] size-2.5 rounded-full border-2 border-background ${a.status === "success" ? "bg-emerald-600" : a.status === "failed" ? "bg-destructive" : "bg-primary"}`}
+                  />
+                  <p className="text-sm">
+                    <span className="font-medium">
+                      {a.cabangNama ?? a.cabangKode ?? "Cabang"}
+                    </span>{" "}
+                    mengupload data {a.periode ? formatPeriode(a.periode) : ""}
+                  </p>
+                  <div className="mt-0.5 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                    {a.status === "success" ? (
+                      <Badge variant="success">Berhasil</Badge>
+                    ) : a.status === "failed" ? (
+                      <Badge variant="destructive">Gagal</Badge>
+                    ) : (
+                      <Badge variant="secondary">Pending</Badge>
+                    )}
+                    {a.detail && <span>{a.detail}</span>}
+                    <span className="tabular-nums">{timeAgo(a.createdAt)}</span>
+                  </div>
+                </li>
+              ))}
+            </ol>
+            {data.activity.length > 3 && (
+              <Link
+                to="/laporan"
+                className="mt-4 inline-flex items-center gap-1 text-primary text-sm hover:underline"
+              >
+                Lihat detail
+                <ChevronRight className="size-3.5" />
+              </Link>
+            )}
+          </>
         )}
       </CardContent>
     </Card>
@@ -489,6 +500,7 @@ function ChartCard({ data }: { data: DashboardSummary }) {
   // undefined (pra-hidrasi) → "light", sama dengan defaultTheme aplikasi.
   const chartTheme = useTheme().resolvedTheme === "dark" ? "dark" : "light"
   const top5 = perCabang.slice(0, 5)
+  const potongan = data.totalGaji - data.totalDiterima
   return (
     <div className="mt-6">
       {perCabang.length === 0 ? (
@@ -503,10 +515,13 @@ function ChartCard({ data }: { data: DashboardSummary }) {
         <>
           <MonoRoundedBarChart
             theme={chartTheme}
-            title="Statistik Gaji per Cabang"
-            subtitle={`Top ${top5.length} cabang · total gaji diterima${
+            title="Statistik Gaji Diterima per Cabang"
+            subtitle={`Top ${top5.length} cabang · total diterima (netto)${
               data.periode ? ` · ${formatPeriode(data.periode)}` : ""
             }`}
+            potonganLabel={
+              potongan > 0 ? `Potongan ${rupiah.format(potongan)}` : undefined
+            }
             unit="rupiah"
             formatValue={(v) => rupiah.format(v)}
             formatAxis={(v) => compactRupiah.format(v)}

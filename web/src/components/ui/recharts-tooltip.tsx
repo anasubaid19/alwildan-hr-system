@@ -50,7 +50,7 @@ export function DitherChartTooltipContent({
       <div className="flex flex-col gap-1">
         {payload.map((item, idx) => {
           const color =
-            item.color || item.fill || (isDark ? "#FFFFFF" : "#000000")
+            item.color || item.fill || (isDark ? "#FFFFFF" : "#151515")
           const numeric = Number(item.value)
           const valueDisplay = formatter
             ? formatter(numeric, item.name ?? "")

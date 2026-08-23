@@ -60,7 +60,7 @@ export function MonoRoundedLineChart({
       } ${
         isDark
           ? "bg-[#181818] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] hover:bg-[#202020]"
-          : "bg-white shadow-[0_4px_20px_rgba(0,0,0,0.04)] border border-neutral-100 text-black hover:shadow-[0_6px_24px_rgba(0,0,0,0.06)]"
+          : "bg-white shadow-[0_4px_20px_rgba(0,0,0,0.04)] border border-neutral-100 text-[#151515] hover:shadow-[0_6px_24px_rgba(0,0,0,0.06)]"
       }`}
     >
       {/* Header */}
@@ -105,11 +105,11 @@ export function MonoRoundedLineChart({
                 className={`px-2.5 py-0.5 rounded-full text-[11px] font-medium capitalize transition-all cursor-pointer ${
                   activeSeries === s
                     ? isDark
-                      ? "bg-white text-black font-semibold shadow-sm"
-                      : "bg-black text-white font-semibold shadow-sm"
+                      ? "bg-white text-[#151515] font-semibold shadow-sm"
+                      : "bg-[#151515] text-white font-semibold shadow-sm"
                     : isDark
                       ? "text-neutral-400 hover:text-white"
-                      : "text-neutral-600 hover:text-black"
+                      : "text-neutral-600 hover:text-[#151515]"
                 }`}
               >
                 {s === "all" ? "Dual" : "Single"}
@@ -211,7 +211,7 @@ export function MonoRoundedLineChart({
         </span>
         <span
           className={
-            isDark ? "text-white font-medium" : "text-black font-medium"
+            isDark ? "text-white font-medium" : "text-[#151515] font-medium"
           }
         >
           {formatValue(peakVal)} Peak

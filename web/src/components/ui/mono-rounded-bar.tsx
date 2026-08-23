@@ -23,6 +23,8 @@ interface MonoRoundedBarChartProps {
   title?: string
   /** Keterangan singkat di bawah metrik utama. */
   subtitle?: string
+  /** Baris tambahan kecil di bawah subtitle, mis. "Potongan Rp 710.000". */
+  potonganLabel?: string
   /** Satuan nilai utama, mis. "rupiah". */
   unit?: string
   /** Format tampilan nilai penuh (tooltip, header, footer). */
@@ -37,6 +39,7 @@ export function MonoRoundedBarChart({
   data,
   title = "Statistik per Cabang",
   subtitle,
+  potonganLabel,
   unit = "",
   formatValue = (v) => `${v}`,
   formatAxis,
@@ -54,7 +57,7 @@ export function MonoRoundedBarChart({
       } ${
         isDark
           ? "bg-[#181818] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] hover:bg-[#202020]"
-          : "bg-white shadow-[0_4px_20px_rgba(0,0,0,0.04)] border border-neutral-100 text-black hover:shadow-[0_6px_24px_rgba(0,0,0,0.06)]"
+          : "bg-white shadow-[0_4px_20px_rgba(0,0,0,0.04)] border border-neutral-100 text-[#151515] hover:shadow-[0_6px_24px_rgba(0,0,0,0.06)]"
       }`}
     >
       {/* Header */}
@@ -78,6 +81,13 @@ export function MonoRoundedBarChart({
               className={`mt-0.5 text-[11px] ${isDark ? "text-neutral-500" : "text-neutral-400"}`}
             >
               {subtitle}
+            </div>
+          )}
+          {potonganLabel && (
+            <div
+              className={`mt-1 text-[11px] ${isDark ? "text-neutral-400" : "text-neutral-500"}`}
+            >
+              {potonganLabel}
             </div>
           )}
         </div>
@@ -148,7 +158,7 @@ export function MonoRoundedBarChart({
         </span>
         <span
           className={
-            isDark ? "text-white font-medium" : "text-black font-medium"
+            isDark ? "text-white font-medium" : "text-[#151515] font-medium"
           }
         >
           {fmtAxis(avg)}

@@ -54,7 +54,14 @@ export function NotificationBell() {
   return (
     <Popover>
       <PopoverTrigger
-        render={<Button variant="ghost" size="icon" aria-label="Notifikasi" />}
+        render={
+          <Button
+            variant="outline"
+            size="icon"
+            aria-label="Notifikasi"
+            className="size-9 rounded-lg border-neutral-200 bg-white sm:size-9 dark:border-white/10 dark:bg-popover"
+          />
+        }
       >
         <span className="relative inline-flex">
           <Bell className="size-4.5" />

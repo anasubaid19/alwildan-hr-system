@@ -7,7 +7,7 @@
 
 @theme inline {
   --font-heading: var(--font-sans);
-  --font-sans: "Plus Jakarta Sans Variable", sans-serif;
+  --font-sans: "Suisse Intl", sans-serif;
   --font-mono: ui-monospace, monospace;
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
@@ -69,11 +69,11 @@
 
 :root {
   --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
+  --foreground: oklch(0.196 0 0);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
+  --card-foreground: oklch(0.196 0 0);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
+  --popover-foreground: oklch(0.196 0 0);
   --primary: oklch(0.546 0.245 262.9); /* blue-600 — aksen brand biru */
   --primary-foreground: oklch(0.985 0 0);
   --info: oklch(0.546 0.245 262.9);
@@ -99,7 +99,7 @@
   --chart-5: oklch(0.882 0.059 254.1); /* blue-200 */
   --radius: 0.625rem;
   --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
+  --sidebar-foreground: oklch(0.196 0 0);
   --sidebar-primary: oklch(0.546 0.245 262.9); /* blue-600 */
   --sidebar-primary-foreground: oklch(0.985 0 0);
   --sidebar-accent: oklch(0.97 0 0);
