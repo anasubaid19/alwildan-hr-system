@@ -1,4 +1,10 @@
-import { randomInt } from "node:crypto"
+import {
+  randomBytes,
+  randomInt,
+  scrypt as scryptCb,
+  timingSafeEqual,
+} from "node:crypto"
+import { promisify } from "node:util"
 import { createServerFn } from "@tanstack/react-start"
 import { and, desc, eq } from "drizzle-orm"
 
@@ -13,6 +19,28 @@ import { invite as inviteTable, user as userTable } from "@/lib/db/schema"
 
 const INVITE_TTL_MS = 48 * 60 * 60 * 1000 // 48 jam
 const MAX_VERIFY_ATTEMPTS = 3
+
+const scrypt = promisify(scryptCb) as (
+  password: string,
+  salt: string,
+  keylen: number
+) => Promise<Buffer>
+
+/** Hash PIN: salt acak + scrypt, disimpan "salt:key" (hex). Runtime-agnostik. */
+async function hashPin(pin: string): Promise<string> {
+  const salt = randomBytes(16).toString("hex")
+  const key = await scrypt(pin, salt, 32)
+  return `${salt}:${key.toString("hex")}`
+}
+
+/** Verifikasi konstanta-waktu; format tak dikenal (mis. hash lama) → false. */
+async function verifyPin(pin: string, stored: string): Promise<boolean> {
+  const [salt, hex] = stored.split(":")
+  if (!salt || !hex) return false
+  const key = await scrypt(pin, salt, 32)
+  const expected = Buffer.from(hex, "hex")
+  return expected.length === key.length && timingSafeEqual(key, expected)
+}
 
 // Pesan sengaja generik — jangan bocorkan apakah email diundang / PIN hampir benar.
 const PIN_INVALID_MSG = "PIN tidak valid atau sudah kadaluarsa"
@@ -62,7 +90,7 @@ async function consumePendingInvite(email: string, pin: string) {
     throw new Error(PIN_INVALID_MSG)
   }
 
-  const pinMatch = await Bun.password.verify(pin, row.pin)
+  const pinMatch = await verifyPin(pin, row.pin)
   if (!pinMatch) {
     const attempts = row.attempts + 1
     await db
@@ -119,7 +147,7 @@ export const generateInvitePin = createServerFn({ method: "POST" })
     // randomInt = CSPRNG; rentang 100000-999999 menjamin 6 digit tanpa nol depan.
     const pin = String(randomInt(100000, 1000000))
     const expiresAt = new Date(Date.now() + INVITE_TTL_MS)
-    const hashedPin = await Bun.password.hash(pin, { algorithm: "bcrypt" })
+    const hashedPin = await hashPin(pin)
 
     await db.insert(inviteTable).values({
       email: data.email,

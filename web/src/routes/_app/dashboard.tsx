@@ -9,17 +9,20 @@ import {
   Database,
   FileText,
   type LucideIcon,
+  RefreshCw,
   UploadCloud,
   UserPlus,
   Users,
   Wallet,
 } from "lucide-react"
+import { useTheme } from "next-themes"
 import { useState } from "react"
 import { PageHeader } from "@/components/layout/page-header"
 import { Badge } from "@/components/ui/badge"
-import { buttonVariants } from "@/components/ui/button"
+import { Button, buttonVariants } from "@/components/ui/button"
 import {
   Card,
+  CardAction,
   CardContent,
   CardDescription,
   CardHeader,
@@ -33,7 +36,7 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from "@/components/ui/empty"
-import { MonoRoundedLineChart } from "@/components/ui/mono-rounded-line"
+import { MonoRoundedBarChart } from "@/components/ui/mono-rounded-bar"
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 import { Skeleton } from "@/components/ui/skeleton"
 import { authClient } from "@/lib/auth/client"
@@ -51,7 +54,9 @@ const rupiah = new Intl.NumberFormat("id-ID", {
   currency: "IDR",
   maximumFractionDigits: 0,
 })
-const compact = new Intl.NumberFormat("id-ID", {
+const compactRupiah = new Intl.NumberFormat("id-ID", {
+  style: "currency",
+  currency: "IDR",
   notation: "compact",
   maximumFractionDigits: 1,
 })
@@ -145,7 +150,7 @@ function DashboardPage() {
   const role = useAppRole()
   const [periode, setPeriode] = useState("")
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, refetch } = useQuery({
     queryKey: [...QK.dashboard, { periode }],
     queryFn: () => getDashboardSummary({ data: { periode } }),
   })
@@ -160,8 +165,8 @@ function DashboardPage() {
         description="Pusat rekapitulasi penggajian seluruh cabang AL-WILDAN."
         action={
           <div className="flex flex-col items-end gap-1">
-            <span className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
-              Periode Aktif
+            <span className="text-muted-foreground text-sm font-medium">
+              Periode
             </span>
             <NativeSelect
               className="w-44"
@@ -184,7 +189,9 @@ function DashboardPage() {
         }
       />
 
-      {isLoading ? (
+      {isError ? (
+        <ErrorState onRetry={() => refetch()} />
+      ) : isLoading ? (
         <DashboardSkeleton />
       ) : data && data.totalCabang === 0 ? (
         <Onboarding />
@@ -202,25 +209,38 @@ function DashboardContent({
   data: DashboardSummary
   role: AppRole
 }) {
+  const kpiPeriode = data.periode
+    ? `Periode ${formatPeriode(data.periode)}`
+    : "—"
+  const uploadedTotal = data.uploadStatus.length
+  const uploadPct =
+    uploadedTotal > 0
+      ? Math.round((data.uploadedCabang / uploadedTotal) * 100)
+      : 0
+
   const kpis = [
     {
       label: "Cabang Sudah Upload",
-      value: `${data.uploadedCabang} / ${data.totalCabang}`,
+      value: `${data.uploadedCabang} / ${uploadedTotal}`,
+      context: `${uploadPct}% terupload`,
       icon: Building2,
     },
     {
       label: "Total Karyawan",
       value: String(data.totalKaryawan),
+      context: "Seluruh cabang",
       icon: Users,
     },
     {
       label: "Total Gaji Bulan Ini",
       value: rupiah.format(data.totalGaji),
+      context: kpiPeriode,
       icon: Wallet,
     },
     {
       label: "Slip Gaji Diproses",
       value: String(data.totalSlip),
+      context: kpiPeriode,
       icon: FileText,
     },
   ]
@@ -229,14 +249,17 @@ function DashboardContent({
   return (
     <>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {kpis.map(({ label, value, icon: Icon }) => (
+        {kpis.map(({ label, value, context, icon: Icon }) => (
           <Card key={label}>
             <CardHeader>
               <CardDescription>{label}</CardDescription>
               <CardTitle className="text-2xl tabular-nums">{value}</CardTitle>
-              <div className="flex size-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                <Icon className="size-4.5" />
-              </div>
+              <p className="text-muted-foreground text-xs">{context}</p>
+              <CardAction>
+                <div className="flex size-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                  <Icon className="size-4.5" />
+                </div>
+              </CardAction>
             </CardHeader>
           </Card>
         ))}
@@ -256,34 +279,43 @@ function DashboardContent({
 
 function QuickActions({ actions }: { actions: QuickAction[] }) {
   return (
-    <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-      {actions.map(({ to, label, hint, icon: Icon }) => (
-        <Link
-          key={to}
-          to={to}
-          className="group flex items-center gap-3 rounded-4xl bg-card p-5 text-sm text-card-foreground shadow-md ring-1 ring-foreground/5 transition-colors hover:bg-accent/50 hover:ring-primary/30 dark:ring-foreground/10"
-        >
-          <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
-            <Icon className="size-5" />
-          </div>
-          <div className="min-w-0 flex-1">
-            <p className="font-medium">{label}</p>
-            <p className="truncate text-xs text-muted-foreground">{hint}</p>
-          </div>
-          <ChevronRight className="size-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5 motion-reduce:group-hover:translate-x-0 motion-reduce:transition-none" />
-        </Link>
-      ))}
-    </div>
+    <section className="mt-6">
+      <h2 className="mb-3 font-medium text-sm">Tindakan Cepat</h2>
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {actions.map(({ to, label, hint, icon: Icon }) => (
+          <Link
+            key={to}
+            to={to}
+            className="group flex items-center gap-3 rounded-4xl bg-card p-5 text-sm text-card-foreground ring-1 ring-foreground/5 transition-colors duration-normal hover:bg-accent/50 hover:ring-primary/30 motion-reduce:transition-none dark:ring-foreground/10"
+          >
+            <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary transition-transform duration-normal group-hover:scale-105 motion-reduce:group-hover:scale-100">
+              <Icon className="size-5" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="font-medium">{label}</p>
+              <p className="truncate text-xs text-muted-foreground">{hint}</p>
+            </div>
+            <ChevronRight className="size-4 shrink-0 text-muted-foreground transition-transform duration-normal group-hover:translate-x-0.5 motion-reduce:group-hover:translate-x-0 motion-reduce:transition-none" />
+          </Link>
+        ))}
+      </div>
+    </section>
   )
 }
 
 function UploadStatusCard({ data }: { data: DashboardSummary }) {
   const statuses = data.uploadStatus
   const okList = statuses.filter((s) => s.status === "ok")
-  const noneList = statuses.filter((s) => s.status === "none")
   const errorList = statuses.filter((s) => s.status === "error")
+  const pendingCount = statuses.length - okList.length - errorList.length
   const total = statuses.length
   const pct = total > 0 ? Math.round((okList.length / total) * 100) : 0
+
+  // Urutan berbasis atensi: gagal dulu, lalu belum upload, terakhir berhasil.
+  const order = { error: 0, none: 1, ok: 2 } as const
+  const sorted = [...statuses].sort((a, b) => order[a.status] - order[b.status])
+  // ponytail: batas 5 baris tanpa pagination — cukup untuk skala cabang saat ini.
+  const visible = sorted.slice(0, 5)
 
   return (
     <Card>
@@ -294,7 +326,7 @@ function UploadStatusCard({ data }: { data: DashboardSummary }) {
           {data.periode ? ` untuk ${formatPeriode(data.periode)}` : ""}.
         </CardDescription>
       </CardHeader>
-      <CardContent className="flex flex-col gap-6">
+      <CardContent className="flex flex-col gap-4">
         <div>
           <div className="flex items-baseline justify-between gap-2 text-sm">
             <span className="font-medium">
@@ -308,64 +340,80 @@ function UploadStatusCard({ data }: { data: DashboardSummary }) {
               style={{ transform: `scaleX(${pct / 100})` }}
             />
           </div>
+          <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
+            <span className="flex items-center gap-1.5">
+              <CheckCircle2 className="size-3.5 text-emerald-600 dark:text-emerald-500" />
+              Berhasil · {okList.length}
+            </span>
+            <span className="flex items-center gap-1.5">
+              <Clock className="size-3.5" />
+              Belum upload · {pendingCount}
+            </span>
+            {errorList.length > 0 && (
+              <span className="flex items-center gap-1.5 text-destructive">
+                <AlertCircle className="size-3.5" />
+                Gagal · {errorList.length}
+              </span>
+            )}
+          </div>
         </div>
 
-        <div className="grid gap-6 sm:grid-cols-2">
-          <div>
-            <h4 className="mb-2 flex items-center gap-1.5 text-xs font-medium tracking-wide text-muted-foreground uppercase">
-              <CheckCircle2 className="size-3.5 text-emerald-600 dark:text-emerald-500" />
-              Sudah upload · {okList.length}
-            </h4>
-            {okList.length === 0 ? (
-              <p className="text-sm text-muted-foreground">Belum ada</p>
-            ) : (
-              <ul className="flex max-h-56 flex-col gap-1 overflow-y-auto">
-                {okList.map((s) => (
-                  <li
-                    key={s.cabangId}
-                    className="flex items-center justify-between gap-2 text-sm"
-                  >
-                    <span className="truncate font-medium">
-                      {s.kode} · {s.nama}
-                    </span>
-                    <span className="shrink-0 text-xs text-muted-foreground tabular-nums">
-                      {formatTime(s.createdAt)}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            )}
+        {pct === 100 && (
+          <div className="flex items-center gap-2 rounded-lg border border-emerald-600/20 bg-emerald-600/5 p-3 text-sm">
+            <CheckCircle2 className="size-4 shrink-0 text-emerald-600 dark:text-emerald-500" />
+            <span>Semua cabang sudah upload untuk periode ini.</span>
           </div>
+        )}
 
-          <div>
-            <h4 className="mb-2 flex items-center gap-1.5 text-xs font-medium tracking-wide text-muted-foreground uppercase">
-              <Clock className="size-3.5" />
-              Belum upload · {noneList.length}
-            </h4>
-            {noneList.length === 0 ? (
-              <p className="text-sm text-muted-foreground">
-                Semua sudah upload
-              </p>
-            ) : (
-              <ul className="flex max-h-56 flex-col gap-1 overflow-y-auto">
-                {noneList.map((s) => (
-                  <li
-                    key={s.cabangId}
-                    className="truncate text-sm text-muted-foreground"
+        <div>
+          <ul className="divide-y divide-border/60">
+            {visible.map((s) => (
+              <li
+                key={s.cabangId}
+                className="flex items-center justify-between gap-2 py-2 text-sm first:pt-0 last:pb-0"
+              >
+                <span className="min-w-0 truncate font-medium">
+                  {s.kode} · {s.nama}
+                </span>
+                <span className="flex shrink-0 items-center gap-2">
+                  <Badge
+                    variant={
+                      s.status === "ok"
+                        ? "default"
+                        : s.status === "error"
+                          ? "destructive"
+                          : "secondary"
+                    }
                   >
-                    {s.kode} · {s.nama}
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
+                    {s.status === "ok"
+                      ? "Berhasil"
+                      : s.status === "error"
+                        ? "Gagal"
+                        : "Belum"}
+                  </Badge>
+                  <span className="w-[104px] text-right text-xs text-muted-foreground tabular-nums">
+                    {formatTime(s.createdAt)}
+                  </span>
+                </span>
+              </li>
+            ))}
+          </ul>
+          {statuses.length > visible.length && (
+            <Link
+              to="/cabang"
+              className="mt-2 inline-flex items-center gap-1 text-primary text-sm hover:underline"
+            >
+              Lihat semua cabang
+              <ChevronRight className="size-3.5" />
+            </Link>
+          )}
         </div>
 
         {errorList.length > 0 && (
           <div className="rounded-lg border border-destructive/20 bg-destructive/5 p-3">
             <p className="mb-2 flex items-center gap-1.5 text-xs font-medium tracking-wide text-destructive uppercase">
               <AlertCircle className="size-3.5" />
-              Upload gagal · {errorList.length}
+              Detail kegagalan · {errorList.length}
             </p>
             <ul className="flex flex-col gap-1">
               {errorList.map((s) => (
@@ -377,7 +425,7 @@ function UploadStatusCard({ data }: { data: DashboardSummary }) {
                     {s.kode} · {s.nama}
                   </span>
                   {s.detail && (
-                    <span className="text-xs text-muted-foreground">
+                    <span className="text-right text-xs text-muted-foreground">
                       {s.detail}
                     </span>
                   )}
@@ -392,7 +440,8 @@ function UploadStatusCard({ data }: { data: DashboardSummary }) {
 }
 
 function ActivityCard({ data }: { data: DashboardSummary }) {
-  const activity = data.activity
+  // ponytail: tanpa link "lihat semua" — belum ada halaman aktivitas terpisah.
+  const activity = data.activity.slice(0, 5)
   return (
     <Card>
       <CardHeader>
@@ -437,6 +486,9 @@ function ActivityCard({ data }: { data: DashboardSummary }) {
 
 function ChartCard({ data }: { data: DashboardSummary }) {
   const perCabang = data.perCabang
+  // undefined (pra-hidrasi) → "light", sama dengan defaultTheme aplikasi.
+  const chartTheme = useTheme().resolvedTheme === "dark" ? "dark" : "light"
+  const top5 = perCabang.slice(0, 5)
   return (
     <div className="mt-6">
       {perCabang.length === 0 ? (
@@ -448,17 +500,56 @@ function ChartCard({ data }: { data: DashboardSummary }) {
           </CardContent>
         </Card>
       ) : (
-        <MonoRoundedLineChart
-          title="Statistik Gaji per Cabang"
-          unit="rupiah"
-          formatValue={(v) => compact.format(v)}
-          data={perCabang.map((c) => ({
-            label: c.kode,
-            value: Number(c.total ?? 0),
-          }))}
-        />
+        <>
+          <MonoRoundedBarChart
+            theme={chartTheme}
+            title="Statistik Gaji per Cabang"
+            subtitle={`Top ${top5.length} cabang · total gaji diterima${
+              data.periode ? ` · ${formatPeriode(data.periode)}` : ""
+            }`}
+            unit="rupiah"
+            formatValue={(v) => rupiah.format(v)}
+            formatAxis={(v) => compactRupiah.format(v)}
+            data={top5.map((c) => ({
+              label: c.kode,
+              value: Number(c.total ?? 0),
+            }))}
+          />
+          <div className="mt-2 text-right">
+            <Link
+              to="/laporan"
+              className="inline-flex items-center gap-1 text-primary text-sm hover:underline"
+            >
+              Lihat detail di Laporan
+              <ChevronRight className="size-3.5" />
+            </Link>
+          </div>
+        </>
       )}
     </div>
+  )
+}
+
+function ErrorState({ onRetry }: { onRetry: () => void }) {
+  return (
+    <Empty className="rounded-xl border border-dashed py-16">
+      <EmptyHeader>
+        <EmptyMedia variant="icon">
+          <AlertCircle />
+        </EmptyMedia>
+        <EmptyTitle>Gagal memuat dashboard</EmptyTitle>
+        <EmptyDescription>
+          Terjadi kesalahan saat mengambil data. Periksa koneksi Anda, lalu coba
+          lagi.
+        </EmptyDescription>
+      </EmptyHeader>
+      <EmptyContent>
+        <Button onClick={onRetry}>
+          <RefreshCw aria-hidden="true" />
+          Coba lagi
+        </Button>
+      </EmptyContent>
+    </Empty>
   )
 }
 
@@ -513,6 +604,11 @@ function DashboardSkeleton() {
           </Card>
         ))}
       </div>
+      <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {[0, 1, 2, 3].map((i) => (
+          <Skeleton key={i} className="h-[88px] rounded-4xl" />
+        ))}
+      </div>
       <div className="mt-6 grid gap-6 xl:grid-cols-2">
         <Card>
           <CardHeader>
@@ -533,6 +629,9 @@ function DashboardSkeleton() {
             ))}
           </CardContent>
         </Card>
+      </div>
+      <div className="mt-6">
+        <Skeleton className="h-[290px] w-full rounded-[24px]" />
       </div>
     </>
   )

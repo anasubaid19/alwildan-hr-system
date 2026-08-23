@@ -72,7 +72,13 @@ export function MonoRoundedLineChart({
             >
               {title}
             </span>
-            <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-mono bg-white/10 text-white border border-white/20">
+            <span
+              className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-mono border ${
+                isDark
+                  ? "bg-white/10 text-white border-white/20"
+                  : "bg-neutral-100 text-neutral-600 border-neutral-200"
+              }`}
+            >
               Line
             </span>
           </div>
@@ -172,19 +178,19 @@ export function MonoRoundedLineChart({
               type="monotone"
               dataKey="value"
               name="Active"
-              stroke={isDark ? "#FFFFFF" : "#09090B"}
+              stroke="#2563eb"
               strokeWidth={3}
               strokeLinecap="round"
               strokeLinejoin="round"
               dot={{
                 r: 4,
-                fill: isDark ? "#FFFFFF" : "#09090B",
+                fill: "#2563eb",
                 stroke: isDark ? "#181818" : "#FFFFFF",
                 strokeWidth: 2,
               }}
               activeDot={{
                 r: 6,
-                fill: isDark ? "#FFFFFF" : "#09090B",
+                fill: "#2563eb",
                 stroke: isDark ? "#A1A1AA" : "#52525B",
                 strokeWidth: 2,
               }}
@@ -195,7 +201,11 @@ export function MonoRoundedLineChart({
       </div>
 
       {/* Footer Metrics */}
-      <div className="flex items-center justify-between mt-3 pt-1 border-t border-white/5 text-[11px] font-mono">
+      <div
+        className={`flex items-center justify-between mt-3 pt-1 border-t text-[11px] font-mono ${
+          isDark ? "border-white/5" : "border-neutral-200"
+        }`}
+      >
         <span className={isDark ? "text-neutral-400" : "text-neutral-600"}>
           Rounded Caps
         </span>

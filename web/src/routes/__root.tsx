@@ -25,7 +25,10 @@ export const Route = createRootRoute({
           "Sistem HR AL-WILDAN Islamic School — manajemen karyawan, cabang, dan penggajian.",
       },
     ],
-    links: [{ rel: "stylesheet", href: appCss }],
+    links: [
+      { rel: "stylesheet", href: appCss },
+      { rel: "icon", type: "image/svg+xml", href: "/hr2.svg" },
+    ],
   }),
   errorComponent: ErrorFallback,
   notFoundComponent: () => (

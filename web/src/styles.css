@@ -57,12 +57,14 @@
   --spacing-stack: var(--space-stack);
   --spacing-section: var(--space-section);
   --spacing-page: var(--space-page);
-  --duration-fast: var(--motion-duration-fast);
-  --duration-normal: var(--motion-duration-normal);
-  --duration-slow: var(--motion-duration-slow);
+  /* Namespace utilitas v4: duration-* membaca --transition-duration-* */
+  --transition-duration-fast: var(--motion-duration-fast);
+  --transition-duration-normal: var(--motion-duration-normal);
+  --transition-duration-slow: var(--motion-duration-slow);
   --ease-entrance: var(--motion-ease-entrance);
   --ease-out: var(--motion-ease-out);
   --ease-in-out: var(--motion-ease-in-out);
+  --ease-spring: var(--motion-ease-spring);
 }
 
 :root {
@@ -118,6 +120,7 @@
   --motion-ease-out: cubic-bezier(0.23, 1, 0.32, 1);
   --motion-ease-entrance: cubic-bezier(0, 0.55, 0.45, 1);
   --motion-ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --motion-ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
 
   /* Shadow aliases (elevation) */
   --shadow-surface: 0 1px 2px 0 rgb(0 0 0 / 0.05);
@@ -301,4 +304,52 @@
   font-family: var(--font-mono);
   font-size: var(--type-mono-size);
   line-height: var(--type-mono-leading);
+}
+
+/* Morphing sun/moon toggle (amicro LightDarkMorphToggle): rotasi 180° +
+   scale pop spring yang replay tiap ganti tema — nama animasi berganti
+   bersama class `.dark`, jadi tanpa state JS tambahan. */
+@keyframes sunmoon-to-dark {
+  from {
+    rotate: 0deg;
+    scale: 0.85;
+  }
+  55% {
+    rotate: 200deg;
+    scale: 1.05;
+  }
+  to {
+    rotate: 180deg;
+    scale: 1;
+  }
+}
+
+@keyframes sunmoon-to-light {
+  from {
+    rotate: 180deg;
+    scale: 0.85;
+  }
+  55% {
+    rotate: -20deg;
+    scale: 1.05;
+  }
+  to {
+    rotate: 0deg;
+    scale: 1;
+  }
+}
+
+.sunmoon-morph {
+  animation: sunmoon-to-light 500ms var(--ease-spring);
+}
+
+.dark .sunmoon-morph {
+  animation: sunmoon-to-dark 500ms var(--ease-spring);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sunmoon-morph,
+  .dark .sunmoon-morph {
+    animation: none;
+  }
 }
