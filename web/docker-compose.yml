@@ -34,7 +34,11 @@ services:
       - "${APP_PORT:-3100}:3000"
     environment:
       # Password ikut POSTGRES_PASSWORD (atau override DATABASE_URL penuh).
-      DATABASE_URL: ${DATABASE_URL:-postgresql://alwildan:${POSTGRES_PASSWORD:-alwildan2026}@postgres:5432/alwildan_hr}
+      # Nama var interpolasi sengaja APP_DATABASE_URL (bukan DATABASE_URL):
+      # .env dev berisi DATABASE_URL=@localhost utk `bun run dev` — bila dipakai
+      # di sini, nilai itu bocor ke container dan app crash (postgres ada di
+      # container lain, bukan localhost).
+      DATABASE_URL: ${APP_DATABASE_URL:-postgresql://alwildan:${POSTGRES_PASSWORD:-alwildan2026}@postgres:5432/alwildan_hr}
       # WAJIB diisi (via file .env di samping compose): openssl rand -base64 32
       BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET}
       BETTER_AUTH_URL: ${BETTER_AUTH_URL:-http://localhost:3100}

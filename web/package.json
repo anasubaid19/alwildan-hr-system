@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite dev --port 3100",
     "build": "vite build",
-    "start": "bun dist/server/server.js",
+    "start": "bun server.ts",
     "preview": "vite preview",
     "lint": "biome lint .",
     "format": "biome format --write .",
