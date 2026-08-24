@@ -2,11 +2,19 @@ import { useMutation, useQuery } from "@tanstack/react-query"
 import { createFileRoute } from "@tanstack/react-router"
 import jsPDF from "jspdf"
 import autoTable from "jspdf-autotable"
-import { Download, FileDown, FileSpreadsheet, FileText } from "lucide-react"
+import {
+  ArrowDownCircle,
+  ArrowUpCircle,
+  Download,
+  FileDown,
+  FileSpreadsheet,
+  FileText,
+} from "lucide-react"
 import { useState } from "react"
 import { toast } from "sonner"
 import * as XLSX from "xlsx"
 import { PageHeader } from "@/components/layout/page-header"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -21,8 +29,10 @@ import {
 import { QK } from "@/lib/query-keys"
 import { listCabang } from "@/server/cabang"
 import { listPeriodeGaji } from "@/server/gaji"
+import { type GajiVariableRow, listGajiVariable } from "@/server/gaji-variable"
 import {
   getLaporanAll,
+  getPergerakan,
   getRekap,
   type LaporanRow,
   listLaporan,
@@ -69,7 +79,31 @@ const DETAIL_HEADERS = [
   "JML DITERIMA",
 ]
 
-function detailRow(r: LaporanRow, i: number) {
+// Kolom uang standar urut slip: pendapatan → potongan → total.
+const MONEY_COLS: [keyof LaporanRow, string][] = [
+  ["gapok", "GAPOK"],
+  ["tunjanganPenddk", "PENDDK"],
+  ["tunjanganJabatan", "T.JABATAN"],
+  ["transport", "TRANSPORT"],
+  ["bpjsKs", "BPJS KS"],
+  ["lains", "LAINS"],
+  ["lembur", "LEMBUR"],
+  ["potThr", "POT THR"],
+  ["potBpjsTk", "POT BPJS TK"],
+  ["depositItba", "DEPOSIT ITBA"],
+  ["punishment", "PUNISHMENT"],
+  ["pinjaman", "PINJAMAN"],
+]
+
+function customHeaders(variables: GajiVariableRow[]): string[] {
+  return variables.map((v) => v.label.toUpperCase())
+}
+
+function detailRow(
+  r: LaporanRow,
+  i: number,
+  variables: GajiVariableRow[]
+): (string | number)[] {
   return [
     i + 1,
     r.nu ?? "",
@@ -79,18 +113,8 @@ function detailRow(r: LaporanRow, i: number) {
     r.noAcc ?? "",
     r.cabangNama ?? "",
     r.periode,
-    Number(r.gapok),
-    Number(r.tunjanganPenddk),
-    Number(r.tunjanganJabatan),
-    Number(r.transport),
-    Number(r.bpjsKs),
-    Number(r.lains),
-    Number(r.lembur),
-    Number(r.potThr),
-    Number(r.potBpjsTk),
-    Number(r.depositItba),
-    Number(r.punishment),
-    Number(r.pinjaman),
+    ...MONEY_COLS.map(([f]) => Number(r[f])),
+    ...variables.map((v) => r.customs?.[v.key] ?? 0),
     Number(r.jumlahGaji),
     Number(r.jmlDiterima),
   ]
@@ -125,16 +149,30 @@ function LaporanPage() {
     queryFn: () => getRekap({ data: filters }),
     enabled: view === "rekap",
   })
+  const variableQuery = useQuery({
+    queryKey: QK.gajiVariable,
+    queryFn: () => listGajiVariable(),
+  })
+  const variables = variableQuery.data ?? []
+
+  // Pergerakan karyawan: pakai periode terpilih, atau periode terbaru.
+  const periodeEfektif = periode || periodeQuery.data?.[0] || ""
+  const pergerakanQuery = useQuery({
+    queryKey: [...QK.laporan, "pergerakan", periodeEfektif],
+    queryFn: () => getPergerakan({ data: { periode: periodeEfektif } }),
+    enabled: !!periodeEfektif,
+  })
 
   const label = periode || "semua"
 
   function buildDetailSheet(rows: LaporanRow[]) {
+    const headers = [...DETAIL_HEADERS, ...customHeaders(variables)]
     return XLSX.utils.aoa_to_sheet([
       ["LAPORAN PENGGAJIAN - AL-WILDAN ISLAMIC SCHOOL"],
       [`Periode: ${label}`],
       [],
-      DETAIL_HEADERS,
-      ...rows.map(detailRow),
+      headers,
+      ...rows.map((r, i) => detailRow(r, i, variables)),
     ])
   }
 
@@ -188,75 +226,61 @@ function LaporanPage() {
       78
     )
 
+    // Semua variabel slip: kolom uang standar + custom + total.
+    const head = [
+      "NO",
+      "NAMA",
+      "CABANG",
+      "PERIODE",
+      ...MONEY_COLS.map(([, l]) => l),
+      ...customHeaders(variables),
+      "JUMLAH",
+      "DITERIMA",
+    ]
+    const body = rows.map((r, i) => [
+      i + 1,
+      r.nama,
+      r.cabangKode ?? "",
+      r.periode,
+      ...MONEY_COLS.map(([f]) => nf.format(Number(r[f]))),
+      ...variables.map((v) => nf.format(r.customs?.[v.key] ?? 0)),
+      nf.format(Number(r.jumlahGaji)),
+      nf.format(Number(r.jmlDiterima)),
+    ])
+    const foot = [
+      [
+        "",
+        "TOTAL",
+        "",
+        "",
+        ...MONEY_COLS.map(([f]) =>
+          nf.format(rows.reduce((a, r) => a + Number(r[f]), 0))
+        ),
+        ...variables.map((v) =>
+          nf.format(rows.reduce((a, r) => a + (r.customs?.[v.key] ?? 0), 0))
+        ),
+        nf.format(totalGaji),
+        nf.format(totalDiterima),
+      ],
+    ]
+    const numCols = head.map((_, i) => i).slice(4) // kolom angka mulai setelah NO/NAMA/CABANG/PERIODE
+
     autoTable(doc, {
       startY: 88,
-      head: [
-        [
-          "NO",
-          "NU",
-          "NAMA",
-          "JABATAN",
-          "CABANG",
-          "PERIODE",
-          "GAPOK",
-          "TRANSP.",
-          "BPJS KS",
-          "POT BPJSTK",
-          "LAINS",
-          "TOTAL",
-          "DITERIMA",
-        ],
-      ],
-      body: rows.map((r, i) => [
-        i + 1,
-        r.nu ?? "",
-        r.nama,
-        r.jabatan ?? "",
-        r.cabangKode ?? "",
-        r.periode,
-        nf.format(Number(r.gapok)),
-        nf.format(Number(r.transport)),
-        nf.format(Number(r.bpjsKs)),
-        nf.format(Number(r.potBpjsTk)),
-        nf.format(Number(r.lains)),
-        nf.format(Number(r.jumlahGaji)),
-        nf.format(Number(r.jmlDiterima)),
-      ]),
-      foot: [
-        [
-          "",
-          "",
-          "TOTAL",
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          nf.format(totalGaji),
-          nf.format(totalDiterima),
-        ],
-      ],
-      styles: { fontSize: 7, cellPadding: 2 },
-      headStyles: { fillColor: [26, 59, 143], textColor: 255, fontSize: 6.5 },
+      head: [head],
+      body,
+      foot,
+      styles: { fontSize: 5.5, cellPadding: 1.5 },
+      headStyles: { fillColor: [26, 59, 143], textColor: 255, fontSize: 5 },
       footStyles: {
         fillColor: [26, 59, 143],
         textColor: 255,
         fontStyle: "bold",
       },
       alternateRowStyles: { fillColor: [247, 247, 247] },
-      columnStyles: {
-        0: { halign: "center" },
-        6: { halign: "right" },
-        7: { halign: "right" },
-        8: { halign: "right" },
-        9: { halign: "right" },
-        10: { halign: "right" },
-        11: { halign: "right" },
-        12: { halign: "right" },
-      },
+      columnStyles: Object.fromEntries(
+        numCols.map((i) => [i, { halign: "right" as const }])
+      ),
       margin: { left: 32, right: 32 },
     })
 
@@ -376,6 +400,11 @@ function LaporanPage() {
         </div>
       </div>
 
+      {/* Pergerakan karyawan masuk/keluar antar periode */}
+      {periodeEfektif && pergerakanQuery.data && (
+        <PergerakanCard data={pergerakanQuery.data} />
+      )}
+
       {/* Toggle view */}
       <div className="mb-4 inline-flex rounded-lg border p-1">
         <Button
@@ -395,7 +424,12 @@ function LaporanPage() {
       </div>
 
       {view === "detail" ? (
-        <DetailView query={detailQuery} page={page} onPage={setPage} />
+        <DetailView
+          query={detailQuery}
+          page={page}
+          onPage={setPage}
+          variables={variables}
+        />
       ) : (
         <RekapView query={rekapQuery} />
       )}
@@ -403,14 +437,81 @@ function LaporanPage() {
   )
 }
 
+function PergerakanCard({
+  data,
+}: {
+  data: Awaited<ReturnType<typeof getPergerakan>>
+}) {
+  return (
+    <div className="mb-4 rounded-xl border p-4">
+      <div className="mb-3 flex flex-wrap items-center gap-2">
+        <p className="font-medium text-sm">Pergerakan Karyawan</p>
+        <span className="text-muted-foreground text-sm">
+          {data.periode}
+          {data.periodeSebelum
+            ? ` · vs ${data.periodeSebelum}`
+            : " · periode pertama"}
+        </span>
+        <Badge variant="secondary">
+          {data.totalKini} karyawan
+          {data.periodeSebelum && data.totalKini !== data.totalSebelum && (
+            <span className="ml-1">
+              ({data.totalKini > data.totalSebelum ? "+" : ""}
+              {data.totalKini - data.totalSebelum})
+            </span>
+          )}
+        </Badge>
+      </div>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div>
+          <p className="mb-2 flex items-center gap-1.5 font-medium text-sm">
+            <ArrowUpCircle className="size-4 text-emerald-600" /> Masuk (
+            {data.masuk.length})
+          </p>
+          {data.masuk.length === 0 ? (
+            <p className="text-muted-foreground text-sm">—</p>
+          ) : (
+            <ul className="flex flex-wrap gap-1.5">
+              {data.masuk.map((k) => (
+                <li key={k.id}>
+                  <Badge variant="success">{k.nama}</Badge>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+        <div>
+          <p className="mb-2 flex items-center gap-1.5 font-medium text-sm">
+            <ArrowDownCircle className="size-4 text-destructive" /> Keluar (
+            {data.keluar.length})
+          </p>
+          {data.keluar.length === 0 ? (
+            <p className="text-muted-foreground text-sm">—</p>
+          ) : (
+            <ul className="flex flex-wrap gap-1.5">
+              {data.keluar.map((k) => (
+                <li key={k.id}>
+                  <Badge variant="destructive">{k.nama}</Badge>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function DetailView({
   query,
   page,
   onPage,
+  variables,
 }: {
   query: ReturnType<typeof useQuery<Awaited<ReturnType<typeof listLaporan>>>>
   page: number
   onPage: (p: number) => void
+  variables: GajiVariableRow[]
 }) {
   if (query.isLoading) {
     return (
@@ -442,6 +543,16 @@ function DetailView({
               <TableHead>Jabatan</TableHead>
               <TableHead className="w-20">Cabang</TableHead>
               <TableHead className="w-24">Periode</TableHead>
+              {MONEY_COLS.map(([f, l]) => (
+                <TableHead key={f} className="text-right whitespace-nowrap">
+                  {l}
+                </TableHead>
+              ))}
+              {variables.map((v) => (
+                <TableHead key={v.key} className="text-right whitespace-nowrap">
+                  {v.label}
+                </TableHead>
+              ))}
               <TableHead className="text-right">Jumlah Gaji</TableHead>
               <TableHead className="text-right">Diterima</TableHead>
             </TableRow>
@@ -457,10 +568,26 @@ function DetailView({
                   {r.cabangKode ?? "—"}
                 </TableCell>
                 <TableCell className="tabular-nums">{r.periode}</TableCell>
-                <TableCell className="text-right tabular-nums">
+                {MONEY_COLS.map(([f]) => (
+                  <TableCell
+                    key={f}
+                    className="text-right tabular-nums whitespace-nowrap"
+                  >
+                    {nf.format(Number(r[f]))}
+                  </TableCell>
+                ))}
+                {variables.map((v) => (
+                  <TableCell
+                    key={v.key}
+                    className="text-right tabular-nums whitespace-nowrap"
+                  >
+                    {r.customs?.[v.key] ? nf.format(r.customs[v.key]) : "—"}
+                  </TableCell>
+                ))}
+                <TableCell className="text-right font-medium tabular-nums whitespace-nowrap">
                   {fmtRp(r.jumlahGaji)}
                 </TableCell>
-                <TableCell className="text-right font-medium tabular-nums">
+                <TableCell className="text-right font-medium tabular-nums whitespace-nowrap">
                   {fmtRp(r.jmlDiterima)}
                 </TableCell>
               </TableRow>
@@ -545,8 +672,19 @@ function RekapView({
                   {r.cabang[c] ? nf.format(r.cabang[c]) : "—"}
                 </TableCell>
               ))}
-              <TableCell className="text-right font-medium tabular-nums">
-                {nf.format(r.total)}
+              <TableCell className="text-right">
+                <div className="font-medium tabular-nums">
+                  {nf.format(r.total)}
+                </div>
+                {/* Rincian per cabang pembayar (beban sharing) — kecil di
+                    bawah total; export XLSX tetap matriks penuh. */}
+                {Object.keys(r.cabang).length > 1 && (
+                  <div className="text-[11px] text-muted-foreground tabular-nums">
+                    {Object.entries(r.cabang)
+                      .map(([k, v]) => `${k}: ${nf.format(v)}`)
+                      .join(" · ")}
+                  </div>
+                )}
               </TableCell>
             </TableRow>
           ))}

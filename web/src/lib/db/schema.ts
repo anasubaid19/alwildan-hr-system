@@ -90,6 +90,8 @@ export const gaji = pgTable(
     payingCabangId: integer("paying_cabang_id")
       .notNull()
       .references(() => cabang.id),
+    // Nilai variabel custom (dari tabel gaji_variable), mis. {"adjustment-gaji": 500000}
+    customs: jsonb().$type<Record<string, number>>().default({}).notNull(),
     createdAt: timestamp("created_at", { withTimezone: true })
       .defaultNow()
       .notNull(),
@@ -103,6 +105,18 @@ export const gaji = pgTable(
     ),
   ]
 )
+
+// gaji_variable — variabel acuan tambahan buatan super_admin (mis. "Adjustment
+// Gaji" yang dipakai sekali setahun). Nilai per slip disimpan di gaji.customs.
+export const gajiVariable = pgTable("gaji_variable", {
+  id: serial().primaryKey(),
+  key: text().unique().notNull(), // slug stabil, dipakai sebagai kunci jsonb
+  label: text().notNull(), // tampilan, mis. "Adjustment Gaji"
+  tipe: text().notNull(), // pendapatan | potongan
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+})
 
 // settings — konfigurasi sistem (AI provider, dll)
 export const settings = pgTable("settings", {

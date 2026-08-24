@@ -174,16 +174,41 @@ export const askAi = createServerFn({ method: "POST" })
       "paling",
       "besar",
       "kecil",
+      // Kata ganti rujukan — bila hanya ini tersisa, token diambil dari
+      // pertanyaan user sebelumnya (pertanyaan lanjutan spt "di cabang berapa dia?").
+      "dia",
+      "itu",
+      "beliau",
+      "ini",
+      "lalu",
     ])
-    const tokens = question
-      .toLowerCase()
-      .split(/[^a-z0-9\u00C0-\u024F]+/i)
-      .filter((w) => w.length >= 3 && !STOPWORDS.has(w))
-      .slice(0, 4)
+    const extractTokens = (q: string) =>
+      q
+        .toLowerCase()
+        .split(/[^a-z0-9\u00C0-\u024F]+/i)
+        // sufiks "nya" (jabatannya → jabatan) agar tak jadi kunci pencarian
+        .map((w) => w.replace(/nya$/, ""))
+        .filter((w) => w.length >= 3 && !STOPWORDS.has(w))
+        .slice(0, 4)
+    const tokens = extractTokens(question)
+    // Pertanyaan lanjutan (hanya kata ganti) → pakai token dari pesan user
+    // sebelumnya agar rujukan "dia/itu" tetap mendapat konteks karyawan.
+    // Gerbang adaRujukan: pertanyaan agregat ("total gaji bulan ini?") tak
+    // boleh menyeret nama dari history.
+    const adaRujukan = /\b(dia|itu|beliau|tersebut|tadi)\b/i.test(question)
+    const searchTokens =
+      tokens.length > 0
+        ? tokens
+        : adaRujukan
+          ? extractTokens(
+              [...history].reverse().find((m) => m.role === "user")?.content ??
+                ""
+            )
+          : []
 
-    if (tokens.length > 0 && cabangList.length > 0) {
+    if (searchTokens.length > 0 && cabangList.length > 0) {
       // Cocokkan ke nama ATAU jabatan (mis. "jabatan finance").
-      const conds = tokens.flatMap((t) => [
+      const conds = searchTokens.flatMap((t) => [
         ilike(karyawan.nama, `%${t}%`),
         ilike(karyawan.jabatan, `%${t}%`),
       ])
@@ -288,7 +313,9 @@ ${JSON.stringify(konteks, null, 2)}`
       body: JSON.stringify({
         model,
         messages,
-        max_tokens: 1500,
+        // nemotron reasoning 400–1400+ token di field terpisah; 1500 pernah
+        // memotong sebelum content terisi (content kosong → degenerate).
+        max_tokens: 3000,
         temperature: 0.2,
       }),
     })

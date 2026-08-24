@@ -7,6 +7,7 @@ import { db } from "@/lib/db"
 import {
   cabang,
   gaji,
+  gajiVariable,
   karyawan,
   notifications,
   uploadLog,
@@ -241,11 +242,23 @@ export function buildHeaders(aoa: unknown[][], headerIdx: number): string[] {
 }
 
 // ── Pemetaan kolom via AI (OpenAI-compatible), fallback heuristik ──────
-function buildMappingPrompt(headers: string[], sample: Rec[]): string {
+/** Kunci variabel custom utk prompt AI & valid set mapping. */
+async function customKeys(): Promise<string[]> {
+  const rows = await db
+    .select({ key: gajiVariable.key, label: gajiVariable.label })
+    .from(gajiVariable)
+  return rows.map((r) => r.key)
+}
+
+function buildMappingPrompt(
+  headers: string[],
+  sample: Rec[],
+  extra: string[]
+): string {
   return `Kamu asisten HR yang memetakan kolom data gaji karyawan.
 
 Kolom standar HR Pusat yang dibutuhkan:
-${HR_COLUMNS.join(", ")}
+${[...HR_COLUMNS, ...extra].join(", ")}
 
 Istilah penting:
 - NU = Nomor Urut karyawan
@@ -277,6 +290,7 @@ export const aiMapping = createServerFn({ method: "POST" })
     if (!apiKey || !model) {
       throw new Error("AI belum dikonfigurasi — atur di menu Settings.")
     }
+    const extra = await customKeys()
 
     const res = await fetch(`${baseUrl}/chat/completions`, {
       method: "POST",
@@ -287,7 +301,7 @@ export const aiMapping = createServerFn({ method: "POST" })
       body: JSON.stringify({
         model,
         messages: [
-          { role: "user", content: buildMappingPrompt(headers, sample) },
+          { role: "user", content: buildMappingPrompt(headers, sample, extra) },
         ],
         max_tokens: 1000,
         temperature: 0.1,
@@ -309,7 +323,7 @@ export const aiMapping = createServerFn({ method: "POST" })
       return heuristicMapping(headers)
     }
 
-    const valid = new Set<string>(HR_COLUMNS)
+    const valid = new Set<string>([...HR_COLUMNS, ...(await customKeys())])
     const result: Mapping = {}
     for (const h of headers) {
       const v = raw[h]
@@ -439,7 +453,7 @@ export const analyzeUpload = createServerFn({ method: "POST" })
       suggestedPeriode,
       suggestedCabangId,
       totalRows: records.length,
-      hrColumns: [...HR_COLUMNS],
+      hrColumns: [...HR_COLUMNS, ...(await customKeys())],
     }
   })
 
@@ -515,6 +529,10 @@ export const commitUpload = createServerFn({ method: "POST" })
     const { user } = await requireRole("admin")
     const { cabangId, periode, filename, mapping, records } = data
 
+    const varKeys = await db
+      .select({ key: gajiVariable.key })
+      .from(gajiVariable)
+
     const result = await db.transaction(async (tx) => {
       // Matching global by nama (beban sharing lintas cabang).
       const existing = await tx
@@ -583,6 +601,13 @@ export const commitUpload = createServerFn({ method: "POST" })
         const jmlDiterima =
           jumlahGaji - potThr - potBpjsTk - depositItba - punishment - pinjaman
 
+        // Variabel custom: nilai dari kolom Excel yang dimap ke kunci variabel.
+        const customs: Record<string, number> = {}
+        for (const { key } of varKeys) {
+          const n = toNum(getVal(rec, mapping, key))
+          if (n !== 0) customs[key] = n
+        }
+
         const money = {
           gapok: String(gapok),
           tunjanganPenddk: String(penddk),
@@ -602,10 +627,16 @@ export const commitUpload = createServerFn({ method: "POST" })
 
         await tx
           .insert(gaji)
-          .values({ karyawanId, periode, payingCabangId: cabangId, ...money })
+          .values({
+            karyawanId,
+            periode,
+            payingCabangId: cabangId,
+            customs,
+            ...money,
+          })
           .onConflictDoUpdate({
             target: [gaji.karyawanId, gaji.periode, gaji.payingCabangId],
-            set: money,
+            set: { ...money, customs },
           })
 
         if (wasExisting) updated++

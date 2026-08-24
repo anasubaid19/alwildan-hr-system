@@ -7,6 +7,7 @@ export const QK = {
   karyawanOptions: ["karyawan-options"] as const,
   gaji: ["gaji"] as const,
   gajiPeriode: ["gaji-periode"] as const,
+  gajiVariable: ["gaji-variable"] as const,
   dashboard: ["dashboard"] as const,
   laporan: ["laporan"] as const,
   laporanRekap: ["laporan-rekap"] as const,

@@ -17,6 +17,13 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV PORT=3000
 
+# Chromium utk generate PDF slip gaji (puppeteer-core memakai ini).
+# --no-install-recommends agar image tak membengkak; dijalankan sebagai
+# /usr/bin/chromium (ditemukan otomatis oleh server/slip.ts).
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends chromium \
+  && rm -rf /var/lib/apt/lists/*
+
 # Hanya yang dibutuhkan runtime: build output, migrasi SQL + config drizzle
 # (drizzle-kit migrate butuh drizzle.config.ts), server.ts, dan node_modules.
 COPY --from=build /app/package.json ./

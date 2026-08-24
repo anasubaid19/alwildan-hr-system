@@ -4,7 +4,7 @@ import { and, asc, count, desc, eq, ilike, type SQL } from "drizzle-orm"
 import { requireRole, requireUserId } from "@/lib/auth"
 import { db } from "@/lib/db"
 import { isForeignKeyViolation, isUniqueViolation } from "@/lib/db/errors"
-import { cabang, gaji, karyawan } from "@/lib/db/schema"
+import { cabang, gaji, gajiVariable, karyawan } from "@/lib/db/schema"
 import { GAJI_MONEY_FIELDS, type GajiMoneyField } from "@/lib/gaji-fields"
 
 export type { GajiMoneyField }
@@ -18,6 +18,7 @@ export type GajiRow = {
   karyawanNama: string | null
   payingCabangId: number
   cabangKode: string | null
+  customs: Record<string, number>
 } & Record<GajiMoneyField, string>
 
 export type ListGajiResult = {
@@ -31,6 +32,7 @@ type GajiInput = {
   karyawanId?: number | string | null
   periode?: string
   payingCabangId?: number | string | null
+  customs?: Record<string, number | string | null>
 } & Partial<Record<GajiMoneyField, number | string | null>>
 
 function toMoney(v: unknown): string {
@@ -65,6 +67,22 @@ function parseGajiInput(d: GajiInput) {
     payingCabangId: toInt(d.payingCabangId),
     ...money,
   }
+}
+
+/** Buang kunci customs yang tak dikenal & normalisasi nilai ke angka. */
+async function sanitizeCustoms(
+  customs: unknown
+): Promise<Record<string, number>> {
+  if (!customs || typeof customs !== "object") return {}
+  const vars = await db.select({ key: gajiVariable.key }).from(gajiVariable)
+  const known = new Set(vars.map((v) => v.key))
+  const out: Record<string, number> = {}
+  for (const [k, v] of Object.entries(customs as Record<string, unknown>)) {
+    if (!known.has(k)) continue
+    const n = Number(toMoney(v))
+    if (n !== 0) out[k] = n
+  }
+  return out
 }
 
 /**
@@ -128,6 +146,7 @@ export const listGaji = createServerFn()
           karyawanNama: karyawan.nama,
           payingCabangId: gaji.payingCabangId,
           cabangKode: cabang.kode,
+          customs: gaji.customs,
           ...moneyCols,
         })
         .from(gaji)
@@ -166,7 +185,7 @@ export const listPeriodeGaji = createServerFn().handler(
 
 /** Tambah slip gaji. Akses: admin ke atas. */
 export const createGaji = createServerFn({ method: "POST" })
-  .validator((d: GajiInput) => parseGajiInput(d))
+  .validator((d: GajiInput) => ({ ...parseGajiInput(d), customs: d.customs }))
   .handler(async ({ data }) => {
     await requireRole("admin")
     try {
@@ -174,9 +193,10 @@ export const createGaji = createServerFn({ method: "POST" })
         data.karyawanId,
         data.payingCabangId
       )
+      const customs = await sanitizeCustoms(data.customs)
       const [row] = await db
         .insert(gaji)
-        .values({ ...data, payingCabangId })
+        .values({ ...data, customs, payingCabangId })
         .returning()
       return row
     } catch (err) {
@@ -192,6 +212,7 @@ export const createGaji = createServerFn({ method: "POST" })
 export const updateGaji = createServerFn({ method: "POST" })
   .validator((d: GajiInput & { id: number }) => ({
     id: d.id,
+    customs: d.customs,
     ...parseGajiInput(d),
   }))
   .handler(async ({ data }) => {
@@ -200,6 +221,7 @@ export const updateGaji = createServerFn({ method: "POST" })
     try {
       const values = {
         ...input,
+        customs: await sanitizeCustoms(input.customs),
         payingCabangId: await resolvePayingCabangId(
           input.karyawanId,
           input.payingCabangId

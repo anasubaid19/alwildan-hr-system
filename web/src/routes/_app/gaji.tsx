@@ -1,6 +1,14 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { createFileRoute } from "@tanstack/react-router"
-import { MoreHorizontal, Pencil, Plus, Trash2, Wallet } from "lucide-react"
+import {
+  Eye,
+  FileDown,
+  MoreHorizontal,
+  Pencil,
+  Plus,
+  Trash2,
+  Wallet,
+} from "lucide-react"
 import { type FormEvent, useState } from "react"
 import { toast } from "sonner"
 import { PageHeader } from "@/components/layout/page-header"
@@ -60,7 +68,9 @@ import {
   listPeriodeGaji,
   updateGaji,
 } from "@/server/gaji"
+import { type GajiVariableRow, listGajiVariable } from "@/server/gaji-variable"
 import { listKaryawanOptions } from "@/server/karyawan"
+import { exportSlipPdf, getSlipHtml } from "@/server/slip"
 
 export const Route = createFileRoute("/_app/gaji")({
   component: GajiPage,
@@ -101,6 +111,7 @@ type GajiFormValues = {
   karyawanId: string
   periode: string
   payingCabangId: string
+  customs: Record<string, string>
 } & Record<GajiMoneyField, string>
 
 function GajiPage() {
@@ -124,6 +135,10 @@ function GajiPage() {
     queryKey: QK.karyawanOptions,
     queryFn: () => listKaryawanOptions(),
   })
+  const variableQuery = useQuery({
+    queryKey: QK.gajiVariable,
+    queryFn: () => listGajiVariable(),
+  })
 
   const { data, isLoading } = useQuery({
     queryKey: [...QK.gaji, { search, periode, cabangId, page }],
@@ -141,6 +156,36 @@ function GajiPage() {
   const [formOpen, setFormOpen] = useState(false)
   const [editing, setEditing] = useState<GajiRow | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<GajiRow | null>(null)
+  const [slipPreview, setSlipPreview] = useState<{
+    html: string
+    filename: string
+  } | null>(null)
+
+  const slipPreviewMut = useMutation({
+    mutationFn: (row: GajiRow) =>
+      getSlipHtml({
+        data: { karyawanId: row.karyawanId, periode: row.periode },
+      }),
+    onSuccess: (res) => setSlipPreview(res),
+    onError: (err: Error) => toast.error(err.message),
+  })
+
+  const slipPdfMut = useMutation({
+    mutationFn: (row: GajiRow) =>
+      exportSlipPdf({
+        data: { karyawanId: row.karyawanId, periode: row.periode },
+      }),
+    onSuccess: (res) => {
+      const bin = Uint8Array.from(atob(res.pdf), (c) => c.charCodeAt(0))
+      const blob = new Blob([bin], { type: "application/pdf" })
+      const a = document.createElement("a")
+      a.href = URL.createObjectURL(blob)
+      a.download = res.filename
+      a.click()
+      URL.revokeObjectURL(a.href)
+    },
+    onError: (err: Error) => toast.error(err.message),
+  })
 
   function openCreate() {
     setEditing(null)
@@ -312,6 +357,16 @@ function GajiPage() {
                           <MoreHorizontal />
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
+                          <DropdownMenuItem
+                            onClick={() => slipPreviewMut.mutate(row)}
+                          >
+                            <Eye /> Preview Slip
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => slipPdfMut.mutate(row)}
+                          >
+                            <FileDown /> Unduh PDF
+                          </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => openEdit(row)}>
                             <Pencil /> Edit
                           </DropdownMenuItem>
@@ -356,6 +411,30 @@ function GajiPage() {
         </>
       )}
 
+      <Dialog
+        open={slipPreview !== null}
+        onOpenChange={(o) => !o && setSlipPreview(null)}
+      >
+        <DialogContent className="max-h-[95vh] overflow-hidden sm:max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>Preview Slip — {slipPreview?.filename}</DialogTitle>
+            <DialogDescription>
+              Slip total gabungan semua cabang pembayar.
+            </DialogDescription>
+          </DialogHeader>
+          <iframe
+            title="Preview slip gaji"
+            srcDoc={slipPreview?.html ?? ""}
+            className="h-[70vh] w-full rounded-lg border"
+          />
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setSlipPreview(null)}>
+              Tutup
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <GajiFormDialog
         key={editing?.id ?? "new"}
         open={formOpen}
@@ -363,6 +442,7 @@ function GajiPage() {
         editing={editing}
         karyawanList={karyawanList}
         cabangList={cabangList}
+        variables={variableQuery.data ?? []}
         pending={saveMutation.isPending}
         onSubmit={(values) =>
           saveMutation.mutate({ id: editing?.id, ...values })
@@ -405,6 +485,7 @@ function GajiFormDialog({
   editing,
   karyawanList,
   cabangList,
+  variables,
   pending,
   onSubmit,
 }: {
@@ -413,6 +494,7 @@ function GajiFormDialog({
   editing: GajiRow | null
   karyawanList: { id: number; nama: string; cabangKode: string | null }[]
   cabangList: { id: number; kode: string; nama: string }[]
+  variables: GajiVariableRow[]
   pending: boolean
   onSubmit: (values: GajiFormValues) => void
 }) {
@@ -420,12 +502,16 @@ function GajiFormDialog({
     const money = Object.fromEntries(
       GAJI_MONEY_FIELDS.map((f) => [f, editing?.[f] ?? "0"])
     ) as Record<GajiMoneyField, string>
+    const customs = Object.fromEntries(
+      variables.map((v) => [v.key, String(editing?.customs?.[v.key] ?? "0")])
+    )
     return {
       karyawanId: editing?.karyawanId ? String(editing.karyawanId) : "",
       periode: editing?.periode ?? "",
       payingCabangId: editing?.payingCabangId
         ? String(editing.payingCabangId)
         : "",
+      customs,
       ...money,
     }
   })
@@ -450,6 +536,26 @@ function GajiFormDialog({
       />
     </div>
   )
+
+  const customField = (v: GajiVariableRow) => (
+    <div key={v.key} className="flex flex-col gap-2">
+      <Label htmlFor={`custom-${v.key}`}>{v.label}</Label>
+      <Input
+        id={`custom-${v.key}`}
+        inputMode="numeric"
+        value={form.customs[v.key] ?? "0"}
+        onChange={(e) =>
+          setForm((f) => ({
+            ...f,
+            customs: { ...f.customs, [v.key]: e.target.value },
+          }))
+        }
+      />
+    </div>
+  )
+
+  const customPendapatan = variables.filter((v) => v.tipe === "pendapatan")
+  const customPotongan = variables.filter((v) => v.tipe === "potongan")
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -520,11 +626,13 @@ function GajiFormDialog({
           </p>
           <div className="grid gap-4 py-3 sm:grid-cols-3">
             {PENDAPATAN.map(moneyField)}
+            {customPendapatan.map(customField)}
           </div>
 
           <p className="font-medium text-muted-foreground text-sm">Potongan</p>
           <div className="grid gap-4 py-3 sm:grid-cols-3">
             {POTONGAN.map(moneyField)}
+            {customPotongan.map(customField)}
           </div>
 
           <p className="font-medium text-muted-foreground text-sm">Total</p>

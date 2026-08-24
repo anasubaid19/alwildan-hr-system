@@ -1,7 +1,15 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { createFileRoute, redirect } from "@tanstack/react-router"
-import { AlertTriangle, Check, Loader2, ShieldAlert, X } from "lucide-react"
-import { useState } from "react"
+import {
+  AlertTriangle,
+  Check,
+  Loader2,
+  Plus,
+  ShieldAlert,
+  Trash2,
+  X,
+} from "lucide-react"
+import { type FormEvent, useState } from "react"
 import { toast } from "sonner"
 import { PageHeader } from "@/components/layout/page-header"
 import {
@@ -22,8 +30,16 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 import { hasAtLeast, normalizeRole } from "@/lib/auth/roles"
 import { QK } from "@/lib/query-keys"
+import {
+  createGajiVariable,
+  deleteGajiVariable,
+  listGajiVariable,
+} from "@/server/gaji-variable"
 import { beginDeleteAll, confirmDeleteAll } from "@/server/system"
 
 export const Route = createFileRoute("/_app/system")({
@@ -33,6 +49,128 @@ export const Route = createFileRoute("/_app/system")({
   },
   component: SystemPage,
 })
+
+function VariabelGajiCard() {
+  const qc = useQueryClient()
+  const [label, setLabel] = useState("")
+  const [tipe, setTipe] = useState("pendapatan")
+
+  const listQuery = useQuery({
+    queryKey: QK.gajiVariable,
+    queryFn: () => listGajiVariable(),
+  })
+
+  function invalidate() {
+    qc.invalidateQueries({ queryKey: QK.gajiVariable })
+    qc.invalidateQueries({ queryKey: QK.gaji })
+    qc.invalidateQueries({ queryKey: QK.laporan })
+  }
+
+  const createMut = useMutation({
+    mutationFn: () => createGajiVariable({ data: { label, tipe } }),
+    onSuccess: () => {
+      setLabel("")
+      invalidate()
+      toast.success("Variabel ditambahkan")
+    },
+    onError: (err: Error) => toast.error(err.message),
+  })
+
+  const deleteMut = useMutation({
+    mutationFn: (id: number) => deleteGajiVariable({ data: { id } }),
+    onSuccess: () => {
+      invalidate()
+      toast.success("Variabel dihapus")
+    },
+    onError: (err: Error) => toast.error(err.message),
+  })
+
+  function handleSubmit(e: FormEvent) {
+    e.preventDefault()
+    createMut.mutate()
+  }
+
+  const vars = listQuery.data ?? []
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Variabel Gaji Custom</CardTitle>
+        <CardDescription>
+          Variabel acuan tambahan di luar kolom standar (mis. “Adjustment
+          Gaji”). Akan muncul di form gaji, slip PDF, laporan, dan mapping
+          upload.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <form
+          onSubmit={handleSubmit}
+          className="flex flex-col gap-2 sm:flex-row sm:items-end"
+        >
+          <div className="flex-1 space-y-2">
+            <Label htmlFor="var-label">Nama variabel</Label>
+            <Input
+              id="var-label"
+              value={label}
+              onChange={(e) => setLabel(e.target.value)}
+              placeholder="mis. Adjustment Gaji"
+              maxLength={60}
+              required
+            />
+          </div>
+          <div className="space-y-2 sm:w-40">
+            <Label htmlFor="var-tipe">Tipe</Label>
+            <NativeSelect
+              id="var-tipe"
+              value={tipe}
+              onChange={(e) => setTipe(e.target.value)}
+            >
+              <NativeSelectOption value="pendapatan">
+                Pendapatan
+              </NativeSelectOption>
+              <NativeSelectOption value="potongan">Potongan</NativeSelectOption>
+            </NativeSelect>
+          </div>
+          <Button type="submit" disabled={createMut.isPending || !label.trim()}>
+            <Plus /> Tambah
+          </Button>
+        </form>
+
+        {vars.length === 0 ? (
+          <p className="text-muted-foreground text-sm">
+            Belum ada variabel custom.
+          </p>
+        ) : (
+          <ul className="divide-y rounded-lg border">
+            {vars.map((v) => (
+              <li
+                key={v.id}
+                className="flex items-center justify-between gap-2 px-3 py-2"
+              >
+                <div className="flex items-center gap-2 text-sm">
+                  <span className="font-medium">{v.label}</span>
+                  <span className="rounded bg-muted px-1.5 py-0.5 text-muted-foreground text-xs capitalize">
+                    {v.tipe}
+                  </span>
+                  <code className="text-muted-foreground text-xs">{v.key}</code>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  aria-label={`Hapus variabel ${v.label}`}
+                  onClick={() => deleteMut.mutate(v.id)}
+                  disabled={deleteMut.isPending}
+                >
+                  <Trash2 className="text-destructive" />
+                </Button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </CardContent>
+    </Card>
+  )
+}
 
 function SystemPage() {
   const qc = useQueryClient()
@@ -77,6 +215,8 @@ function SystemPage() {
       />
 
       <div className="max-w-2xl space-y-6">
+        <VariabelGajiCard />
+
         <Card className="border-destructive/20 bg-destructive/5">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-destructive">

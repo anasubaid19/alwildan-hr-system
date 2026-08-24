@@ -15,6 +15,7 @@ export type LaporanRow = {
   cabangKode: string | null
   cabangNama: string | null
   periode: string
+  customs: Record<string, number>
 } & Record<GajiMoneyField, string>
 
 export type ListLaporanResult = {
@@ -70,6 +71,7 @@ const laporanColumns = {
   cabangKode: cabang.kode,
   cabangNama: cabang.nama,
   periode: gaji.periode,
+  customs: gaji.customs,
   ...moneyCols,
 }
 
@@ -170,5 +172,64 @@ export const getRekap = createServerFn()
     return {
       data: [...byKaryawan.values()],
       cabangCols: [...cabangSet].sort(),
+    }
+  })
+
+export type PergerakanRow = { id: number; nama: string }
+export type PergerakanResult = {
+  periode: string
+  periodeSebelum: string | null
+  totalKini: number
+  totalSebelum: number
+  masuk: PergerakanRow[]
+  keluar: PergerakanRow[]
+}
+
+function periodeSebelumnya(periode: string): string | null {
+  const m = periode.match(/^(\d{4})-(\d{2})$/)
+  if (!m) return null
+  const y = Number(m[1])
+  const bulan = Number(m[2])
+  return bulan === 1
+    ? `${y - 1}-12`
+    : `${y}-${String(bulan - 1).padStart(2, "0")}`
+}
+
+/**
+ * Karyawan masuk/keluar antar periode berdasarkan keberadaan slip gaji.
+ * Masuk = punya slip di periode ini tapi tidak di periode sebelumnya.
+ * Keluar = sebaliknya. Periode wajib YYYY-MM.
+ */
+export const getPergerakan = createServerFn()
+  .validator((p: { periode: string }) => ({
+    periode: typeof p.periode === "string" ? p.periode.trim() : "",
+  }))
+  .handler(async ({ data }): Promise<PergerakanResult> => {
+    await requireUserId()
+    if (!/^\d{4}-\d{2}$/.test(data.periode)) {
+      throw new Error("Periode wajib dipilih (format YYYY-MM)")
+    }
+    const sebelum = periodeSebelumnya(data.periode)
+
+    const ambil = (periode: string) =>
+      db
+        .selectDistinct({ id: karyawan.id, nama: karyawan.nama })
+        .from(gaji)
+        .innerJoin(karyawan, eq(gaji.karyawanId, karyawan.id))
+        .where(eq(gaji.periode, periode))
+
+    const [kini, lama] = await Promise.all([
+      ambil(data.periode),
+      sebelum ? ambil(sebelum) : Promise.resolve([]),
+    ])
+    const idKini = new Set(kini.map((k) => k.id))
+    const idLama = new Set(lama.map((k) => k.id))
+    return {
+      periode: data.periode,
+      periodeSebelum: sebelum,
+      totalKini: kini.length,
+      totalSebelum: lama.length,
+      masuk: kini.filter((k) => !idLama.has(k.id)),
+      keluar: lama.filter((k) => !idKini.has(k.id)),
     }
   })
