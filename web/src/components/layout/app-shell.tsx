@@ -18,6 +18,7 @@ import {
 import { useTheme } from "next-themes"
 import { useEffect, useState } from "react"
 
+import { AiChat } from "@/components/layout/ai-chat"
 import { NotificationBell } from "@/components/layout/notification-bell"
 import { SearchCommand } from "@/components/layout/search-command"
 import { Button } from "@/components/ui/button"
@@ -278,6 +279,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <MobileNav nav={nav} />
 
       <SearchCommand open={searchOpen} onOpenChange={setSearchOpen} />
+      <AiChat />
     </div>
   )
 }

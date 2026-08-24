@@ -26,6 +26,7 @@ const ALLOWED_AI_HOSTS = new Set([
   "openrouter.ai",
   "generativelanguage.googleapis.com",
   "opencode.ai",
+  "ollama.com",
   "localhost",
   "127.0.0.1",
   "[::1]",
@@ -134,9 +135,10 @@ export async function readAiConfig() {
     getSetting(AI_KEYS.model),
   ])
   return {
+    // Normalisasi trailing slash agar `${baseUrl}/chat/completions` tak jadi double-slash.
     baseUrl: validateBaseUrl(
       baseUrl || process.env.AI_BASE_URL || "https://api.groq.com/openai/v1"
-    ),
+    ).replace(/\/+$/, ""),
     apiKey: apiKey ? decryptApiKey(apiKey) : process.env.AI_API_KEY || "",
     model: model || process.env.AI_MODEL || "",
   }
